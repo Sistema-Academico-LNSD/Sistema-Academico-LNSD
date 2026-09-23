@@ -6,4 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\ProyectoLNSD_WApp.BLL\ProyectoLNSD_WApp.BLL.csproj" />
+  </ItemGroup>
+
 </Project>
