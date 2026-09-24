@@ -1,5 +1,5 @@
 ﻿@using ProyectoLNSD_WApp.BLL.DTO
-@model List<UsuarioDTO>
+@using ProyectoLNSD_WApp.BLL.DTO.UsuarioActions
 
 @{
     ViewData["Title"] = "Usuarios";
@@ -68,15 +68,14 @@
                 </div>
 
                 <div class="col-md-3">
-
-                    <button id="btnBuscar"
+                    <button type="button"
+                            id="btnBuscar"
                             class="btn btn-success">
 
                         <i class="bi bi-search"></i>
                         Buscar
 
                     </button>
-
                 </div>
 
             </div>
@@ -113,81 +112,20 @@
 
 </div>
 
-@* @await Html.PartialAsync("_Create") *@
-
 @await Html.PartialAsync(
     "_Create",
-    new ProyectoLNSD_WApp.BLL.DTO.UsuarioActions.UsuarioCrearDTO()
+    new UsuarioCrearDTO()
 )
-
-@* @await Html.PartialAsync("_Edit") *@
 
 @await Html.PartialAsync(
     "_Edit",
-    new ProyectoLNSD_WApp.BLL.DTO.UsuarioActions.UsuarioActualizarDTO()
+    new UsuarioActualizarDTO()
 )
 
-@section Scripts
-{
+@section Scripts {
+
     <partial name="_ValidationScriptsPartial" />
 
-    <script>
+    <script src="~/js/usuario.js"></script>
 
-        $(document).ready(function ()
-        {
-            cargarUsuarios();
-        });
-
-        function cargarUsuarios()
-        {
-            $.ajax({
-                url: '/Usuario/GetUsuarios',
-                type: 'GET',
-
-                success: function(response)
-                {
-                    let filas = '';
-
-                    if(response.dato != null)
-                    {
-                        $.each(response.dato, function(index, usuario)
-                        {
-                            filas += `
-                                <tr>
-                                    <td>${usuario.idUsuario}</td>
-                                    <td>${usuario.nombre}</td>
-                                    <td>${usuario.apellido}</td>
-                                    <td>${usuario.correo}</td>
-                                    <td>${usuario.rol ? usuario.rol.nombre : ''}</td>
-                                    <td>
-                                        ${usuario.estado
-                                            ? '<span class="badge bg-success">Activo</span>'
-                                            : '<span class="badge bg-danger">Inactivo</span>'}
-                                    </td>
-                                    <td>
-
-                                        <button class="btn btn-warning btn-sm">
-                                            <i class="bi bi-pencil-square"></i>
-                                        </button>
-
-                                        <button class="btn btn-danger btn-sm">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-
-                                    </td>
-                                </tr>`;
-                        });
-                    }
-
-                    $('#tblUsuarios tbody').html(filas);
-                },
-
-                error: function()
-                {
-                    alert('Error al cargar usuarios');
-                }
-            });
-        }
-
-    </script>
 }

@@ -1,5 +1,94 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model ProyectoLNSD_WApp.BLL.DTO.RolDTO
+
+<div class="modal fade"
+     id="modalEditarRol"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    Editar Rol
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formEditarRol">
+
+                    @Html.AntiForgeryToken()
+
+                    <input asp-for="IdRol"
+                           type="hidden"
+                           id="editIdRol" />
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nombre"
+                               class="form-label">
+
+                            Nombre
+
+                        </label>
+
+                        <input asp-for="Nombre"
+                               id="editNombre"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Descripcion"
+                               class="form-label">
+
+                            Descripción
+
+                        </label>
+
+                        <textarea asp-for="Descripcion"
+                                  id="editDescripcion"
+                                  class="form-control">
+                        </textarea>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button type="button"
+                        id="btnActualizarRol"
+                        class="btn btn-warning">
+
+                    Actualizar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
