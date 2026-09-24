@@ -37,9 +37,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (rol == null)
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "Rol no encontrado";
-                respuesta.codigo = 404;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "Rol no encontrado";
+                respuesta.Codigo = 404;
 
                 return respuesta;
             }
@@ -56,9 +56,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (string.IsNullOrWhiteSpace(rol.Nombre))
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "El nombre del rol es requerido";
-                respuesta.codigo = 1001;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "El nombre del rol es requerido";
+                respuesta.Codigo = 1001;
 
                 return respuesta;
             }
@@ -68,9 +68,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (!await _rolRepository.CreateRol(entity))
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "No se pudo crear el rol";
-                respuesta.codigo = 1002;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "No se pudo crear el rol";
+                respuesta.Codigo = 1002;
 
                 return respuesta;
             }
@@ -86,9 +86,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (rol.IdRol <= 0)
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "Rol inválido";
-                respuesta.codigo = 1003;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "Rol inválido";
+                respuesta.Codigo = 1003;
 
                 return respuesta;
             }
@@ -98,9 +98,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (!await _rolRepository.UpdateRol(entity))
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "No se pudo actualizar el rol";
-                respuesta.codigo = 1004;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "No se pudo actualizar el rol";
+                respuesta.Codigo = 1004;
 
                 return respuesta;
             }
@@ -116,9 +116,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Rol
 
             if (!await _rolRepository.DeleteRol(id))
             {
-                respuesta.esCorrecto = false;
-                respuesta.mensaje = "No se pudo eliminar el rol";
-                respuesta.codigo = 1005;
+                respuesta.EsCorrecto = false;
+                respuesta.Mensaje = "No se pudo eliminar el rol";
+                respuesta.Codigo = 1005;
             }
 
             return respuesta;

@@ -29,8 +29,35 @@
 
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Usuario" asp-action="Index"> Usuarios</a>
+                        </li>
+
+                        @if (User.IsInRole("Administrador"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Permiso" asp-action="Index">Permisos</a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Auditoria" asp-action="Index">Historial de Accesos</a>
+                            </li>
+                        }
                     </ul>
+
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <form id="formLogoutNav" class="d-flex align-items-center gap-2 mb-0">
+                            @Html.AntiForgeryToken()
+                            <span class="text-muted small">@User.Identity.Name</span>
+                            <button type="button" id="btnLogout" class="btn btn-outline-secondary btn-sm">
+                                Cerrar sesión
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a class="btn btn-outline-primary btn-sm" asp-controller="Auth" asp-action="Login">
+                            Iniciar sesión
+                        </a>
+                    }
                 </div>
             </div>
         </nav>
@@ -49,6 +76,7 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/auth.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

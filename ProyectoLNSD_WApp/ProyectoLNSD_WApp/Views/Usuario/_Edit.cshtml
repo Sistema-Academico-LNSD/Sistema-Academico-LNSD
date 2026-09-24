@@ -1,7 +1,139 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
-}
+﻿@model ProyectoLNSD_WApp.BLL.DTO.UsuarioActions.UsuarioActualizarDTO
 
-<div></div>
+<div class="modal fade"
+     id="modalEditarUsuario"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    Editar Usuario
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formEditarUsuario">
+
+                    @Html.AntiForgeryToken()
+
+                    <input asp-for="IdUsuario"
+                           type="hidden"
+                           id="editIdUsuario" />
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nombre"
+                               class="form-label">
+                            Nombre
+                        </label>
+
+                        <input asp-for="Nombre"
+                               id="editNombre"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Apellido"
+                               class="form-label">
+                            Apellido
+                        </label>
+
+                        <input asp-for="Apellido"
+                               id="editApellido"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Correo"
+                               class="form-label">
+                            Correo
+                        </label>
+
+                        <input asp-for="Correo"
+                               id="editCorreo"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="IdRol"
+                               class="form-label">
+                            Rol
+                        </label>
+
+                        <select asp-for="IdRol"
+                                id="editIdRol"
+                                class="form-select">
+
+                            <option value="">
+                                Seleccione...
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Estado"
+                               class="form-label">
+                            Estado
+                        </label>
+
+                        <select asp-for="Estado"
+                                id="editEstado"
+                                class="form-select">
+
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+
+                        </select>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button type="button"
+                        id="btnActualizarUsuario"
+                        class="btn btn-warning">
+
+                    Actualizar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

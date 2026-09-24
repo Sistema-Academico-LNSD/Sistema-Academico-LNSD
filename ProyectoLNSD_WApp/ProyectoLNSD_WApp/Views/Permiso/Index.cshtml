@@ -1,0 +1,46 @@
+﻿@{
+    ViewData["Title"] = "Permisos por Rol";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="bi bi-shield-lock"></i>
+                Permisos por Rol
+            </h3>
+            <small>Seleccioná un rol para administrar sus permisos por módulo</small>
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table id="tblRolesPermiso" class="table table-striped table-hover">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Rol</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+    <script src="~/js/permiso.js"></script>
+}

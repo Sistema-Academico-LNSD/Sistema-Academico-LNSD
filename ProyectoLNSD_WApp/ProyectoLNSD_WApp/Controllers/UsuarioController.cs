@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.DTO.UsuarioActions;
 using ProyectoLNSD_WApp.BLL.Service.Usuario;
 
 namespace ProyectoLNSD_WApp.Controllers
 {
+    [Authorize]
     public class UsuarioController : Controller
     {
         private readonly IUsuarioService _usuarioService;
@@ -14,16 +17,13 @@ namespace ProyectoLNSD_WApp.Controllers
             _usuarioService = usuarioService;
         }
 
-        //public IActionResult Index()
-        //{
-        //    return View();
-        //}
-
+        [RequierePermiso("Usuarios", "Ver")]
         public IActionResult Index()
         {
             return View(new List<UsuarioDTO>());
         }
 
+        [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> GetUsuarios()
         {
             var respuesta = await _usuarioService.GetUsuarios();
@@ -31,6 +31,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> GetUsuarioById(int id)
         {
             if (!ModelState.IsValid)
@@ -44,6 +45,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> BuscarUsuarios(
             string? nombre,
             string? correo,
@@ -60,6 +62,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Crear")]
         public async Task<IActionResult> CreateUsuario(
             UsuarioCrearDTO usuario)
         {
@@ -74,6 +77,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Editar")]
         public async Task<IActionResult> UpdateUsuario(
             UsuarioActualizarDTO usuario)
         {
@@ -88,6 +92,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Eliminar")]
         public async Task<IActionResult> DeleteUsuario(int id)
         {
             if (!ModelState.IsValid)
@@ -101,6 +106,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [RequierePermiso("Usuarios", "Editar")]
         public async Task<IActionResult> CambiarEstado(
             int id,
             bool estado)

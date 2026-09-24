@@ -1,0 +1,69 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.UsuarioActions.LoginDTO
+@{
+    Layout = null;
+    ViewData["Title"] = "Iniciar sesión";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ProyectoLNSD_WApp</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-light">
+
+    <div class="d-flex align-items-center justify-content-center min-vh-100">
+
+        <div class="card shadow border-0" style="width: 100%; max-width: 400px;">
+
+            <div class="card-header bg-primary text-white text-center py-3">
+                <h4 class="mb-0">Campus Virtual LNSD</h4>
+                <small>Iniciar sesión</small>
+            </div>
+
+            <div class="card-body p-4">
+
+                <div id="alertLogin" class="alert alert-danger d-none" role="alert"></div>
+
+                <form id="formLogin">
+
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <div class="mb-3">
+                        <label asp-for="Correo" class="form-label">Correo electrónico</label>
+                        <input asp-for="Correo" class="form-control" autocomplete="username" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">Contraseña</label>
+                        <input asp-for="Password" type="password" class="form-control" autocomplete="current-password" />
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" id="btnLogin" class="btn btn-primary">
+                            Ingresar
+                        </button>
+                    </div>
+
+                </form>
+
+                <div class="text-center mt-3">
+                    <a asp-controller="Auth" asp-action="RecuperarPassword" class="small">
+                        ¿Olvidó su contraseña?
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/auth.js"></script>
+
+</body>
+</html>

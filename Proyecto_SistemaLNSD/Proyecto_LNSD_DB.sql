@@ -318,6 +318,55 @@ CREATE TABLE Encargado_Estudiante
 GO
 
 
+/*Passwords management*/
+
+CREATE TABLE Usuario_Token_Reset
+(
+    id_token INT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NOT NULL,
+    token_hash VARBINARY(64) NOT NULL,
+    fecha_creacion DATETIME NOT NULL
+        CONSTRAINT DF_TokenReset_FechaCreacion DEFAULT GETUTCDATE(),
+    fecha_expiracion DATETIME NOT NULL,
+    usado BIT NOT NULL
+        CONSTRAINT DF_TokenReset_Usado DEFAULT 0,
+    CONSTRAINT PK_Usuario_Token_Reset PRIMARY KEY (id_token),
+    CONSTRAINT FK_TokenReset_Usuario FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+);
+GO
+
+
+
+/* ---- Permisos por rol (MUSF-01) ---- */
+-- Modulo: catálogo de pantallas/funcionalidades del sistema.
+
+CREATE TABLE Modulo
+(
+    id_modulo INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    descripcion NVARCHAR(250) NULL,
+    CONSTRAINT PK_Modulo PRIMARY KEY (id_modulo),
+    CONSTRAINT UQ_Modulo_Nombre UNIQUE (nombre)
+);
+GO
+
+CREATE TABLE Rol_Permiso
+(
+    id_rol_permiso INT IDENTITY(1,1) NOT NULL,
+    id_rol INT NOT NULL,
+    id_modulo INT NOT NULL,
+    puede_ver BIT NOT NULL CONSTRAINT DF_RolPermiso_Ver DEFAULT 0,
+    puede_crear BIT NOT NULL CONSTRAINT DF_RolPermiso_Crear DEFAULT 0,
+    puede_editar BIT NOT NULL CONSTRAINT DF_RolPermiso_Editar DEFAULT 0,
+    puede_eliminar BIT NOT NULL CONSTRAINT DF_RolPermiso_Eliminar DEFAULT 0,
+    CONSTRAINT PK_Rol_Permiso PRIMARY KEY (id_rol_permiso),
+    CONSTRAINT UQ_Rol_Permiso UNIQUE (id_rol, id_modulo),
+    CONSTRAINT FK_RolPermiso_Rol FOREIGN KEY (id_rol) REFERENCES Rol(id_rol),
+    CONSTRAINT FK_RolPermiso_Modulo FOREIGN KEY (id_modulo) REFERENCES Modulo(id_modulo)
+);
+GO
+
+
 
 /* ---- INDICES ---- */
 
@@ -331,4 +380,45 @@ GO
 
 CREATE INDEX IX_Horario_Curso
 ON Horario(id_curso);
+GO
+
+CREATE INDEX IX_TokenReset_TokenHash
+ON Usuario_Token_Reset(token_hash);
+GO
+
+CREATE INDEX IX_TokenReset_Usuario
+ON Usuario_Token_Reset(id_usuario);
+GO
+
+CREATE INDEX IX_RolPermiso_Rol
+ON Rol_Permiso(id_rol);
+GO
+
+/* TEST Inserts */
+
+INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
+VALUES (
+    (SELECT id_rol FROM Rol WHERE nombre = N'Administrador'),
+    N'Admin',
+    N'Sistema',
+    N'admin@lnsd.local',
+    0x0100000001000186A000000010AABE60C9F6BC5529223DBB4951C347B70856A178469303277C4D854B9F0B2E79183FA7B4B3BD2A4C1CE30BE8D34122C5,
+    1
+);
+GO
+
+-- User: admin@lnsd.local 
+-- Pass: Admin123!
+
+INSERT INTO Modulo (nombre, descripcion)
+VALUES
+    (N'Usuarios', N'Alta, edición y activación/desactivación de usuarios.'),
+    (N'Roles', N'Administración de roles del sistema.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador';
 GO

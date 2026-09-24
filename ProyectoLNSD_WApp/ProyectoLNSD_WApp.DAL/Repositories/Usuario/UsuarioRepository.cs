@@ -127,5 +127,19 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Usuario
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<bool> ActualizarPassword(int id, byte[] passwordHash)
+        {
+            var usuario = await _context.Usuarios.FindAsync(id);
+
+            if (usuario == null)
+                return false;
+
+            usuario.PasswordHash = passwordHash;
+
+            _context.Usuarios.Update(usuario);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

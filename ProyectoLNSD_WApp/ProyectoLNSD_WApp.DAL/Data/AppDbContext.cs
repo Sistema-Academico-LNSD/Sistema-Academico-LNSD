@@ -19,6 +19,10 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Encargado> Encargados { get; set; }
         public virtual DbSet<EstudianteDocente> EstudiantesDocentes { get; set; }
         public virtual DbSet<EncargadoEstudiante> EncargadosEstudiantes { get; set; }
+        public virtual DbSet<UsuarioTokenReset> UsuariosTokensReset { get; set; }
+        public virtual DbSet<Modulo> Modulos { get; set; }
+        public virtual DbSet<RolPermiso> RolesPermisos { get; set; }
+        public virtual DbSet<LogAcceso> LogsAcceso { get; set; }
 
 
 
@@ -273,6 +277,168 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.HasOne(d => d.Estudiante)
                       .WithMany(p => p.EncargadosEstudiantes)
                       .HasForeignKey(d => d.IdEstudiante);
+            });
+
+            modelBuilder.Entity<UsuarioTokenReset>(entity =>
+            {
+                entity.ToTable("Usuario_Token_Reset");
+
+                entity.HasKey(e => e.IdToken)
+                      .HasName("PK_Usuario_Token_Reset");
+
+                entity.Property(e => e.IdToken)
+                      .HasColumnName("id_token");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.Property(e => e.TokenHash)
+                      .HasColumnName("token_hash")
+                      .HasColumnType("varbinary(64)")
+                      .IsRequired();
+
+                entity.Property(e => e.FechaCreacion)
+                      .HasColumnName("fecha_creacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.FechaExpiracion)
+                      .HasColumnName("fecha_expiracion")
+                      .IsRequired();
+
+                entity.Property(e => e.Usado)
+                      .HasColumnName("usado")
+                      .HasDefaultValue(false);
+
+                entity.HasIndex(e => e.TokenHash)
+                      .HasDatabaseName("IX_TokenReset_TokenHash");
+
+                entity.HasIndex(e => e.IdUsuario)
+                      .HasDatabaseName("IX_TokenReset_Usuario");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .HasConstraintName("FK_TokenReset_Usuario");
+            });
+
+            modelBuilder.Entity<Modulo>(entity =>
+            {
+                entity.ToTable("Modulo");
+
+                entity.HasKey(e => e.IdModulo)
+                      .HasName("PK_Modulo");
+
+                entity.Property(e => e.IdModulo)
+                      .HasColumnName("id_modulo");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(250);
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Modulo_Nombre");
+            });
+
+            modelBuilder.Entity<RolPermiso>(entity =>
+            {
+                entity.ToTable("Rol_Permiso");
+
+                entity.HasKey(e => e.IdRolPermiso)
+                      .HasName("PK_Rol_Permiso");
+
+                entity.Property(e => e.IdRolPermiso)
+                      .HasColumnName("id_rol_permiso");
+
+                entity.Property(e => e.IdRol)
+                      .HasColumnName("id_rol");
+
+                entity.Property(e => e.IdModulo)
+                      .HasColumnName("id_modulo");
+
+                entity.Property(e => e.PuedeVer)
+                      .HasColumnName("puede_ver")
+                      .HasDefaultValue(false);
+
+                entity.Property(e => e.PuedeCrear)
+                      .HasColumnName("puede_crear")
+                      .HasDefaultValue(false);
+
+                entity.Property(e => e.PuedeEditar)
+                      .HasColumnName("puede_editar")
+                      .HasDefaultValue(false);
+
+                entity.Property(e => e.PuedeEliminar)
+                      .HasColumnName("puede_eliminar")
+                      .HasDefaultValue(false);
+
+                entity.HasIndex(e => new { e.IdRol, e.IdModulo })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Rol_Permiso");
+
+                entity.HasIndex(e => e.IdRol)
+                      .HasDatabaseName("IX_RolPermiso_Rol");
+
+                entity.HasOne(d => d.Rol)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdRol)
+                      .HasConstraintName("FK_RolPermiso_Rol");
+
+                entity.HasOne(d => d.Modulo)
+                      .WithMany(m => m.RolesPermisos)
+                      .HasForeignKey(d => d.IdModulo)
+                      .HasConstraintName("FK_RolPermiso_Modulo");
+            });
+
+            modelBuilder.Entity<LogAcceso>(entity =>
+            {
+                entity.ToTable("Log_Acceso");
+
+                entity.HasKey(e => e.IdLog)
+                      .HasName("PK_Log_Acceso");
+
+                entity.Property(e => e.IdLog)
+                      .HasColumnName("id_log");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.Property(e => e.Correo)
+                      .HasColumnName("correo")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.TipoEvento)
+                      .HasColumnName("tipo_evento")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Exitoso)
+                      .HasColumnName("exitoso");
+
+                entity.Property(e => e.Mensaje)
+                      .HasColumnName("mensaje")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.Fecha)
+                      .HasColumnName("fecha")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasIndex(e => e.IdUsuario)
+                      .HasDatabaseName("IX_LogAcceso_Usuario");
+
+                entity.HasIndex(e => e.Fecha)
+                      .HasDatabaseName("IX_LogAcceso_Fecha");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .HasConstraintName("FK_LogAcceso_Usuario");
             });
 
 

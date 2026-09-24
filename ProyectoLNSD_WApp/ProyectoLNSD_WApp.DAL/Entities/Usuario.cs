@@ -1,5 +1,5 @@
 ﻿namespace ProyectoLNSD_WApp.DAL.Entities;
-public class Usuario
+public partial class Usuario
 {
     public int IdUsuario { get; set; }
 
