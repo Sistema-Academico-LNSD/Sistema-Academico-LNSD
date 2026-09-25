@@ -1,8 +1,101 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@using ProyectoLNSD_WApp.Authorization
+@{
+    ViewData["Title"] = "Inicio";
+
+    bool autenticado = User.Identity?.IsAuthenticated == true;
+    bool esAdmin = User.IsInRole("Administrador");
+    string? nombreUsuario = User.Identity?.Name;
+    string? rolUsuario = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
+
+    bool TienePermiso(string modulo, string accion) =>
+        User.Claims.Any(c => c.Type == RequierePermisoAttribute.TipoClaim && c.Value == $"{modulo}:{accion}");
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+<!-- -----------------------------------------
+     HERO Section
+---------------------------------------------- -->
+<section class="hero-lnsd">
+    <div class="hero-lnsd-content">
+
+        <span class="hero-badge">
+            <i class="bi bi-mortarboard-fill"></i>
+        </span>
+
+        @if (autenticado)
+        {
+            <h1>Bienvenido, @nombreUsuario</h1>
+            <p class="hero-subtitle">
+                @if (!string.IsNullOrWhiteSpace(rolUsuario))
+                {
+                    <span class="badge-rol"><i class="bi bi-person-check"></i> @rolUsuario</span>
+                }
+                Accedé a los módulos habilitados para tu cuenta desde el panel de abajo.
+            </p>
+        }
+        else
+        {
+            <h1>Sistema Académico LNSD</h1>
+            <p class="hero-subtitle">
+                Bienvenidos a la plataforma digital de gestión académica, administrativa
+                y de seguridad del Liceo Nuevo de Santo Domingo.
+            </p>
+            <a asp-controller="Auth" asp-action="Login" class="btn btn-login-nav btn-lg mt-3">
+                <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+            </a>
+        }
+
+    </div>
+</section>
+
+
+<!-- -----------------------------------------
+     Quick Access Modules
+---------------------------------------------- -->
+@if (autenticado)
+{
+    <section class="mt-4">
+
+        <h2 class="section-title">
+            <i class="bi bi-grid-1x2"></i>
+            Accesos rápidos
+        </h2>
+
+        <div class="module-grid">
+
+            @if (TienePermiso("Usuarios", "Ver"))
+            {
+                <a asp-controller="Usuario" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-people"></i></div>
+                    <h3>Usuarios</h3>
+                    <p>Edición y activación de cuentas del sistema.</p>
+                </a>
+            }
+
+            @if (TienePermiso("Roles", "Ver"))
+            {
+                <a asp-controller="Rol" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-person-badge"></i></div>
+                    <h3>Roles</h3>
+                    <p>Roles y descripción dentro del sistema.</p>
+                </a>
+            }
+
+            @if (esAdmin)
+            {
+                <a asp-controller="Permiso" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-shield-lock"></i></div>
+                    <h3>Permisos</h3>
+                    <p>Permisos para cada rol.</p>
+                </a>
+
+                <a asp-controller="Auditoria" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-journal-text"></i></div>
+                    <h3>Historial de Accesos</h3>
+                    <p>Auditoría de sesión.</p>
+                </a>
+            }
+
+        </div>
+
+    </section>
+}

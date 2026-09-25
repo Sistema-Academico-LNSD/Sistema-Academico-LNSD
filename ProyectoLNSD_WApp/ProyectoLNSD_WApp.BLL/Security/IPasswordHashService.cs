@@ -2,14 +2,12 @@
 {
     /// <summary>
     /// Servicio encargado de generar y verificar el hash de contraseñas de usuario.
-    /// Se abstrae detrás de una interfaz para no acoplar la capa BLL a una
-    /// implementación concreta (PasswordHasher de ASP.NET Core, BCrypt, etc.).
+    /// Se abstrae detrás de una interfaz para no acoplar la capa BLL a una implementación concreta (PasswordHasher de ASP.NET Core, BCrypt, etc.).
     /// </summary>
     public interface IPasswordHashService
     {
         /// <summary>
-        /// Genera el hash (con sal e iteraciones) de una contraseña en texto plano,
-        /// listo para almacenarse en la columna password_hash (VARBINARY).
+        /// Genera el hash (con sal e iteraciones) de una contraseña en texto plano, listo para almacenarse en la columna password_hash (VARBINARY).
         /// </summary>
         byte[] HashPassword(string password);
 

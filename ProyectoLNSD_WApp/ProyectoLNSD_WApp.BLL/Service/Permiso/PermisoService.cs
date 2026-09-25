@@ -83,9 +83,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Permiso
                 return respuesta;
             }
 
-            // Solo se guardan filas donde al menos una acción está habilitada;
-            // un módulo sin ninguna marca simplemente no genera fila (equivale
-            // a "sin permiso" cuando se relee con GetMatrizPermisos).
             var entidades = dto.Permisos
                 .Where(p => p.PuedeVer || p.PuedeCrear || p.PuedeEditar || p.PuedeEliminar)
                 .Select(p => new DAL.Entities.RolPermiso
