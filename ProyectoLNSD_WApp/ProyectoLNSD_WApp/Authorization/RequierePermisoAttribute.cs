@@ -28,13 +28,7 @@ namespace ProyectoLNSD_WApp.Authorization
                 return;
             }
 
-            string permisoRequerido = $"{_modulo}:{_accion}";
-
-            bool tienePermiso = usuario.Claims.Any(c =>
-                c.Type == TipoClaim &&
-                c.Value == permisoRequerido);
-
-            if (!tienePermiso)
+            if (!usuario.TienePermiso(_modulo, _accion))
             {
                 context.Result = new RedirectToActionResult("AccessDenied", "Auth", null);
             }

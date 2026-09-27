@@ -6,7 +6,7 @@ using ProyectoLNSD_WApp.BLL.Service.Permiso;
 namespace ProyectoLNSD_WApp.Controllers
 {
     [Authorize(Roles = "Administrador")]
-    public class PermisoController : Controller
+    public class PermisoController : BaseController
     {
         private readonly IPermisoService _permisoService;
 
@@ -41,7 +41,7 @@ namespace ProyectoLNSD_WApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return RespuestaModeloInvalido();
             }
 
             var respuesta = await _permisoService.GuardarPermisos(dto);

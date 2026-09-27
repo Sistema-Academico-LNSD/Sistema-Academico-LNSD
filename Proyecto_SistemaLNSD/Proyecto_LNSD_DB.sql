@@ -366,6 +366,32 @@ CREATE TABLE Rol_Permiso
 );
 GO
 
+/* LOGs de Acceso AUDITORÍA*/
+
+CREATE TABLE Log_Acceso
+(
+    id_log INT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NULL,
+    correo NVARCHAR(150) NOT NULL,
+    tipo_evento NVARCHAR(20) NOT NULL,
+    exitoso BIT NOT NULL,
+    mensaje NVARCHAR(250) NULL,
+    fecha DATETIME NOT NULL
+        CONSTRAINT DF_LogAcceso_Fecha DEFAULT GETUTCDATE(),
+    CONSTRAINT PK_Log_Acceso PRIMARY KEY (id_log),
+    CONSTRAINT CK_LogAcceso_TipoEvento CHECK (tipo_evento IN (N'Login', N'Logout')),
+    CONSTRAINT FK_LogAcceso_Usuario FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+);
+GO
+
+CREATE INDEX IX_LogAcceso_Usuario
+ON Log_Acceso(id_usuario);
+GO
+
+CREATE INDEX IX_LogAcceso_Fecha
+ON Log_Acceso(fecha);
+GO
+
 
 
 /* ---- INDICES ---- */
@@ -394,6 +420,17 @@ CREATE INDEX IX_RolPermiso_Rol
 ON Rol_Permiso(id_rol);
 GO
 
+CREATE INDEX IX_LogAcceso_Usuario
+ON Log_Acceso(id_usuario);
+GO
+
+CREATE INDEX IX_LogAcceso_Fecha
+ON Log_Acceso(fecha);
+GO
+
+
+
+
 /* TEST Inserts */
 
 INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
@@ -409,6 +446,12 @@ GO
 
 -- User: admin@lnsd.local 
 -- Pass: Admin123!
+
+
+-- TEST
+-- User: FMendez@ejemplo.com 
+-- Pass: aaaaaaaa
+
 
 INSERT INTO Modulo (nombre, descripcion)
 VALUES

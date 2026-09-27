@@ -12,7 +12,7 @@ using ProyectoLNSD_WApp.BLL.Service.Permiso;
 namespace ProyectoLNSD_WApp.Controllers
 {
     [AllowAnonymous]
-    public class AuthController : Controller
+    public class AuthController : BaseController
     {
         private readonly IAuthService _authService;
         private readonly IPermisoService _permisoService;
@@ -27,6 +27,8 @@ namespace ProyectoLNSD_WApp.Controllers
             _permisoService = permisoService;
             _auditoriaService = auditoriaService;
         }
+
+        // ---------- Login / Logout ----------
 
         [HttpGet]
         public IActionResult Login(string? returnUrl = null)
@@ -47,27 +49,27 @@ namespace ProyectoLNSD_WApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return RespuestaModeloInvalido();
             }
 
             var respuesta = await _authService.Login(login);
 
-            if (!respuesta.EsCorrecto || respuesta.Dato is not { Autenticado: true, Usuario: not null })
+            if (!respuesta.EsCorrecto || respuesta.Dato == null)
             {
                 await _auditoriaService.RegistrarLogin(
-                    idUsuario: respuesta.Dato?.Usuario?.IdUsuario,
+                    idUsuario: null,
                     correo: login.Correo,
                     exitoso: false,
-                    mensaje: respuesta.Dato?.Mensaje ?? respuesta.Mensaje);
+                    mensaje: respuesta.Mensaje);
 
                 return Json(new
                 {
                     esCorrecto = false,
-                    mensaje = respuesta.Dato?.Mensaje ?? respuesta.Mensaje
+                    mensaje = respuesta.Mensaje
                 });
             }
 
-            var usuario = respuesta.Dato.Usuario;
+            var usuario = respuesta.Dato;
 
             var claims = new List<Claim>
             {
@@ -90,11 +92,10 @@ namespace ProyectoLNSD_WApp.Controllers
             }
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
 
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
-                principal,
+                new ClaimsPrincipal(identity),
                 new AuthenticationProperties
                 {
                     IsPersistent = false,
@@ -110,7 +111,7 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(new
             {
                 esCorrecto = true,
-                mensaje = "Inicio de sesión exitoso",
+                mensaje = respuesta.Mensaje,
                 redirectUrl = Url.IsLocalUrl(returnUrl) ? returnUrl : Url.Action("Index", "Home")
             });
         }
@@ -138,6 +139,8 @@ namespace ProyectoLNSD_WApp.Controllers
             return View();
         }
 
+        // ---------- Recuperación de contraseña ----------
+
         [HttpGet]
         public IActionResult RecuperarPassword()
         {
@@ -150,7 +153,7 @@ namespace ProyectoLNSD_WApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return RespuestaModeloInvalido();
             }
 
             string urlBaseRestablecer =
@@ -184,16 +187,7 @@ namespace ProyectoLNSD_WApp.Controllers
         {
             if (!ModelState.IsValid)
             {
-                var primerError = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .FirstOrDefault();
-
-                return Json(new
-                {
-                    esCorrecto = false,
-                    mensaje = primerError ?? "Datos inválidos."
-                });
+                return RespuestaModeloInvalido();
             }
 
             var respuesta = await _authService.RestablecerPassword(dto);

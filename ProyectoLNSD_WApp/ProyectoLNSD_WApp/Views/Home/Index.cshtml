@@ -1,4 +1,4 @@
-﻿@using ProyectoLNSD_WApp.Authorization
+﻿
 @{
     ViewData["Title"] = "Inicio";
 
@@ -6,9 +6,6 @@
     bool esAdmin = User.IsInRole("Administrador");
     string? nombreUsuario = User.Identity?.Name;
     string? rolUsuario = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
-
-    bool TienePermiso(string modulo, string accion) =>
-        User.Claims.Any(c => c.Type == RequierePermisoAttribute.TipoClaim && c.Value == $"{modulo}:{accion}");
 }
 
 <!-- -----------------------------------------
@@ -62,7 +59,7 @@
 
         <div class="module-grid">
 
-            @if (TienePermiso("Usuarios", "Ver"))
+            @if (User.TienePermiso("Usuarios", "Ver"))
             {
                 <a asp-controller="Usuario" asp-action="Index" class="module-card">
                     <div class="module-icon"><i class="bi bi-people"></i></div>
@@ -71,7 +68,7 @@
                 </a>
             }
 
-            @if (TienePermiso("Roles", "Ver"))
+            @if (User.TienePermiso("Roles", "Ver"))
             {
                 <a asp-controller="Rol" asp-action="Index" class="module-card">
                     <div class="module-icon"><i class="bi bi-person-badge"></i></div>

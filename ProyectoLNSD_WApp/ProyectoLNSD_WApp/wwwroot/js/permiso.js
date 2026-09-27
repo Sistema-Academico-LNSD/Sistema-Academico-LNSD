@@ -101,15 +101,12 @@ function cargarMatriz()
     });
 }
 
-function guardarPermisos()
-{
+function guardarPermisos() {
     let idRol = parseInt($("#hdnIdRol").val(), 10);
-    let token = $("input[name='__RequestVerificationToken']").val();
 
     let permisos = [];
 
-    $("#tblMatrizPermisos tbody tr").each(function ()
-    {
+    $("#tblMatrizPermisos tbody tr").each(function () {
         let $fila = $(this);
 
         permisos.push({
@@ -128,21 +125,17 @@ function guardarPermisos()
         url: '/Permiso/GuardarPermisos',
         type: 'POST',
         contentType: 'application/json',
-        headers: { 'X-CSRF-TOKEN': token },
         data: JSON.stringify({ IdRol: idRol, Permisos: permisos }),
 
-        success: function (response)
-        {
+        success: function (response) {
             mostrarAlertaPermisos(response.esCorrecto, response.mensaje);
         },
 
-        error: function ()
-        {
+        error: function () {
             mostrarAlertaPermisos(false, 'Error al guardar los permisos.');
         },
 
-        complete: function ()
-        {
+        complete: function () {
             $btn.prop("disabled", false).html('<i class="bi bi-save"></i> Guardar cambios');
         }
     });

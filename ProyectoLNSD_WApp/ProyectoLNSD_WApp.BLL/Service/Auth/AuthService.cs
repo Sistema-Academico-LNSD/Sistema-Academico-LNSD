@@ -34,27 +34,24 @@ namespace ProyectoLNSD_WApp.BLL.Service.Auth
             _emailService = emailService;
         }
 
-        public async Task<RespuestaDTO<ResultadoLoginDTO>> Login(LoginDTO login)
+        public async Task<RespuestaDTO<UsuarioDTO>> Login(LoginDTO login)
         {
             const string mensajeCredencialesInvalidas = "Correo o contraseña incorrectos";
 
             if (string.IsNullOrWhiteSpace(login.Correo) || string.IsNullOrWhiteSpace(login.Password))
-                return RespuestaDTO<ResultadoLoginDTO>.Error(mensajeCredencialesInvalidas, 1010);
+                return RespuestaDTO<UsuarioDTO>.Error(mensajeCredencialesInvalidas, 1010);
 
             var usuario = await _usuarioRepository.GetUsuarioByCorreo(login.Correo.Trim());
 
             if (usuario == null || !_passwordHashService.VerifyPassword(usuario.PasswordHash, login.Password))
-                return RespuestaDTO<ResultadoLoginDTO>.Error(mensajeCredencialesInvalidas, 1011);
+                return RespuestaDTO<UsuarioDTO>.Error(mensajeCredencialesInvalidas, 1011);
 
             if (!usuario.Estado)
-                return RespuestaDTO<ResultadoLoginDTO>.Error("El usuario está inactivo. Contacte al administrador.", 1012);
+                return RespuestaDTO<UsuarioDTO>.Error("El usuario está inactivo. Contacte al administrador.", 1012);
 
-            return RespuestaDTO<ResultadoLoginDTO>.Exito(new ResultadoLoginDTO
-            {
-                Autenticado = true,
-                Mensaje = "Inicio de sesión exitoso",
-                Usuario = _mapper.Map<UsuarioDTO>(usuario)
-            });
+            return RespuestaDTO<UsuarioDTO>.Exito(
+                _mapper.Map<UsuarioDTO>(usuario),
+                "Inicio de sesión exitoso");
         }
 
         public async Task<RespuestaDTO<bool>> SolicitarRecuperacionPassword(

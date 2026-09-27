@@ -5,7 +5,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Auth
 {
     public interface IAuthService
     {
-        Task<RespuestaDTO<ResultadoLoginDTO>> Login(LoginDTO login);
+        Task<RespuestaDTO<UsuarioDTO>> Login(LoginDTO login);
 
         Task<RespuestaDTO<bool>> SolicitarRecuperacionPassword(
             SolicitarRecuperacionDTO dto,
