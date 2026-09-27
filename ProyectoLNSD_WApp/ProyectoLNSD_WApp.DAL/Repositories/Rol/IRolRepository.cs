@@ -7,5 +7,7 @@
         Task<bool> CreateRol(Entities.Rol rol);
         Task<bool> UpdateRol(Entities.Rol rol);
         Task<bool> DeleteRol(int id);
+        Task<bool> ExisteNombre(string nombre, int? excluirIdRol = null);
+        Task<bool> TieneUsuariosAsignados(int idRol);
     }
 }

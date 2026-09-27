@@ -12,9 +12,7 @@
             bool? estado);
         Task<bool> CreateUsuario(Entities.Usuario usuario);
         Task<bool> UpdateUsuario(Entities.Usuario usuario);
-        Task<bool> DeleteUsuario(int id);
         Task<bool> CambiarEstado(int id, bool estado);
         Task<bool> ActualizarPassword(int id, byte[] passwordHash);
-
     }
 }

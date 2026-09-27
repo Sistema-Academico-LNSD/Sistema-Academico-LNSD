@@ -43,7 +43,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Rol
                 return false;
 
             existing.Nombre = rol.Nombre;
-
             existing.Descripcion = rol.Descripcion;
 
             _context.Roles.Update(existing);
@@ -58,9 +57,28 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Rol
             if (entity == null)
                 return false;
 
+            var permisos = await _context.RolesPermisos
+                .Where(p => p.IdRol == id)
+                .ToListAsync();
+
+            _context.RolesPermisos.RemoveRange(permisos);
             _context.Roles.Remove(entity);
 
             return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> ExisteNombre(string nombre, int? excluirIdRol = null)
+        {
+            string nombreNormalizado = nombre.Trim().ToLower();
+
+            return await _context.Roles.AnyAsync(r =>
+                r.Nombre.ToLower() == nombreNormalizado &&
+                (!excluirIdRol.HasValue || r.IdRol != excluirIdRol.Value));
+        }
+
+        public async Task<bool> TieneUsuariosAsignados(int idRol)
+        {
+            return await _context.Usuarios.AnyAsync(u => u.IdRol == idRol);
         }
     }
 }

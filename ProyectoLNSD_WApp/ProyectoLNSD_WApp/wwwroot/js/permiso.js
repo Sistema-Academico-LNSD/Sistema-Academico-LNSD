@@ -32,8 +32,8 @@ function cargarRolesPermiso()
                 {
                     filas += `
                         <tr>
-                            <td>${rol.nombre}</td>
-                            <td>${rol.descripcion ?? ''}</td>
+                            <td>${escapeHtml(rol.nombre)}</td>
+                            <td>${escapeHtml(rol.descripcion)}</td>
                             <td>
                                 <a class="btn btn-primary btn-sm"
                                    href="/Permiso/Matriz?idRol=${rol.idRol}&nombreRol=${encodeURIComponent(rol.nombre)}">
@@ -50,7 +50,7 @@ function cargarRolesPermiso()
 
         error: function ()
         {
-            alert('Error al cargar los roles.');
+            mostrarMensaje('Error al cargar los roles.', 'danger');
         }
     });
 }
@@ -74,7 +74,7 @@ function cargarMatriz()
                 {
                     filas += `
                         <tr data-idmodulo="${m.idModulo}">
-                            <td>${m.nombreModulo}</td>
+                            <td>${escapeHtml(m.nombreModulo)}</td>
                             <td class="text-center">
                                 <input type="checkbox" class="form-check-input chk-ver" ${m.puedeVer ? 'checked' : ''} />
                             </td>

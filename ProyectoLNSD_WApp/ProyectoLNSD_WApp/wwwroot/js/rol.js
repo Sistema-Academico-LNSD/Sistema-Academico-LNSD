@@ -1,37 +1,30 @@
-﻿$(document).ready(function ()
-{
+﻿$(document).ready(function () {
     cargarRoles();
 
-    $("#btnGuardarRol").click(function ()
-    {
+    $("#btnGuardarRol").click(function () {
         crearRol();
     });
 
-    $("#btnActualizarRol").click(function ()
-    {
+    $("#btnActualizarRol").click(function () {
         actualizarRol();
     });
 });
 
-function cargarRoles()
-{
+function cargarRoles() {
     $.ajax({
         url: '/Rol/GetRoles',
         type: 'GET',
 
-        success: function (response)
-        {
+        success: function (response) {
             let filas = '';
 
-            if (response.dato != null)
-            {
-                $.each(response.dato, function (index, rol)
-                {
+            if (response.dato != null) {
+                $.each(response.dato, function (index, rol) {
                     filas += `
                         <tr>
                             <td>${rol.idRol}</td>
-                            <td>${rol.nombre}</td>
-                            <td>${rol.descripcion ?? ''}</td>
+                            <td>${escapeHtml(rol.nombre)}</td>
+                            <td>${escapeHtml(rol.descripcion)}</td>
 
                             <td>
 
@@ -59,15 +52,13 @@ function cargarRoles()
             $("#tblRoles tbody").html(filas);
         },
 
-        error: function ()
-        {
-            alert("Error al cargar los roles.");
+        error: function () {
+            mostrarMensaje("Error al cargar los roles.", 'danger');
         }
     });
 }
 
-function crearRol()
-{
+function crearRol() {
     let rol =
     {
         nombre: $("#Nombre").val(),
@@ -79,42 +70,35 @@ function crearRol()
         type: 'POST',
         data: rol,
 
-        success: function (response)
-        {
-            if (response.esCorrecto)
-            {
+        success: function (response) {
+            if (response.esCorrecto) {
                 $("#modalCrearRol").modal('hide');
 
                 $("#formCrearRol")[0].reset();
 
                 cargarRoles();
 
-                alert("Rol creado correctamente.");
+                mostrarMensaje("Rol creado correctamente.", 'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error al crear el rol.");
+        error: function () {
+            mostrarMensaje("Error al crear el rol.", 'danger');
         }
     });
 }
 
-function obtenerRol(id)
-{
+function obtenerRol(id) {
     $.ajax({
         url: '/Rol/GetRolById',
         type: 'GET',
         data: { id: id },
 
-        success: function (response)
-        {
-            if (response.esCorrecto && response.dato != null)
-            {
+        success: function (response) {
+            if (response.esCorrecto && response.dato != null) {
                 $("#editIdRol").val(response.dato.idRol);
 
                 $("#editNombre").val(response.dato.nombre);
@@ -128,21 +112,18 @@ function obtenerRol(id)
 
                 modal.show();
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error obteniendo el rol.");
+        error: function () {
+            mostrarMensaje("Error obteniendo el rol.", 'danger');
         }
     });
 }
 
-function actualizarRol()
-{
+function actualizarRol() {
     let rol =
     {
         idRol: $("#editIdRol").val(),
@@ -155,35 +136,29 @@ function actualizarRol()
         type: 'POST',
         data: rol,
 
-        success: function (response)
-        {
-            if (response.esCorrecto)
-            {
+        success: function (response) {
+            if (response.esCorrecto) {
                 bootstrap.Modal.getInstance(
                     document.getElementById("modalEditarRol")
                 ).hide();
 
                 cargarRoles();
 
-                alert("Rol actualizado correctamente.");
+                mostrarMensaje("Rol actualizado correctamente.", 'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error actualizando el rol.");
+        error: function () {
+            mostrarMensaje("Error actualizando el rol.", 'danger');
         }
     });
 }
 
-function eliminarRol(id)
-{
-    if (!confirm("¿Desea eliminar este rol?"))
-    {
+async function eliminarRol(id) {
+    if (!(await confirmar("¿Desea eliminar este rol? Sus permisos también se eliminarán.", "Eliminar"))) {
         return;
     }
 
@@ -192,23 +167,19 @@ function eliminarRol(id)
         type: 'POST',
         data: { id: id },
 
-        success: function (response)
-        {
-            if (response.esCorrecto)
-            {
+        success: function (response) {
+            if (response.esCorrecto) {
                 cargarRoles();
 
-                alert("Rol eliminado correctamente.");
+                mostrarMensaje("Rol eliminado correctamente.", 'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error eliminando el rol.");
+        error: function () {
+            mostrarMensaje("Error eliminando el rol.", 'danger');
         }
     });
 }

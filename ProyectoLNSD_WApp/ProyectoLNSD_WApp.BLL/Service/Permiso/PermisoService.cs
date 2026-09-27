@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using ProyectoLNSD_WApp.BLL.DTO;
+﻿using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.DTO.PermisoActions;
 using ProyectoLNSD_WApp.DAL.Repositories.Modulo;
 using ProyectoLNSD_WApp.DAL.Repositories.RolPermiso;
@@ -10,50 +9,27 @@ namespace ProyectoLNSD_WApp.BLL.Service.Permiso
     {
         private readonly IModuloRepository _moduloRepository;
         private readonly IRolPermisoRepository _rolPermisoRepository;
-        private readonly IMapper _mapper;
 
         public PermisoService(
             IModuloRepository moduloRepository,
-            IRolPermisoRepository rolPermisoRepository,
-            IMapper mapper)
+            IRolPermisoRepository rolPermisoRepository)
         {
             _moduloRepository = moduloRepository;
             _rolPermisoRepository = rolPermisoRepository;
-            _mapper = mapper;
-        }
-
-        public async Task<RespuestaDTO<List<ModuloDTO>>> GetModulos()
-        {
-            var respuesta = new RespuestaDTO<List<ModuloDTO>>();
-
-            var modulos = await _moduloRepository.GetModulos();
-
-            respuesta.Dato = _mapper.Map<List<ModuloDTO>>(modulos);
-
-            return respuesta;
         }
 
         public async Task<RespuestaDTO<List<ModuloPermisoDTO>>> GetMatrizPermisos(int idRol)
         {
-            var respuesta = new RespuestaDTO<List<ModuloPermisoDTO>>();
-
             if (idRol <= 0)
-            {
-                respuesta.EsCorrecto = false;
-                respuesta.Mensaje = "Rol inválido";
-                respuesta.Codigo = 1018;
-
-                return respuesta;
-            }
+                return RespuestaDTO<List<ModuloPermisoDTO>>.Error("Rol inválido", 1018);
 
             var modulos = await _moduloRepository.GetModulos();
             var permisosDelRol = await _rolPermisoRepository.GetPermisosPorRol(idRol);
 
-            respuesta.Dato = modulos
+            var matriz = modulos
                 .Select(modulo =>
                 {
-                    var permiso = permisosDelRol
-                        .FirstOrDefault(p => p.IdModulo == modulo.IdModulo);
+                    var permiso = permisosDelRol.FirstOrDefault(p => p.IdModulo == modulo.IdModulo);
 
                     return new ModuloPermisoDTO
                     {
@@ -67,21 +43,13 @@ namespace ProyectoLNSD_WApp.BLL.Service.Permiso
                 })
                 .ToList();
 
-            return respuesta;
+            return RespuestaDTO<List<ModuloPermisoDTO>>.Exito(matriz);
         }
 
         public async Task<RespuestaDTO<bool>> GuardarPermisos(GuardarPermisosDTO dto)
         {
-            var respuesta = new RespuestaDTO<bool>();
-
             if (dto.IdRol <= 0)
-            {
-                respuesta.EsCorrecto = false;
-                respuesta.Mensaje = "Rol inválido";
-                respuesta.Codigo = 1019;
-
-                return respuesta;
-            }
+                return RespuestaDTO<bool>.Error("Rol inválido", 1019);
 
             var entidades = dto.Permisos
                 .Where(p => p.PuedeVer || p.PuedeCrear || p.PuedeEditar || p.PuedeEliminar)
@@ -97,18 +65,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Permiso
                 .ToList();
 
             if (!await _rolPermisoRepository.GuardarPermisos(dto.IdRol, entidades))
-            {
-                respuesta.EsCorrecto = false;
-                respuesta.Mensaje = "No se pudieron guardar los permisos";
-                respuesta.Codigo = 1020;
+                return RespuestaDTO<bool>.Error("No se pudieron guardar los permisos", 1020);
 
-                return respuesta;
-            }
-
-            respuesta.Dato = true;
-            respuesta.Mensaje = "Permisos actualizados correctamente";
-
-            return respuesta;
+            return RespuestaDTO<bool>.Exito(true, "Permisos actualizados correctamente");
         }
 
         public async Task<List<string>> ObtenerPermisosComoClaims(int idRol)
@@ -122,17 +81,12 @@ namespace ProyectoLNSD_WApp.BLL.Service.Permiso
                 if (permiso.Modulo == null)
                     continue;
 
-                if (permiso.PuedeVer)
-                    claims.Add($"{permiso.Modulo.Nombre}:Ver");
+                string modulo = permiso.Modulo.Nombre;
 
-                if (permiso.PuedeCrear)
-                    claims.Add($"{permiso.Modulo.Nombre}:Crear");
-
-                if (permiso.PuedeEditar)
-                    claims.Add($"{permiso.Modulo.Nombre}:Editar");
-
-                if (permiso.PuedeEliminar)
-                    claims.Add($"{permiso.Modulo.Nombre}:Eliminar");
+                if (permiso.PuedeVer) claims.Add($"{modulo}:Ver");
+                if (permiso.PuedeCrear) claims.Add($"{modulo}:Crear");
+                if (permiso.PuedeEditar) claims.Add($"{modulo}:Editar");
+                if (permiso.PuedeEliminar) claims.Add($"{modulo}:Eliminar");
             }
 
             return claims;

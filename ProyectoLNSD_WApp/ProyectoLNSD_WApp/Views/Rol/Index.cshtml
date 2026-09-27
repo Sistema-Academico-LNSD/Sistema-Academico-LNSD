@@ -1,6 +1,4 @@
 ﻿@using ProyectoLNSD_WApp.BLL.DTO
-@model List<RolDTO>
-
 @{
     ViewData["Title"] = "Mantenimiento de Roles";
 }
@@ -69,15 +67,9 @@
 
 </div>
 
-@await Html.PartialAsync(
-    "_Create",
-    new RolDTO()
-)
+@await Html.PartialAsync("_Create", new RolDTO())
 
-@await Html.PartialAsync(
-    "_Edit",
-    new RolDTO()
-)
+@await Html.PartialAsync("_Edit", new RolDTO())
 
 @section Scripts {
 

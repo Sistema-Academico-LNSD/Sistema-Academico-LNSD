@@ -102,18 +102,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Usuario
             return await _context.SaveChangesAsync() > 0;
         }
 
-        public async Task<bool> DeleteUsuario(int id)
-        {
-            var entity = await _context.Usuarios.FindAsync(id);
-
-            if (entity == null)
-                return false;
-
-            _context.Usuarios.Remove(entity);
-
-            return await _context.SaveChangesAsync() > 0;
-        }
-
         public async Task<bool> CambiarEstado(int id, bool estado)
         {
             var usuario = await _context.Usuarios.FindAsync(id);

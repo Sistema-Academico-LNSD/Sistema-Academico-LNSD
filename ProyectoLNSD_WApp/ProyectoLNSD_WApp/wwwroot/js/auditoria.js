@@ -7,10 +7,12 @@
 });
 
 function cargarHistorial() {
+    let desde = $("#txtDesde").val();
+    let hasta = $("#txtHasta").val();
     let filtros = {
         correo: $("#txtCorreo").val(),
-        desde: $("#txtDesde").val(),
-        hasta: $("#txtHasta").val(),
+        desde: desde ? new Date(desde + 'T00:00:00').toISOString() : '',
+        hasta: hasta ? new Date(hasta + 'T23:59:59.999').toISOString() : '',
         soloFallidos: $("#chkSoloFallidos").is(":checked")
     };
 
@@ -36,10 +38,10 @@ function cargarHistorial() {
                         <tr>
                             <td>${formatearFecha(log.fecha)}</td>
                             <td>${badgeEvento}</td>
-                            <td>${log.nombreUsuario ?? '-'}</td>
-                            <td>${log.correo}</td>
+                            <td>${escapeHtml(log.nombreUsuario ?? '-')}</td>
+                            <td>${escapeHtml(log.correo)}</td>
                             <td>${badgeResultado}</td>
-                            <td>${log.mensaje ?? ''}</td>
+                            <td>${escapeHtml(log.mensaje)}</td>
                         </tr>`;
                 });
             }
@@ -52,13 +54,15 @@ function cargarHistorial() {
         },
 
         error: function () {
-            alert('Error al cargar el historial de accesos.');
+            mostrarMensaje('Error al cargar el historial de accesos.', 'danger');
         }
     });
 }
-
 function formatearFecha(fechaIso) {
     let fecha = new Date(fechaIso);
 
-    return fecha.toLocaleString();
+    return fecha.toLocaleString('es-CR', {
+        dateStyle: 'short',
+        timeStyle: 'medium'
+    });
 }

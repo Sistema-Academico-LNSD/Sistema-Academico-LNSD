@@ -6,24 +6,24 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO.UsuarioActions;
 using ProyectoLNSD_WApp.BLL.Service.Auditoria;
+using ProyectoLNSD_WApp.BLL.Service.Auth;
 using ProyectoLNSD_WApp.BLL.Service.Permiso;
-using ProyectoLNSD_WApp.BLL.Service.Usuario;
 
 namespace ProyectoLNSD_WApp.Controllers
 {
     [AllowAnonymous]
     public class AuthController : Controller
     {
-        private readonly IUsuarioService _usuarioService;
+        private readonly IAuthService _authService;
         private readonly IPermisoService _permisoService;
         private readonly IAuditoriaService _auditoriaService;
 
         public AuthController(
-            IUsuarioService usuarioService,
+            IAuthService authService,
             IPermisoService permisoService,
             IAuditoriaService auditoriaService)
         {
-            _usuarioService = usuarioService;
+            _authService = authService;
             _permisoService = permisoService;
             _auditoriaService = auditoriaService;
         }
@@ -50,7 +50,7 @@ namespace ProyectoLNSD_WApp.Controllers
                 return BadRequest(ModelState);
             }
 
-            var respuesta = await _usuarioService.Login(login);
+            var respuesta = await _authService.Login(login);
 
             if (!respuesta.EsCorrecto || respuesta.Dato is not { Autenticado: true, Usuario: not null })
             {
@@ -156,7 +156,7 @@ namespace ProyectoLNSD_WApp.Controllers
             string urlBaseRestablecer =
                 Url.Action("RestablecerPassword", "Auth", null, Request.Scheme) ?? string.Empty;
 
-            var respuesta = await _usuarioService.SolicitarRecuperacionPassword(dto, urlBaseRestablecer);
+            var respuesta = await _authService.SolicitarRecuperacionPassword(dto, urlBaseRestablecer);
 
             return Json(new
             {
@@ -196,7 +196,7 @@ namespace ProyectoLNSD_WApp.Controllers
                 });
             }
 
-            var respuesta = await _usuarioService.RestablecerPassword(dto);
+            var respuesta = await _authService.RestablecerPassword(dto);
 
             return Json(new
             {

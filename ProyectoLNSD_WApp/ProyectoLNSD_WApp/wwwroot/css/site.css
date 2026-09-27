@@ -405,3 +405,13 @@ a.module-card:hover {
         color: var(--lnsd-primary-dark);
         text-decoration: underline;
     }
+
+
+.footer-lnsd .footer-link {
+    color: var(--lnsd-primary);
+    text-decoration: none;
+}
+
+    .footer-lnsd .footer-link:hover {
+        text-decoration: underline;
+    }

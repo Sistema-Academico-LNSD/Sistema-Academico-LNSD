@@ -57,16 +57,18 @@ namespace ProyectoLNSD_WApp.BLL.Service.Auditoria
         }
 
         public async Task<RespuestaDTO<List<LogAccesoDTO>>> GetHistorial(
-            string? correo,
-            DateTime? desde,
-            DateTime? hasta,
-            bool? soloFallidos)
+    string? correo,
+    DateTime? desde,
+    DateTime? hasta,
+    bool? soloFallidos)
         {
-            var respuesta = new RespuestaDTO<List<LogAccesoDTO>>();
+            var logs = await _logAccesoRepository.GetHistorial(
+                correo,
+                desde?.ToUniversalTime(),
+                hasta?.ToUniversalTime(),
+                soloFallidos);
 
-            var logs = await _logAccesoRepository.GetHistorial(correo, desde, hasta, soloFallidos);
-
-            respuesta.Dato = logs
+            var historial = logs
                 .Select(l => new LogAccesoDTO
                 {
                     IdLog = l.IdLog,
@@ -77,11 +79,11 @@ namespace ProyectoLNSD_WApp.BLL.Service.Auditoria
                     TipoEvento = l.TipoEvento,
                     Exitoso = l.Exitoso,
                     Mensaje = l.Mensaje,
-                    Fecha = l.Fecha
+                    Fecha = DateTime.SpecifyKind(l.Fecha, DateTimeKind.Utc)
                 })
                 .ToList();
 
-            return respuesta;
+            return RespuestaDTO<List<LogAccesoDTO>>.Exito(historial);
         }
     }
 }

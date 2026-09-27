@@ -8,7 +8,7 @@ using ProyectoLNSD_WApp.BLL.Service.Usuario;
 namespace ProyectoLNSD_WApp.Controllers
 {
     [Authorize]
-    public class UsuarioController : Controller
+    public class UsuarioController : BaseController
     {
         private readonly IUsuarioService _usuarioService;
 
@@ -17,12 +17,16 @@ namespace ProyectoLNSD_WApp.Controllers
             _usuarioService = usuarioService;
         }
 
+        // GET: /Usuario/Index
+
+        [HttpGet]
         [RequierePermiso("Usuarios", "Ver")]
         public IActionResult Index()
         {
             return View(new List<UsuarioDTO>());
         }
 
+        [HttpGet]
         [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> GetUsuarios()
         {
@@ -31,20 +35,16 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(respuesta);
         }
 
+        [HttpGet]
         [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> GetUsuarioById(int id)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var respuesta =
-                await _usuarioService.GetUsuarioById(id);
+            var respuesta = await _usuarioService.GetUsuarioById(id);
 
             return Json(respuesta);
         }
 
+        [HttpGet]
         [RequierePermiso("Usuarios", "Ver")]
         public async Task<IActionResult> BuscarUsuarios(
             string? nombre,
@@ -52,67 +52,49 @@ namespace ProyectoLNSD_WApp.Controllers
             int? idRol,
             bool? estado)
         {
-            var respuesta =
-                await _usuarioService.BuscarUsuarios(
-                    nombre,
-                    correo,
-                    idRol,
-                    estado);
+            var respuesta = await _usuarioService.BuscarUsuarios(nombre, correo, idRol, estado);
 
             return Json(respuesta);
         }
 
+        // POST & antiforgery
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequierePermiso("Usuarios", "Crear")]
-        public async Task<IActionResult> CreateUsuario(
-            UsuarioCrearDTO usuario)
+        public async Task<IActionResult> CreateUsuario(UsuarioCrearDTO usuario)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return RespuestaModeloInvalido();
             }
 
-            var respuesta =
-                await _usuarioService.CreateUsuario(usuario);
+            var respuesta = await _usuarioService.CreateUsuario(usuario);
 
             return Json(respuesta);
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequierePermiso("Usuarios", "Editar")]
-        public async Task<IActionResult> UpdateUsuario(
-            UsuarioActualizarDTO usuario)
+        public async Task<IActionResult> UpdateUsuario(UsuarioActualizarDTO usuario)
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return RespuestaModeloInvalido();
             }
 
-            var respuesta =
-                await _usuarioService.UpdateUsuario(usuario);
+            var respuesta = await _usuarioService.UpdateUsuario(usuario);
 
             return Json(respuesta);
         }
 
-        [RequierePermiso("Usuarios", "Eliminar")]
-        public async Task<IActionResult> DeleteUsuario(int id)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var respuesta =
-                await _usuarioService.DeleteUsuario(id);
-
-            return Json(respuesta);
-        }
-
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [RequierePermiso("Usuarios", "Editar")]
-        public async Task<IActionResult> CambiarEstado(
-            int id,
-            bool estado)
+        public async Task<IActionResult> CambiarEstado(int id, bool estado)
         {
-            var respuesta =
-                await _usuarioService.CambiarEstado(id, estado);
+            var respuesta = await _usuarioService.CambiarEstado(id, estado);
 
             return Json(respuesta);
         }

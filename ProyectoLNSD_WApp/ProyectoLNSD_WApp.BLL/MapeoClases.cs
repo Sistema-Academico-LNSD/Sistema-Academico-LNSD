@@ -15,9 +15,6 @@ namespace ProyectoLNSD_WApp.BLL
             // Usuario
             CreateMap<DAL.Entities.Usuario, DTO.UsuarioDTO>().ReverseMap();
 
-            // Modulo
-            CreateMap<DAL.Entities.Modulo, DTO.ModuloDTO>().ReverseMap();
-
             // Acciones Usuario
             CreateMap<DTO.UsuarioActions.UsuarioCrearDTO, DAL.Entities.Usuario>();
 

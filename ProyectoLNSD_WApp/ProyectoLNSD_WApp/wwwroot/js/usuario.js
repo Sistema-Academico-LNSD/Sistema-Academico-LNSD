@@ -1,32 +1,25 @@
-﻿$(document).ready(function ()
-{
+﻿$(document).ready(function () {
     cargarUsuarios();
     cargarRoles();
 
-    $("#btnGuardarUsuario").click(function ()
-    {
+    $("#btnGuardarUsuario").click(function () {
         crearUsuario();
     });
 
-    $("#btnActualizarUsuario").click(function ()
-    {
+    $("#btnActualizarUsuario").click(function () {
         actualizarUsuario();
     });
 
-    $("#btnBuscar").click(function ()
-    {
+    $("#btnBuscar").click(function () {
         buscarUsuarios();
     });
 });
 
-function renderizarUsuarios(response)
-{
+function renderizarUsuarios(response) {
     let filas = '';
 
-    if (response.dato != null)
-    {
-        $.each(response.dato, function (index, usuario)
-        {
+    if (response.dato != null) {
+        $.each(response.dato, function (index, usuario) {
             let estadoBadge = usuario.estado
                 ? '<span class="badge bg-success">Activo</span>'
                 : '<span class="badge bg-danger">Inactivo</span>';
@@ -46,10 +39,10 @@ function renderizarUsuarios(response)
             filas += `
                 <tr>
                     <td>${usuario.idUsuario}</td>
-                    <td>${usuario.nombre}</td>
-                    <td>${usuario.apellido}</td>
-                    <td>${usuario.correo}</td>
-                    <td>${usuario.rol ? usuario.rol.nombre : ''}</td>
+                    <td>${escapeHtml(usuario.nombre)}</td>
+                    <td>${escapeHtml(usuario.apellido)}</td>
+                    <td>${escapeHtml(usuario.correo)}</td>
+                    <td>${escapeHtml(usuario.rol ? usuario.rol.nombre : '')}</td>
                     <td>${estadoBadge}</td>
 
                     <td>
@@ -71,26 +64,22 @@ function renderizarUsuarios(response)
     $('#tblUsuarios tbody').html(filas);
 }
 
-function cargarUsuarios()
-{
+function cargarUsuarios() {
     $.ajax({
         url: '/Usuario/GetUsuarios',
         type: 'GET',
 
-        success: function (response)
-        {
+        success: function (response) {
             renderizarUsuarios(response);
         },
 
-        error: function ()
-        {
-            alert('Error al cargar usuarios');
+        error: function () {
+            mostrarMensaje('Error al cargar los usuarios.', 'danger');
         }
     });
 }
 
-function buscarUsuarios()
-{
+function buscarUsuarios() {
     let filtros = {
         nombre: $("#txtNombre").val(),
         correo: $("#txtCorreo").val(),
@@ -103,36 +92,30 @@ function buscarUsuarios()
         type: 'GET',
         data: filtros,
 
-        success: function (response)
-        {
+        success: function (response) {
             renderizarUsuarios(response);
         },
 
-        error: function ()
-        {
-            alert('Error al buscar usuarios');
+        error: function () {
+            mostrarMensaje('Error al buscar usuarios.', 'danger');
         }
     });
 }
 
-function cargarRoles()
-{
+function cargarRoles() {
     $.ajax({
         url: '/Rol/GetRoles',
         type: 'GET',
 
-        success: function (response)
-        {
+        success: function (response) {
             let opciones =
                 '<option value="">Seleccione...</option>';
 
-            if (response.dato != null)
-            {
-                $.each(response.dato, function (index, rol)
-                {
+            if (response.dato != null) {
+                $.each(response.dato, function (index, rol) {
                     opciones += `
                         <option value="${rol.idRol}">
-                            ${rol.nombre}
+                            ${escapeHtml(rol.nombre)}
                         </option>`;
                 });
             }
@@ -143,13 +126,11 @@ function cargarRoles()
             let opcionesFiltro =
                 '<option value="">Todos los roles</option>';
 
-            if (response.dato != null)
-            {
-                $.each(response.dato, function (index, rol)
-                {
+            if (response.dato != null) {
+                $.each(response.dato, function (index, rol) {
                     opcionesFiltro += `
                         <option value="${rol.idRol}">
-                            ${rol.nombre}
+                            ${escapeHtml(rol.nombre)}
                         </option>`;
                 });
             }
@@ -157,15 +138,13 @@ function cargarRoles()
             $('#ddlFiltroRol').html(opcionesFiltro);
         },
 
-        error: function ()
-        {
-            alert('Error al cargar roles');
+        error: function () {
+            mostrarMensaje('Error al cargar los roles.', 'danger');
         }
     });
 }
 
-function crearUsuario()
-{
+function crearUsuario() {
     let usuario =
     {
         nombre: $("#Nombre").val(),
@@ -180,44 +159,37 @@ function crearUsuario()
         type: 'POST',
         data: usuario,
 
-        success: function(response)
-        {
-            if(response.esCorrecto)
-            {
-                alert("Usuario creado correctamente");
+        success: function (response) {
+            if (response.esCorrecto) {
+                bootstrap.Modal.getInstance(
+                    document.getElementById("modalCrearUsuario")
+                ).hide();
 
                 $("#formCrearUsuario")[0].reset();
 
                 cargarUsuarios();
 
-                bootstrap.Modal.getInstance(
-                    document.getElementById("modalCrearUsuario")
-                ).hide();
+                mostrarMensaje("Usuario creado correctamente.", 'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function(xhr)
-        {
-            alert("Error al crear usuario");
+        error: function () {
+            mostrarMensaje("Error al crear el usuario.", 'danger');
         }
     });
 }
 
-function obtenerUsuario(id)
-{
+function obtenerUsuario(id) {
     $.ajax({
         url: '/Usuario/GetUsuarioById',
         type: 'GET',
         data: { id: id },
 
-        success: function (response)
-        {
-            if (response.esCorrecto && response.dato != null)
-            {
+        success: function (response) {
+            if (response.esCorrecto && response.dato != null) {
                 $("#editIdUsuario").val(response.dato.idUsuario);
                 $("#editNombre").val(response.dato.nombre);
                 $("#editApellido").val(response.dato.apellido);
@@ -232,21 +204,18 @@ function obtenerUsuario(id)
 
                 modal.show();
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error obteniendo el usuario.");
+        error: function () {
+            mostrarMensaje("Error obteniendo el usuario.", 'danger');
         }
     });
 }
 
-function actualizarUsuario()
-{
+function actualizarUsuario() {
     let usuario =
     {
         idUsuario: $("#editIdUsuario").val(),
@@ -262,39 +231,36 @@ function actualizarUsuario()
         type: 'POST',
         data: usuario,
 
-        success: function (response)
-        {
-            if (response.esCorrecto)
-            {
+        success: function (response) {
+            if (response.esCorrecto) {
                 bootstrap.Modal.getInstance(
                     document.getElementById("modalEditarUsuario")
                 ).hide();
 
                 cargarUsuarios();
 
-                alert("Usuario actualizado correctamente.");
+                mostrarMensaje("Usuario actualizado correctamente.", 'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error actualizando el usuario.");
+        error: function () {
+            mostrarMensaje("Error actualizando el usuario.", 'danger');
         }
     });
 }
 
-function cambiarEstadoUsuario(id, nuevoEstado)
-{
+async function cambiarEstadoUsuario(id, nuevoEstado) {
     let mensajeConfirmacion = nuevoEstado
         ? "¿Desea activar este usuario?"
         : "¿Desea desactivar este usuario?";
 
-    if (!confirm(mensajeConfirmacion))
-    {
+    if (!(await confirmar(
+        mensajeConfirmacion,
+        nuevoEstado ? 'Activar' : 'Desactivar',
+        nuevoEstado ? 'success' : 'danger'))) {
         return;
     }
 
@@ -303,21 +269,21 @@ function cambiarEstadoUsuario(id, nuevoEstado)
         type: 'POST',
         data: { id: id, estado: nuevoEstado },
 
-        success: function (response)
-        {
-            if (response.esCorrecto)
-            {
+        success: function (response) {
+            if (response.esCorrecto) {
                 cargarUsuarios();
+
+                mostrarMensaje(
+                    nuevoEstado ? "Usuario activado correctamente." : "Usuario desactivado correctamente.",
+                    'success');
             }
-            else
-            {
-                alert(response.mensaje);
+            else {
+                mostrarMensaje(response.mensaje, 'danger');
             }
         },
 
-        error: function ()
-        {
-            alert("Error cambiando el estado del usuario.");
+        error: function () {
+            mostrarMensaje("Error cambiando el estado del usuario.", 'danger');
         }
     });
 }

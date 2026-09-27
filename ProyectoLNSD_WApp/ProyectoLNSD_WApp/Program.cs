@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using ProyectoLNSD_WApp.BLL.Service.Auth;
 using ProyectoLNSD_WApp.BLL;
 using ProyectoLNSD_WApp.BLL.Email;
 using ProyectoLNSD_WApp.BLL.Security;
@@ -42,6 +43,7 @@ namespace ProyectoLNSD_WApp
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
             builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPermisoService, PermisoService>();
             builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
