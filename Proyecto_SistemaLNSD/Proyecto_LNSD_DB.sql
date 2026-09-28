@@ -465,3 +465,148 @@ FROM Rol r
 CROSS JOIN Modulo m
 WHERE r.nombre = N'Administrador';
 GO
+
+USE Proyecto_LNSD_DB;
+GO
+ 
+/* ---- HU 01: datos de la institución (una sola fila) ---- */
+IF OBJECT_ID(N'Institucion', N'U') IS NULL
+CREATE TABLE Institucion
+(
+    id_institucion INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(150) NOT NULL,
+    direccion NVARCHAR(250) NULL,
+    telefono NVARCHAR(50) NOT NULL,
+    telefono_secundario NVARCHAR(50) NULL,
+    correo NVARCHAR(150) NOT NULL,
+    ruta_logo NVARCHAR(250) NULL,
+    fecha_actualizacion DATETIME NOT NULL
+        CONSTRAINT DF_Institucion_Fecha DEFAULT GETUTCDATE(),
+    CONSTRAINT PK_Institucion PRIMARY KEY (id_institucion)
+);
+GO
+ 
+/* ---- HU 02: períodos lectivos ---- */
+IF OBJECT_ID(N'Periodo_Lectivo', N'U') IS NULL
+BEGIN
+    CREATE TABLE Periodo_Lectivo
+    (
+        id_periodo INT IDENTITY(1,1) NOT NULL,
+        nombre NVARCHAR(100) NOT NULL,
+        fecha_inicio DATE NOT NULL,
+        fecha_fin DATE NOT NULL,
+        activo BIT NOT NULL CONSTRAINT DF_Periodo_Activo DEFAULT 0,
+        CONSTRAINT PK_Periodo_Lectivo PRIMARY KEY (id_periodo),
+        CONSTRAINT UQ_Periodo_Nombre UNIQUE (nombre),
+        CONSTRAINT CK_Periodo_Fechas CHECK (fecha_fin >= fecha_inicio)
+    );
+ 
+    -- Solo puede existir un período activo
+    CREATE UNIQUE INDEX UQ_Periodo_Activo
+        ON Periodo_Lectivo (activo) WHERE activo = 1;
+END
+GO
+ 
+/* ---- HU 03, 04, 05, 07, 08: contenido editable de la landing ---- */
+IF OBJECT_ID(N'Contenido_Sitio', N'U') IS NULL
+BEGIN
+    CREATE TABLE Contenido_Sitio
+    (
+        id_contenido INT IDENTITY(1,1) NOT NULL,
+        tipo NVARCHAR(30) NOT NULL,
+        titulo NVARCHAR(150) NOT NULL,
+        descripcion NVARCHAR(MAX) NULL,
+        ruta_imagen NVARCHAR(250) NULL,
+        orden INT NOT NULL CONSTRAINT DF_Contenido_Orden DEFAULT 0,
+        estado NVARCHAR(20) NOT NULL CONSTRAINT DF_Contenido_Estado DEFAULT N'Borrador',
+        fecha_publicacion DATETIME NULL,
+        fecha_actualizacion DATETIME NOT NULL
+            CONSTRAINT DF_Contenido_Fecha DEFAULT GETUTCDATE(),
+        id_usuario_modifica INT NULL,
+        CONSTRAINT PK_Contenido_Sitio PRIMARY KEY (id_contenido),
+        CONSTRAINT CK_Contenido_Tipo CHECK (tipo IN (N'Mision', N'Vision', N'Historia', N'Banner', N'Bloque')),
+        CONSTRAINT CK_Contenido_Estado CHECK (estado IN (N'Borrador', N'Publicado')),
+        CONSTRAINT FK_Contenido_Usuario FOREIGN KEY (id_usuario_modifica) REFERENCES Usuario(id_usuario)
+    );
+ 
+    -- Misión, Visión e Historia: una sola fila de cada una
+    CREATE UNIQUE INDEX UQ_Contenido_Tipo_Unico
+        ON Contenido_Sitio (tipo) WHERE tipo IN (N'Mision', N'Vision', N'Historia');
+END
+GO
+ 
+/* ---- HU 06: accesos rápidos ---- */
+IF OBJECT_ID(N'Acceso_Rapido', N'U') IS NULL
+CREATE TABLE Acceso_Rapido
+(
+    id_acceso INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    descripcion NVARCHAR(250) NULL,
+    icono NVARCHAR(50) NULL,
+    enlace NVARCHAR(250) NOT NULL,
+    orden INT NOT NULL CONSTRAINT DF_Acceso_Orden DEFAULT 0,
+    activo BIT NOT NULL CONSTRAINT DF_Acceso_Activo DEFAULT 1,
+    id_modulo INT NULL,
+    CONSTRAINT PK_Acceso_Rapido PRIMARY KEY (id_acceso),
+    CONSTRAINT FK_Acceso_Modulo FOREIGN KEY (id_modulo) REFERENCES Modulo(id_modulo)
+);
+GO
+ 
+/* ---- Módulo de permisos "Configuracion" ---- */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Configuracion')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Configuracion', N'Datos institucionales, períodos lectivos, contenido del sitio y accesos rápidos.');
+GO
+ 
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND m.nombre = N'Configuracion'
+  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+
+
+USE Proyecto_LNSD_DB;
+GO
+
+-- 1) Roles (los que menciona el Excel de HU; solo Administrador es obligatorio para entrar)
+INSERT INTO Rol (nombre, descripcion)
+SELECT v.nombre, v.descripcion
+FROM (VALUES
+    (N'Administrador', N'Acceso total al sistema.'),
+    (N'Director', N'Dirección de la institución.'),
+    (N'Docente', N'Personal docente.'),
+    (N'Estudiante', N'Estudiantes de la institución.'),
+    (N'Encargado', N'Padre, madre o encargado legal.'),
+    (N'Personal administrativo', N'Personal administrativo.')
+) AS v(nombre, descripcion)
+WHERE NOT EXISTS (SELECT 1 FROM Rol r WHERE r.nombre = v.nombre);
+GO
+
+-- 2) Usuario admin de prueba (admin@lnsd.local / Admin123!, mismo hash del script)
+IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'admin@lnsd.local')
+INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
+VALUES (
+    (SELECT id_rol FROM Rol WHERE nombre = N'Administrador'),
+    N'Admin', N'Sistema', N'admin@lnsd.local',
+    0x0100000001000186A000000010AABE60C9F6BC5529223DBB4951C347B70856A178469303277C4D854B9F0B2E79183FA7B4B3BD2A4C1CE30BE8D34122C5,
+    1
+);
+GO
+
+-- 3) Permisos del Administrador sobre los módulos que ya existan
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+
+SELECT r.nombre AS rol, m.nombre AS modulo
+FROM Rol_Permiso rp
+JOIN Rol r ON r.id_rol = rp.id_rol
+JOIN Modulo m ON m.id_modulo = rp.id_modulo;
