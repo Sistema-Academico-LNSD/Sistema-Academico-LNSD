@@ -26,6 +26,9 @@ namespace ProyectoLNSD_WApp.BLL
             // Periodo Lectivo
             CreateMap<DAL.Entities.PeriodoLectivo, DTO.PeriodoLectivoDTO>().ReverseMap();
 
+            // Contenido del sitio (misión, visión, historia, banners...)
+            CreateMap<DAL.Entities.ContenidoSitio, DTO.ContenidoSitioDTO>().ReverseMap();
+
         }
     }
 }

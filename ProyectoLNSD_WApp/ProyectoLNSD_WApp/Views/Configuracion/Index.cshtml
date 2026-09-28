@@ -24,6 +24,16 @@
                         <i class="bi bi-calendar3"></i> Períodos lectivos
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabContenido" type="button">
+                        <i class="bi bi-file-earmark-text"></i> Misión, visión e historia
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBloques" type="button">
+                        <i class="bi bi-layout-text-window"></i> Página principal
+                    </button>
+                </li>
             </ul>
 
             <div class="tab-content">
@@ -105,7 +115,117 @@
                     </div>
                 </div>
 
+                <!-- HU 05: Misión, visión e historia -->
+                <div class="tab-pane fade" id="tabContenido">
+                    <div class="alert alert-info py-2">
+                        <i class="bi bi-info-circle"></i>
+                        Solo lo <strong>publicado</strong> se muestra en el sitio web. Los datos de contacto
+                        (teléfonos, correo, dirección) se editan en la pestaña <strong>Institución</strong>.
+                    </div>
+
+                    @foreach (var (tipo, titulo, icono) in new[] {
+                        ("Mision", "Misión", "bi-bullseye"),
+                        ("Vision", "Visión", "bi-eye"),
+                        ("Historia", "Historia", "bi-book") })
+                    {
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0"><i class="bi @icono"></i> @titulo</h6>
+                                <span id="estado-@tipo" class="badge bg-secondary">Sin contenido</span>
+                            </div>
+                            <div class="card-body">
+                                <textarea id="texto-@tipo" class="form-control mb-2" rows="4" maxlength="5000"
+                                          placeholder="Escriba aquí el texto de @titulo.ToLower()"></textarea>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted" id="fecha-@tipo"></small>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-secondary btn-guardar-contenido"
+                                                data-tipo="@tipo" data-publicar="false">
+                                            <i class="bi bi-save"></i> Guardar borrador
+                                        </button>
+                                        <button type="button" class="btn btn-success btn-guardar-contenido"
+                                                data-tipo="@tipo" data-publicar="true">
+                                            <i class="bi bi-cloud-upload"></i> Publicar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- HU 04: Contenido de la página principal -->
+                <div class="tab-pane fade" id="tabBloques">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Contenido de la página principal</h5>
+                        <button type="button" id="btnNuevoBloque" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo contenido
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Orden</th>
+                                    <th>Título</th>
+                                    <th>Estado</th>
+                                    <th>Actualizado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyBloques"></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: crear / editar contenido de la página principal -->
+<div class="modal fade" id="modalBloque" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formBloque" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IdContenido" id="bloqueId" value="0" />
+                <input type="hidden" name="Tipo" value="Bloque" />
+                <input type="hidden" id="bloqueEstado" value="" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalBloque">Nuevo contenido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="bloqueTitulo">Título *</label>
+                        <input type="text" name="Titulo" id="bloqueTitulo" class="form-control" maxlength="150" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="bloqueDescripcion">Texto *</label>
+                        <textarea name="Descripcion" id="bloqueDescripcion" class="form-control" rows="6" maxlength="5000"></textarea>
+                    </div>
+                    <div class="mb-3" style="max-width:180px;">
+                        <label class="form-label" for="bloqueOrden">Orden de aparición</label>
+                        <input type="number" name="Orden" id="bloqueOrden" class="form-control" min="0" value="0" />
+                        <div class="form-text">Menor número aparece primero.</div>
+                    </div>
+                    <small class="text-muted">Solo lo publicado se muestra en la página principal.</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnBloqueBorrador" class="btn btn-outline-secondary">
+                        <i class="bi bi-save"></i> Guardar borrador
+                    </button>
+                    <button type="button" id="btnBloquePublicar" class="btn btn-success">
+                        <i class="bi bi-cloud-upload"></i> Publicar
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -157,4 +277,7 @@
 @section Scripts {
     <script src="~/js/configuracion.js" asp-append-version="true"></script>
     <script src="~/js/configuracion-periodos.js" asp-append-version="true"></script>
+    <script src="~/js/configuracion-contenido.js" asp-append-version="true"></script>
+    <script src="~/js/configuracion-bloques.js" asp-append-version="true"></script>
 }
+
