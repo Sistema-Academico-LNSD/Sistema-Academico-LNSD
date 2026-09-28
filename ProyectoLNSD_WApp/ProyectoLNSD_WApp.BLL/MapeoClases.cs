@@ -20,6 +20,9 @@ namespace ProyectoLNSD_WApp.BLL
 
             CreateMap<DTO.UsuarioActions.UsuarioActualizarDTO, DAL.Entities.Usuario>();
 
+            // Institucion
+            CreateMap<DAL.Entities.Institucion, DTO.InstitucionDTO>().ReverseMap();
+
         }
     }
 }
