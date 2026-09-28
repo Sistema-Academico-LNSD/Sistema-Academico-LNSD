@@ -98,6 +98,8 @@ namespace ProyectoLNSD_WApp
             app.UseAuthentication();
             app.UseAuthorization();
 
+            app.UseStaticFiles();   // sirve los archivos subidos en runtime (logo, banners) desde wwwroot/uploads
+
             app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",

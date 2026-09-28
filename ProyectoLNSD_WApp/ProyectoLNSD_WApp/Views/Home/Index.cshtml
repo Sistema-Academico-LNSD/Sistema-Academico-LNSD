@@ -92,6 +92,15 @@
                 </a>
             }
 
+            @if (User.TienePermiso("Configuracion", "Ver"))
+            {
+                <a asp-controller="Configuracion" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-gear"></i></div>
+                    <h3>Configuración</h3>
+                    <p>Datos institucionales, períodos y contenido del sitio.</p>
+                </a>
+            }
+
         </div>
 
     </section>
