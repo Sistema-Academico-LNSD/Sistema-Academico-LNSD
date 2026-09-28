@@ -19,6 +19,11 @@
                         <i class="bi bi-building"></i> Institución
                     </button>
                 </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabPeriodos" type="button">
+                        <i class="bi bi-calendar3"></i> Períodos lectivos
+                    </button>
+                </li>
             </ul>
 
             <div class="tab-content">
@@ -75,11 +80,81 @@
                     </form>
                 </div>
 
+                <!-- HU 02: Períodos lectivos -->
+                <div class="tab-pane fade" id="tabPeriodos">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Períodos lectivos</h5>
+                        <button type="button" id="btnNuevoPeriodo" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo período
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Inicio</th>
+                                    <th>Fin</th>
+                                    <th>Estado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyPeriodos"></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: registrar / editar período -->
+<div class="modal fade" id="modalPeriodo" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formPeriodo" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IdPeriodo" id="periodoId" value="0" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalPeriodo">Nuevo período lectivo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="periodoNombre">Nombre *</label>
+                        <input type="text" name="Nombre" id="periodoNombre" class="form-control" maxlength="100"
+                               placeholder="Ej: Curso lectivo 2026" />
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="periodoInicio">Fecha de inicio *</label>
+                            <input type="date" name="FechaInicio" id="periodoInicio" class="form-control" />
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label" for="periodoFin">Fecha de finalización *</label>
+                            <input type="date" name="FechaFin" id="periodoFin" class="form-control" />
+                        </div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" name="Activo" id="periodoActivo" value="true" />
+                        <label class="form-check-label" for="periodoActivo">Período activo</label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnGuardarPeriodo" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="~/js/configuracion.js" asp-append-version="true"></script>
+    <script src="~/js/configuracion-periodos.js" asp-append-version="true"></script>
 }

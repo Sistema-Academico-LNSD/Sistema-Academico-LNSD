@@ -17,7 +17,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.Usuario;
 using ProyectoLNSD_WApp.DAL.Repositories.UsuarioTokenReset;
 using ProyectoLNSD_WApp.BLL.Service.Institucion;
 using ProyectoLNSD_WApp.DAL.Repositories.Institucion;
-
+using ProyectoLNSD_WApp.BLL.Service.PeriodoLectivo;
+using ProyectoLNSD_WApp.DAL.Repositories.PeriodoLectivo;
 
 namespace ProyectoLNSD_WApp
 {
@@ -42,6 +43,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IRolPermisoRepository, RolPermisoRepository>();
             builder.Services.AddScoped<ILogAccesoRepository, LogAccesoRepository>();
             builder.Services.AddScoped<IInstitucionRepository, InstitucionRepository>();
+            builder.Services.AddScoped<IPeriodoLectivoRepository, PeriodoLectivoRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -50,6 +52,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IPermisoService, PermisoService>();
             builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
             builder.Services.AddScoped<IInstitucionService, InstitucionService>();
+            builder.Services.AddScoped<IPeriodoLectivoService, PeriodoLectivoService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

@@ -22,6 +22,9 @@ namespace ProyectoLNSD_WApp.BLL
 
             // Institucion
             CreateMap<DAL.Entities.Institucion, DTO.InstitucionDTO>().ReverseMap();
+            
+            // Periodo Lectivo
+            CreateMap<DAL.Entities.PeriodoLectivo, DTO.PeriodoLectivoDTO>().ReverseMap();
 
         }
     }

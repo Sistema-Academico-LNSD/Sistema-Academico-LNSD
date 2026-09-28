@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.Service.Institucion;
+using ProyectoLNSD_WApp.BLL.Service.PeriodoLectivo;
 using ProyectoLNSD_WApp.Utilidades;
 
 namespace ProyectoLNSD_WApp.Controllers
@@ -12,11 +13,13 @@ namespace ProyectoLNSD_WApp.Controllers
     public class ConfiguracionController : BaseController
     {
         private readonly IInstitucionService _institucionService;
+        private readonly IPeriodoLectivoService _periodoService;
         private readonly IWebHostEnvironment _entorno;
 
-        public ConfiguracionController(IInstitucionService institucionService, IWebHostEnvironment entorno)
+        public ConfiguracionController(IInstitucionService institucionService, IPeriodoLectivoService periodoService, IWebHostEnvironment entorno)
         {
             _institucionService = institucionService;
+            _periodoService = periodoService;
             _entorno = entorno;
         }
 
@@ -60,6 +63,38 @@ namespace ProyectoLNSD_WApp.Controllers
             }
 
             var respuesta = await _institucionService.GuardarInstitucion(institucion, nuevaRutaLogo);
+            return Json(respuesta);
+        }
+
+        // ---------- HU 02: Períodos lectivos ----------
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetPeriodos()
+        {
+            var respuesta = await _periodoService.GetPeriodos();
+            return Json(respuesta);
+        }
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetPeriodo(int id)
+        {
+            var respuesta = await _periodoService.GetPeriodo(id);
+            return Json(respuesta);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Editar")]
+        public async Task<IActionResult> GuardarPeriodo(PeriodoLectivoDTO periodo, bool confirmarCambio = false)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RespuestaModeloInvalido();
+            }
+
+            var respuesta = await _periodoService.GuardarPeriodo(periodo, confirmarCambio);
             return Json(respuesta);
         }
     }
