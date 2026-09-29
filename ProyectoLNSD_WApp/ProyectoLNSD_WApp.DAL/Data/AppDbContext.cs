@@ -23,6 +23,11 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Modulo> Modulos { get; set; }
         public virtual DbSet<RolPermiso> RolesPermisos { get; set; }
         public virtual DbSet<LogAcceso> LogsAcceso { get; set; }
+        public virtual DbSet<Institucion> Instituciones { get; set; }
+        public virtual DbSet<PeriodoLectivo> PeriodosLectivos { get; set; }
+        public virtual DbSet<ContenidoSitio> ContenidosSitio { get; set; }
+        public virtual DbSet<AccesoRapido> AccesosRapidos { get; set; }
+        public virtual DbSet<AccesoRapidoRol> AccesosRapidosRoles { get; set; }
         public virtual DbSet<Tiquete> Tiquetes { get; set; }
         public virtual DbSet<Grado> Grados { get; set; }
         public virtual DbSet<Seccion> Secciones { get; set; }
@@ -443,7 +448,160 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdUsuario)
                       .HasConstraintName("FK_LogAcceso_Usuario");
             });
+            modelBuilder.Entity<Institucion>(entity =>
+            {
+                entity.ToTable("Institucion");
 
+                entity.HasKey(e => e.IdInstitucion)
+                      .HasName("PK_Institucion");
+
+                entity.Property(e => e.IdInstitucion)
+                      .HasColumnName("id_institucion");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Direccion)
+                      .HasColumnName("direccion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.Telefono)
+                      .HasColumnName("telefono")
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.Property(e => e.TelefonoSecundario)
+                      .HasColumnName("telefono_secundario")
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Correo)
+                      .HasColumnName("correo")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.RutaLogo)
+                      .HasColumnName("ruta_logo")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.FechaActualizacion)
+                      .HasColumnName("fecha_actualizacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+            });
+
+            modelBuilder.Entity<PeriodoLectivo>(entity =>
+            {
+                entity.ToTable("Periodo_Lectivo");
+
+                entity.HasKey(e => e.IdPeriodo)
+                      .HasName("PK_Periodo_Lectivo");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.FechaInicio)
+                      .HasColumnName("fecha_inicio");
+
+                entity.Property(e => e.FechaFin)
+                      .HasColumnName("fecha_fin");
+
+                entity.Property(e => e.Activo)
+                      .HasColumnName("activo");
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Periodo_Nombre");
+
+                entity.HasIndex(e => e.Activo)
+                      .IsUnique().HasFilter("[activo] = 1")
+                      .HasDatabaseName("UQ_Periodo_Activo");
+            });
+
+            modelBuilder.Entity<ContenidoSitio>(entity =>
+            {
+                entity.ToTable("Contenido_Sitio");
+
+                entity.HasKey(e => e.IdContenido)
+                      .HasName("PK_Contenido_Sitio");
+
+                entity.Property(e => e.IdContenido)
+                      .HasColumnName("id_contenido");
+
+                entity.Property(e => e.Tipo)
+                      .HasColumnName("tipo")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Titulo)
+                      .HasColumnName("titulo")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion");
+
+                entity.Property(e => e.RutaImagen)
+                      .HasColumnName("ruta_imagen")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.Orden)
+                      .HasColumnName("orden");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.FechaPublicacion)
+                      .HasColumnName("fecha_publicacion");
+
+                entity.Property(e => e.FechaActualizacion)
+                      .HasColumnName("fecha_actualizacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+            });
+
+            modelBuilder.Entity<AccesoRapidoRol>(entity =>
+            {
+                entity.ToTable("Acceso_Rapido_Rol");
+
+                entity.HasKey(e => new { e.IdAcceso, e.IdRol })
+                      .HasName("PK_Acceso_Rapido_Rol");
+
+                entity.Property(e => e.IdAcceso)
+                      .HasColumnName("id_acceso");
+
+                entity.Property(e => e.IdRol)
+                      .HasColumnName("id_rol");
+
+                entity.HasOne(d => d.Acceso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdAcceso)
+                      .HasConstraintName("FK_AccesoRol_Acceso")
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Rol)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdRol)
+                      .HasConstraintName("FK_AccesoRol_Rol");
+            });
+
+            modelBuilder.Entity<AccesoRapido>(entity =>
+            {
+                entity.ToTable("Acceso_Rapido");
+
+                entity.HasKey(e => e.IdAcceso).HasName("PK_Acceso_Rapido");
+
+                entity.Property(e => e.IdAcceso)
+                      .HasColumnName("id_acceso");
             modelBuilder.Entity<Tiquete>(entity =>
             {
                 entity.ToTable("Tiquete");
@@ -515,6 +673,28 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasMaxLength(100)
                       .IsRequired();
 
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.Icono)
+                      .HasColumnName("icono")
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Enlace)
+                      .HasColumnName("enlace")
+                      .HasMaxLength(250)
+                      .IsRequired();
+
+                entity.Property(e => e.Orden)
+                      .HasColumnName("orden");
+
+                entity.Property(e => e.Activo)
+                      .HasColumnName("activo");
+
+                entity.Property(e => e.IdModulo)
+                      .HasColumnName("id_modulo");
+            });
                 entity.Property(e => e.Nivel)
                       .HasColumnName("nivel")
                       .HasMaxLength(50)
