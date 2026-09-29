@@ -20,6 +20,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.Institucion;
 using ProyectoLNSD_WApp.BLL.Service.PeriodoLectivo;
 using ProyectoLNSD_WApp.DAL.Repositories.PeriodoLectivo;
 using ProyectoLNSD_WApp.BLL.Service.ContenidoSitio;
+using ProyectoLNSD_WApp.BLL.Service.AccesoRapido;
+using ProyectoLNSD_WApp.DAL.Repositories.AccesoRapido;
 using ProyectoLNSD_WApp.DAL.Repositories.ContenidoSitio;
 
 namespace ProyectoLNSD_WApp
@@ -47,7 +49,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IInstitucionRepository, InstitucionRepository>();
             builder.Services.AddScoped<IPeriodoLectivoRepository, PeriodoLectivoRepository>();
             builder.Services.AddScoped<IContenidoSitioRepository, ContenidoSitioRepository>();
-
+            builder.Services.AddScoped<IAccesoRapidoRepository, AccesoRapidoRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -58,6 +60,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IInstitucionService, InstitucionService>();
             builder.Services.AddScoped<IPeriodoLectivoService, PeriodoLectivoService>();
             builder.Services.AddScoped<IContenidoSitioService, ContenidoSitioService>();
+            builder.Services.AddScoped<IAccesoRapidoService, AccesoRapidoService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

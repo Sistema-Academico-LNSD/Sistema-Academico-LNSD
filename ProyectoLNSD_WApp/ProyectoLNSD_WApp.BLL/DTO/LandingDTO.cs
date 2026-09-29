@@ -14,5 +14,8 @@
 
         // Banners del carrusel (HU 03), solo publicados y ordenados.
         public List<ContenidoSitioDTO> Banners { get; set; } = new();
+
+        // Accesos rápidos activos (HU 06). Los carga HomeController.
+        public List<AccesoRapidoDTO> Accesos { get; set; } = new();
     }
 }
