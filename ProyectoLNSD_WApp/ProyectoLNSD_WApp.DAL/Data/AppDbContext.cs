@@ -23,6 +23,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Modulo> Modulos { get; set; }
         public virtual DbSet<RolPermiso> RolesPermisos { get; set; }
         public virtual DbSet<LogAcceso> LogsAcceso { get; set; }
+        public virtual DbSet<Tiquete> Tiquetes { get; set; }
 
 
 
@@ -439,6 +440,56 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .WithMany()
                       .HasForeignKey(d => d.IdUsuario)
                       .HasConstraintName("FK_LogAcceso_Usuario");
+            });
+
+            modelBuilder.Entity<Tiquete>(entity =>
+            {
+                entity.ToTable("Tiquete");
+
+                entity.HasKey(e => e.IdTiquete)
+                      .HasName("PK_Tiquete");
+
+                entity.Property(e => e.IdTiquete)
+                      .HasColumnName("id_tiquete");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.Property(e => e.Codigo)
+                      .HasColumnName("codigo")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.FechaGeneracion)
+                      .HasColumnName("fecha_generacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.FechaUtilizacion)
+                      .HasColumnName("fecha_utilizacion");
+
+                entity.Property(e => e.IdUsuarioValidador)
+                      .HasColumnName("id_usuario_validador");
+
+                entity.HasIndex(e => e.Codigo)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Tiquete_Codigo");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Tiquete_Usuario");
+
+                entity.HasOne(d => d.UsuarioValidador)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioValidador)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Tiquete_Validador");
             });
 
 

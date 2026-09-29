@@ -1,0 +1,57 @@
+﻿@{
+    ViewData["Title"] = "Validar Tiquetes";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="bi bi-qr-code-scan"></i>
+                Validar Tiquetes
+            </h3>
+
+            <small>
+                Verificación de tiquetes digitales del comedor
+            </small>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-5">
+                    <label for="txtCodigo" class="form-label">Código del tiquete</label>
+                    <input type="text" id="txtCodigo" class="form-control text-uppercase"
+                           placeholder="Ej. TQ-20260929-A1B2C3" maxlength="30" autocomplete="off" />
+                </div>
+
+                <div class="col-md-5">
+                    <label for="txtCorreo" class="form-label">Correo de quien lo presenta</label>
+                    <input type="email" id="txtCorreo" class="form-control"
+                           placeholder="usuario@ejemplo.com" maxlength="150" autocomplete="off" />
+                </div>
+
+                <div class="col-md-2 d-grid">
+                    <button type="button" id="btnValidar" class="btn btn-primary">
+                        <i class="bi bi-search"></i>
+                        Validar
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="resultadoValidacion" class="mt-4"></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script src="~/js/boleteria-validar.js"></script>
+
+}

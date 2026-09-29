@@ -420,15 +420,11 @@ CREATE INDEX IX_RolPermiso_Rol
 ON Rol_Permiso(id_rol);
 GO
 
-CREATE INDEX IX_LogAcceso_Usuario
-ON Log_Acceso(id_usuario);
+
+
+INSERT INTO Rol (nombre, descripcion)
+VALUES (N'Administrador', N'Acceso total al sistema.');
 GO
-
-CREATE INDEX IX_LogAcceso_Fecha
-ON Log_Acceso(fecha);
-GO
-
-
 
 
 /* TEST Inserts */
@@ -465,3 +461,50 @@ FROM Rol r
 CROSS JOIN Modulo m
 WHERE r.nombre = N'Administrador';
 GO
+
+
+
+/* ---- Boletería ---- */
+
+IF OBJECT_ID(N'dbo.Tiquete', N'U') IS NULL
+BEGIN
+    CREATE TABLE Tiquete
+    (
+        id_tiquete INT IDENTITY(1,1) NOT NULL,
+        id_usuario INT NOT NULL,
+        codigo NVARCHAR(30) NOT NULL,
+        estado NVARCHAR(20) NOT NULL
+        CONSTRAINT DF_Tiquete_Estado DEFAULT N'Disponible',
+        fecha_generacion DATETIME NOT NULL
+        CONSTRAINT DF_Tiquete_FechaGeneracion DEFAULT GETUTCDATE(),
+        fecha_utilizacion DATETIME NULL,
+        id_usuario_validador INT NULL,
+        CONSTRAINT PK_Tiquete PRIMARY KEY (id_tiquete),
+        CONSTRAINT UQ_Tiquete_Codigo UNIQUE (codigo),
+        CONSTRAINT CK_Tiquete_Estado CHECK (estado IN (N'Disponible', N'Utilizado')),
+        CONSTRAINT FK_Tiquete_Usuario FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+        CONSTRAINT FK_Tiquete_Validador FOREIGN KEY (id_usuario_validador) REFERENCES Usuario(id_usuario)
+    );
+
+    -- Un solo tiquete disponible por usuario 
+    CREATE UNIQUE INDEX UX_Tiquete_Usuario_Disponible
+    ON Tiquete(id_usuario) WHERE estado = N'Disponible';
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Boleteria')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Boleteria', N'Generación, validación y control de tiquetes del comedor.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND m.nombre = N'Boleteria'
+  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+
+   
