@@ -602,6 +602,40 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.Property(e => e.IdAcceso)
                       .HasColumnName("id_acceso");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.Icono)
+                      .HasColumnName("icono")
+                      .HasMaxLength(50);
+
+                entity.Property(e => e.Enlace)
+                      .HasColumnName("enlace")
+                      .HasMaxLength(250)
+                      .IsRequired();
+
+                entity.Property(e => e.Orden)
+                      .HasColumnName("orden");
+
+                entity.Property(e => e.Activo)
+                      .HasColumnName("activo");
+
+                entity.Property(e => e.IdModulo)
+                      .HasColumnName("id_modulo");
+
+                entity.HasOne<Modulo>()
+                      .WithMany()
+                      .HasForeignKey(e => e.IdModulo)
+                      .HasConstraintName("FK_Acceso_Modulo");
+            });
+
             modelBuilder.Entity<Tiquete>(entity =>
             {
                 entity.ToTable("Tiquete");
@@ -673,36 +707,13 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasMaxLength(100)
                       .IsRequired();
 
-                entity.Property(e => e.Descripcion)
-                      .HasColumnName("descripcion")
-                      .HasMaxLength(250);
-
-                entity.Property(e => e.Icono)
-                      .HasColumnName("icono")
-                      .HasMaxLength(50);
-
-                entity.Property(e => e.Enlace)
-                      .HasColumnName("enlace")
-                      .HasMaxLength(250)
-                      .IsRequired();
-
-                entity.Property(e => e.Orden)
-                      .HasColumnName("orden");
-
-                entity.Property(e => e.Activo)
-                      .HasColumnName("activo");
-
-                entity.Property(e => e.IdModulo)
-                      .HasColumnName("id_modulo");
-            });
                 entity.Property(e => e.Nivel)
                       .HasColumnName("nivel")
                       .HasMaxLength(50)
                       .IsRequired();
 
                 entity.Property(e => e.Estado)
-                      .HasColumnName("estado")
-                      .HasDefaultValue(true);
+                      .HasColumnName("estado");
 
                 entity.HasIndex(e => e.Codigo)
                       .IsUnique()
