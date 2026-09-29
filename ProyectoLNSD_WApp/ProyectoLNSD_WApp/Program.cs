@@ -9,6 +9,8 @@ using ProyectoLNSD_WApp.BLL.Service.Permiso;
 using ProyectoLNSD_WApp.BLL.Service.Rol;
 using ProyectoLNSD_WApp.BLL.Service.Usuario;
 using ProyectoLNSD_WApp.BLL.Service.Tiquete;
+using ProyectoLNSD_WApp.BLL.Service.Grado;
+using ProyectoLNSD_WApp.BLL.Service.Seccion;
 using ProyectoLNSD_WApp.DAL.Data;
 using ProyectoLNSD_WApp.DAL.Repositories.LogAcceso;
 using ProyectoLNSD_WApp.DAL.Repositories.Modulo;
@@ -17,6 +19,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.RolPermiso;
 using ProyectoLNSD_WApp.DAL.Repositories.Usuario;
 using ProyectoLNSD_WApp.DAL.Repositories.UsuarioTokenReset;
 using ProyectoLNSD_WApp.DAL.Repositories.Tiquete;
+using ProyectoLNSD_WApp.DAL.Repositories.Grado;
+using ProyectoLNSD_WApp.DAL.Repositories.Seccion;
 
 
 namespace ProyectoLNSD_WApp
@@ -42,6 +46,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IRolPermisoRepository, RolPermisoRepository>();
             builder.Services.AddScoped<ILogAccesoRepository, LogAccesoRepository>();
             builder.Services.AddScoped<ITiqueteRepository, TiqueteRepository>();
+            builder.Services.AddScoped<IGradoRepository, GradoRepository>();
+            builder.Services.AddScoped<ISeccionRepository, SeccionRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -50,6 +56,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IPermisoService, PermisoService>();
             builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
             builder.Services.AddScoped<ITiqueteService, TiqueteService>();
+            builder.Services.AddScoped<IGradoService, GradoService>();
+            builder.Services.AddScoped<ISeccionService, SeccionService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

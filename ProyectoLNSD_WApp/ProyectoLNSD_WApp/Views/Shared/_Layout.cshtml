@@ -73,7 +73,16 @@
                                     <i class="bi bi-people"></i> Usuarios
                                 </a>
                             </li>
+
+                            @if (User.TienePermiso("Grados", "Ver"))
+                            {
                                 <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Grado")" asp-controller="Grado" asp-action="Index">
+                                        <i class="bi bi-diagram-3"></i> Grados y secciones
+                                    </a>
+                                </li>
+                            }
+                              <li class="nav-item">
                                 <a class="nav-link @EsActivoAccion("Boleteria", "Index")" asp-controller="Boleteria" asp-action="Index">
                                     <i class="bi bi-ticket-perforated"></i> Mi tiquete
                                 </a>

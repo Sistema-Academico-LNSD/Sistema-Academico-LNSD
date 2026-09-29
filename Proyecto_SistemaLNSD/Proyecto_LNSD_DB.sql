@@ -507,4 +507,61 @@ WHERE r.nombre = N'Administrador'
                   WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO
 
+
+
+
+
+---- Grados, Grupos y Secciones ---- 
+
+USE Proyecto_LNSD_DB;
+GO
+
+IF OBJECT_ID(N'dbo.Seccion', N'U') IS NULL
+AND OBJECT_ID(N'dbo.Grado', N'U') IS NULL
+BEGIN
+    CREATE TABLE Grado
+    (
+        id_grado INT IDENTITY(1,1) NOT NULL,
+        codigo NVARCHAR(20) NOT NULL,
+        nombre NVARCHAR(100) NOT NULL,
+        nivel NVARCHAR(50) NOT NULL,
+        estado BIT NOT NULL CONSTRAINT DF_Grado_Estado DEFAULT 1,
+        CONSTRAINT PK_Grado PRIMARY KEY (id_grado),
+        CONSTRAINT UQ_Grado_Codigo UNIQUE (codigo),
+        CONSTRAINT UQ_Grado_Nombre UNIQUE (nombre)
+    );
+
+    CREATE TABLE Seccion
+    (
+        id_seccion INT IDENTITY(1,1) NOT NULL,
+        id_grado INT NOT NULL,
+        nombre NVARCHAR(50) NOT NULL,
+        capacidad_maxima INT NOT NULL,
+        estado BIT NOT NULL CONSTRAINT DF_Seccion_Estado DEFAULT 1,
+        CONSTRAINT PK_Seccion PRIMARY KEY (id_seccion),
+        CONSTRAINT UQ_Seccion_Grado_Nombre UNIQUE (id_grado, nombre),
+        CONSTRAINT CK_Seccion_Capacidad CHECK (capacidad_maxima > 0),
+        CONSTRAINT FK_Seccion_Grado FOREIGN KEY (id_grado)
+            REFERENCES Grado(id_grado)
+    );
+END
+GO
+
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Grados')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Grados', N'Gestión de grados académicos, grupos y secciones.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 0
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND m.nombre = N'Grados'
+  AND NOT EXISTS (
+      SELECT 1 FROM Rol_Permiso rp
+      WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo
+  );
+GO
+
    
