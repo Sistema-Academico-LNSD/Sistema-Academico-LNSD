@@ -20,6 +20,17 @@ namespace ProyectoLNSD_WApp.BLL
 
             CreateMap<DTO.UsuarioActions.UsuarioActualizarDTO, DAL.Entities.Usuario>();
 
+            // Institucion
+            CreateMap<DAL.Entities.Institucion, DTO.InstitucionDTO>().ReverseMap();
+
+            // Periodo Lectivo
+            CreateMap<DAL.Entities.PeriodoLectivo, DTO.PeriodoLectivoDTO>().ReverseMap();
+
+            // Contenido del sitio (misión, visión, historia, banners...)
+            CreateMap<DAL.Entities.ContenidoSitio, DTO.ContenidoSitioDTO>().ReverseMap();
+
+            // Accesos rápidos
+            CreateMap<DAL.Entities.AccesoRapido, DTO.AccesoRapidoDTO>().ReverseMap();
             // Tiquete
             CreateMap<DAL.Entities.Tiquete, DTO.TiqueteDTO>();
 

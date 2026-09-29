@@ -18,6 +18,14 @@ using ProyectoLNSD_WApp.DAL.Repositories.Rol;
 using ProyectoLNSD_WApp.DAL.Repositories.RolPermiso;
 using ProyectoLNSD_WApp.DAL.Repositories.Usuario;
 using ProyectoLNSD_WApp.DAL.Repositories.UsuarioTokenReset;
+using ProyectoLNSD_WApp.BLL.Service.Institucion;
+using ProyectoLNSD_WApp.DAL.Repositories.Institucion;
+using ProyectoLNSD_WApp.BLL.Service.PeriodoLectivo;
+using ProyectoLNSD_WApp.DAL.Repositories.PeriodoLectivo;
+using ProyectoLNSD_WApp.BLL.Service.ContenidoSitio;
+using ProyectoLNSD_WApp.BLL.Service.AccesoRapido;
+using ProyectoLNSD_WApp.DAL.Repositories.AccesoRapido;
+using ProyectoLNSD_WApp.DAL.Repositories.ContenidoSitio;
 using ProyectoLNSD_WApp.DAL.Repositories.Tiquete;
 using ProyectoLNSD_WApp.DAL.Repositories.Grado;
 using ProyectoLNSD_WApp.DAL.Repositories.Seccion;
@@ -45,6 +53,10 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IModuloRepository, ModuloRepository>();
             builder.Services.AddScoped<IRolPermisoRepository, RolPermisoRepository>();
             builder.Services.AddScoped<ILogAccesoRepository, LogAccesoRepository>();
+            builder.Services.AddScoped<IInstitucionRepository, InstitucionRepository>();
+            builder.Services.AddScoped<IPeriodoLectivoRepository, PeriodoLectivoRepository>();
+            builder.Services.AddScoped<IContenidoSitioRepository, ContenidoSitioRepository>();
+            builder.Services.AddScoped<IAccesoRapidoRepository, AccesoRapidoRepository>();
             builder.Services.AddScoped<ITiqueteRepository, TiqueteRepository>();
             builder.Services.AddScoped<IGradoRepository, GradoRepository>();
             builder.Services.AddScoped<ISeccionRepository, SeccionRepository>();
@@ -55,6 +67,10 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IPermisoService, PermisoService>();
             builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+            builder.Services.AddScoped<IInstitucionService, InstitucionService>();
+            builder.Services.AddScoped<IPeriodoLectivoService, PeriodoLectivoService>();
+            builder.Services.AddScoped<IContenidoSitioService, ContenidoSitioService>();
+            builder.Services.AddScoped<IAccesoRapidoService, AccesoRapidoService>();
             builder.Services.AddScoped<ITiqueteService, TiqueteService>();
             builder.Services.AddScoped<IGradoService, GradoService>();
             builder.Services.AddScoped<ISeccionService, SeccionService>();
@@ -105,6 +121,8 @@ namespace ProyectoLNSD_WApp
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseStaticFiles();   // sirve los archivos subidos en runtime (logo, banners) desde wwwroot/uploads
 
             app.MapStaticAssets();
             app.MapControllerRoute(
