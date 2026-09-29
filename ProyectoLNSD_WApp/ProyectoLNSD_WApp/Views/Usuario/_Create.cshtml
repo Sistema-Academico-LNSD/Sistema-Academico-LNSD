@@ -1,0 +1,123 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.UsuarioActions.UsuarioCrearDTO
+
+<div class="modal fade"
+     id="modalCrearUsuario"
+     tabindex="-1">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title">
+                    Nuevo Usuario
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formCrearUsuario">
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nombre"
+                               class="form-label">
+                            Nombre
+                        </label>
+
+                        <input asp-for="Nombre"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Apellido"
+                               class="form-label">
+                            Apellido
+                        </label>
+
+                        <input asp-for="Apellido"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Correo"
+                               class="form-label">
+                            Correo
+                        </label>
+
+                        <input asp-for="Correo"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Password"
+                               class="form-label">
+                            Contraseña
+                        </label>
+
+                        <input asp-for="Password"
+                               type="password"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="IdRol"
+                               class="form-label">
+                            Rol
+                        </label>
+
+                        <select asp-for="IdRol"
+                                class="form-select">
+
+                            <option value="">
+                                Seleccione...
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+
+                    Cancelar
+
+                </button>
+
+                <button type="button"
+                        id="btnGuardarUsuario"
+                        class="btn btn-primary">
+
+                    Guardar
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

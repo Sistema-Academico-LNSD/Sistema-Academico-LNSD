@@ -1,0 +1,140 @@
+﻿@using ProyectoLNSD_WApp.BLL.DTO
+@using ProyectoLNSD_WApp.BLL.DTO.UsuarioActions
+
+@{
+    ViewData["Title"] = "Usuarios";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+                    <h3 class="mb-0">
+                        <i class="bi bi-people-fill"></i>
+                        Gestión de Usuarios
+                    </h3>
+
+                    <small>
+                        Administración de usuarios y roles
+                    </small>
+                </div>
+
+                <button type="button"
+                        class="btn btn-light"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalCrearUsuario">
+
+                    <i class="bi bi-plus-circle"></i>
+                    Nuevo Usuario
+
+                </button>
+
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="row mb-3">
+
+                <div class="col-md-3">
+                    <input type="text"
+                           id="txtNombre"
+                           class="form-control"
+                           placeholder="Buscar por nombre..." />
+                </div>
+
+                <div class="col-md-3">
+                    <input type="text"
+                           id="txtCorreo"
+                           class="form-control"
+                           placeholder="Buscar por correo..." />
+                </div>
+
+                <div class="col-md-2">
+                    <select id="ddlFiltroRol"
+                            class="form-select">
+
+                        <option value="">Todos los roles</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="ddlEstado"
+                            class="form-select">
+
+                        <option value="">Todos</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <button type="button"
+                            id="btnBuscar"
+                            class="btn btn-success">
+
+                        <i class="bi bi-search"></i>
+                        Buscar
+
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table id="tblUsuarios"
+                       class="table table-striped table-hover">
+
+                    <thead class="table-dark">
+
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Correo</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@await Html.PartialAsync(
+    "_Create",
+    new UsuarioCrearDTO()
+)
+
+@await Html.PartialAsync(
+    "_Edit",
+    new UsuarioActualizarDTO()
+)
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/usuario.js"></script>
+
+}
