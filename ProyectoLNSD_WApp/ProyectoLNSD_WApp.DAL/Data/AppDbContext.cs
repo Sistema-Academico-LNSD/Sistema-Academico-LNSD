@@ -27,6 +27,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<PeriodoLectivo> PeriodosLectivos { get; set; }
         public virtual DbSet<ContenidoSitio> ContenidosSitio { get; set; }
         public virtual DbSet<AccesoRapido> AccesosRapidos { get; set; }
+        public virtual DbSet<AccesoRapidoRol> AccesosRapidosRoles { get; set; }
 
 
         //Tables override mode builder
@@ -492,7 +493,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.HasKey(e => e.IdPeriodo)
                       .HasName("PK_Periodo_Lectivo");
 
-                entity.Property(e => e.IdPeriodo)   
+                entity.Property(e => e.IdPeriodo)
                       .HasColumnName("id_periodo");
 
                 entity.Property(e => e.Nombre)
@@ -562,6 +563,31 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.Property(e => e.IdUsuarioModifica)
                       .HasColumnName("id_usuario_modifica");
+            });
+
+            modelBuilder.Entity<AccesoRapidoRol>(entity =>
+            {
+                entity.ToTable("Acceso_Rapido_Rol");
+
+                entity.HasKey(e => new { e.IdAcceso, e.IdRol })
+                      .HasName("PK_Acceso_Rapido_Rol");
+
+                entity.Property(e => e.IdAcceso)
+                      .HasColumnName("id_acceso");
+
+                entity.Property(e => e.IdRol)
+                      .HasColumnName("id_rol");
+
+                entity.HasOne(d => d.Acceso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdAcceso)
+                      .HasConstraintName("FK_AccesoRol_Acceso")
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(d => d.Rol)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdRol)
+                      .HasConstraintName("FK_AccesoRol_Rol");
             });
 
             modelBuilder.Entity<AccesoRapido>(entity =>

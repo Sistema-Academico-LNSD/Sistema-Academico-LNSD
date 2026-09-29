@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
+using ProyectoLNSD_WApp.BLL.Service.AccesoRapido;
 using ProyectoLNSD_WApp.BLL.Service.ContenidoSitio;
 using ProyectoLNSD_WApp.BLL.Service.Institucion;
 using ProyectoLNSD_WApp.BLL.Service.PeriodoLectivo;
@@ -17,13 +18,15 @@ namespace ProyectoLNSD_WApp.Controllers
         private readonly IInstitucionService _institucionService;
         private readonly IPeriodoLectivoService _periodoService;
         private readonly IContenidoSitioService _contenidoService;
+        private readonly IAccesoRapidoService _accesoService;
         private readonly IWebHostEnvironment _entorno;
 
-        public ConfiguracionController(IInstitucionService institucionService, IPeriodoLectivoService periodoService, IContenidoSitioService contenidoService, IWebHostEnvironment entorno)
+        public ConfiguracionController(IInstitucionService institucionService, IPeriodoLectivoService periodoService, IContenidoSitioService contenidoService, IAccesoRapidoService accesoService, IWebHostEnvironment entorno)
         {
             _institucionService = institucionService;
             _periodoService = periodoService;
             _contenidoService = contenidoService;
+            _accesoService = accesoService;
             _entorno = entorno;
         }
 
@@ -275,6 +278,56 @@ namespace ProyectoLNSD_WApp.Controllers
         public async Task<IActionResult> PublicarPendientes()
         {
             var respuesta = await _contenidoService.PublicarPendientes(IdUsuarioActual);
+            return Json(respuesta);
+        }
+
+        // ---------- HU 06: Accesos rápidos ----------
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetAccesosRapidos()
+        {
+            var respuesta = await _accesoService.GetAccesos();
+            return Json(respuesta);
+        }
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetAccesoRapido(int id)
+        {
+            var respuesta = await _accesoService.GetAcceso(id);
+            return Json(respuesta);
+        }
+
+        // Lista de roles del formulario (casillas "Visible para")
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetRolesAcceso()
+        {
+            var respuesta = await _accesoService.GetRoles();
+            return Json(respuesta);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Editar")]
+        public async Task<IActionResult> GuardarAccesoRapido(AccesoRapidoDTO acceso)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RespuestaModeloInvalido();
+            }
+
+            var respuesta = await _accesoService.GuardarAcceso(acceso);
+            return Json(respuesta);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Eliminar")]
+        public async Task<IActionResult> EliminarAccesoRapido(int id)
+        {
+            var respuesta = await _accesoService.EliminarAcceso(id);
             return Json(respuesta);
         }
     }

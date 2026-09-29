@@ -610,3 +610,41 @@ SELECT r.nombre AS rol, m.nombre AS modulo
 FROM Rol_Permiso rp
 JOIN Rol r ON r.id_rol = rp.id_rol
 JOIN Modulo m ON m.id_modulo = rp.id_modulo;
+
+
+USE Proyecto_LNSD_DB;
+GO
+
+IF OBJECT_ID(N'Acceso_Rapido_Rol', N'U') IS NULL
+CREATE TABLE Acceso_Rapido_Rol
+(
+    id_acceso INT NOT NULL,
+    id_rol INT NOT NULL,
+    CONSTRAINT PK_Acceso_Rapido_Rol PRIMARY KEY (id_acceso, id_rol),
+    CONSTRAINT FK_AccesoRol_Acceso FOREIGN KEY (id_acceso) REFERENCES Acceso_Rapido(id_acceso) ON DELETE CASCADE,
+    CONSTRAINT FK_AccesoRol_Rol FOREIGN KEY (id_rol) REFERENCES Rol(id_rol)
+);
+GO
+
+/* ---- Tarjetas que estaban fijas en Home (solo si su enlace aún no existe) ---- */
+INSERT INTO Acceso_Rapido (nombre, descripcion, icono, enlace, orden, activo)
+SELECT v.nombre, v.descripcion, v.icono, v.enlace, v.orden, 1
+FROM (VALUES
+    (N'Usuarios',             N'Edición y activación de cuentas del sistema.',        N'bi-people',       N'/Usuario/Index',       1),
+    (N'Roles',                N'Roles y descripción dentro del sistema.',              N'bi-person-badge', N'/Rol/Index',           2),
+    (N'Permisos',             N'Permisos para cada rol.',                              N'bi-shield-lock',  N'/Permiso/Index',       3),
+    (N'Historial de Accesos', N'Auditoría de sesión.',                                 N'bi-journal-text', N'/Auditoria/Index',     4),
+    (N'Configuración',        N'Datos institucionales, períodos y contenido del sitio.', N'bi-gear',      N'/Configuracion/Index', 5)
+) AS v(nombre, descripcion, icono, enlace, orden)
+WHERE NOT EXISTS (SELECT 1 FROM Acceso_Rapido a WHERE a.enlace = v.enlace);
+GO
+
+/* ---- Asignarlas al rol Administrador (luego se ajustan desde Configuración > Accesos rápidos) ---- */
+INSERT INTO Acceso_Rapido_Rol (id_acceso, id_rol)
+SELECT a.id_acceso, r.id_rol
+FROM Acceso_Rapido a
+CROSS JOIN Rol r
+WHERE r.nombre = N'Administrador'
+  AND a.enlace IN (N'/Usuario/Index', N'/Rol/Index', N'/Permiso/Index', N'/Auditoria/Index', N'/Configuracion/Index')
+  AND NOT EXISTS (SELECT 1 FROM Acceso_Rapido_Rol x WHERE x.id_acceso = a.id_acceso AND x.id_rol = r.id_rol);
+GO

@@ -50,9 +50,9 @@
 <partial name="_BannersSitio" model="Model" />
 
 <!-- -----------------------------------------
-     Quick Access Modules
+     Accesos rápidos: los administra Configuración > Accesos rápidos y se asignan por rol (MCFG-01-06)
 ---------------------------------------------- -->
-@if (autenticado)
+@if (autenticado && Model.Accesos.Count > 0)
 {
     <section class="mt-4">
 
@@ -63,45 +63,20 @@
 
         <div class="module-grid">
 
-            @if (User.TienePermiso("Usuarios", "Ver"))
+            @foreach (var acceso in Model.Accesos)
             {
-                <a asp-controller="Usuario" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-people"></i></div>
-                    <h3>Usuarios</h3>
-                    <p>Edición y activación de cuentas del sistema.</p>
-                </a>
-            }
+                bool externo = acceso.Enlace.StartsWith("http", StringComparison.OrdinalIgnoreCase);
 
-            @if (User.TienePermiso("Roles", "Ver"))
-            {
-                <a asp-controller="Rol" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-person-badge"></i></div>
-                    <h3>Roles</h3>
-                    <p>Roles y descripción dentro del sistema.</p>
-                </a>
-            }
-
-            @if (esAdmin)
-            {
-                <a asp-controller="Permiso" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-shield-lock"></i></div>
-                    <h3>Permisos</h3>
-                    <p>Permisos para cada rol.</p>
-                </a>
-
-                <a asp-controller="Auditoria" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-journal-text"></i></div>
-                    <h3>Historial de Accesos</h3>
-                    <p>Auditoría de sesión.</p>
-                </a>
-            }
-
-            @if (User.TienePermiso("Configuracion", "Ver"))
-            {
-                <a asp-controller="Configuracion" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-gear"></i></div>
-                    <h3>Configuración</h3>
-                    <p>Datos institucionales, períodos y contenido del sitio.</p>
+                <a href="@acceso.Enlace" class="module-card"
+                   target="@(externo ? "_blank" : null)" rel="@(externo ? "noopener noreferrer" : null)">
+                    <div class="module-icon">
+                        <i class="bi @(string.IsNullOrWhiteSpace(acceso.Icono) ? "bi-link-45deg" : acceso.Icono)"></i>
+                    </div>
+                    <h3>@acceso.Nombre</h3>
+                    @if (!string.IsNullOrWhiteSpace(acceso.Descripcion))
+                    {
+                        <p>@acceso.Descripcion</p>
+                    }
                 </a>
             }
 
