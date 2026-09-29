@@ -20,6 +20,9 @@ namespace ProyectoLNSD_WApp.BLL
 
             CreateMap<DTO.UsuarioActions.UsuarioActualizarDTO, DAL.Entities.Usuario>();
 
+            // Tiquete
+            CreateMap<DAL.Entities.Tiquete, DTO.TiqueteDTO>();
+
         }
     }
 }
