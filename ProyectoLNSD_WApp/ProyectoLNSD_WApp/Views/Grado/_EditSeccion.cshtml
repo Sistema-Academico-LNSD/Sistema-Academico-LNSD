@@ -1,0 +1,114 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.SeccionDTO
+
+<div class="modal fade"
+     id="modalEditarSeccion"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    Editar sección
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formEditarSeccion">
+
+                    @Html.AntiForgeryToken()
+
+                    <input asp-for="IdSeccion"
+                           type="hidden"
+                           id="editIdSeccion" />
+
+                    <div class="mb-3">
+
+                        <label asp-for="IdGrado"
+                               class="form-label">
+                            Grado
+                        </label>
+
+                        <select asp-for="IdGrado"
+                                id="editSeccionIdGrado"
+                                class="form-select">
+                            <option value="">Seleccione un grado</option>
+                        </select>
+
+                        <span asp-validation-for="IdGrado"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nombre"
+                               class="form-label">
+                            Nombre de la sección
+                        </label>
+
+                        <input asp-for="Nombre"
+                               id="editNombreSeccion"
+                               class="form-control" />
+
+                        <span asp-validation-for="Nombre"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="CapacidadMaxima"
+                               class="form-label">
+                            Capacidad máxima
+                        </label>
+
+                        <input asp-for="CapacidadMaxima"
+                               id="editCapacidadMaxima"
+                               class="form-control"
+                               type="number"
+                               min="1" />
+
+                        <span asp-validation-for="CapacidadMaxima"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        id="btnActualizarSeccion"
+                        class="btn btn-warning">
+                    Actualizar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

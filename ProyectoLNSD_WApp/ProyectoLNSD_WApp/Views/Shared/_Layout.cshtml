@@ -6,6 +6,16 @@
             ? "active"
             : "";
 
+
+    string accionActual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    string EsActivoAccion(string controlador, string accion) =>
+        string.Equals(controladorActual, controlador, StringComparison.OrdinalIgnoreCase) &&
+        string.Equals(accionActual, accion, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : "";
+
+
     string? nombreUsuario = User.Identity?.Name;
 
     string inicialUsuario = !string.IsNullOrWhiteSpace(nombreUsuario)
@@ -63,6 +73,38 @@
                                     <i class="bi bi-people"></i> Usuarios
                                 </a>
                             </li>
+
+                            @if (User.TienePermiso("Grados", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Grado")" asp-controller="Grado" asp-action="Index">
+                                        <i class="bi bi-diagram-3"></i> Grados y secciones
+                                    </a>
+                                </li>
+                            }
+                              <li class="nav-item">
+                                <a class="nav-link @EsActivoAccion("Boleteria", "Index")" asp-controller="Boleteria" asp-action="Index">
+                                    <i class="bi bi-ticket-perforated"></i> Mi tiquete
+                                </a>
+                            </li>
+
+                            @if (User.TienePermiso("Boleteria", "Editar"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivoAccion("Boleteria", "Validar")" asp-controller="Boleteria" asp-action="Validar">
+                                        <i class="bi bi-qr-code-scan"></i> Validar tiquetes
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.TienePermiso("Boleteria", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivoAccion("Boleteria", "Consulta")" asp-controller="Boleteria" asp-action="Consulta">
+                                        <i class="bi bi-clipboard-data"></i> Control de tiquetes
+                                    </a>
+                                </li>
+                            }
                         }
 
                         @if (User.IsInRole("Administrador"))

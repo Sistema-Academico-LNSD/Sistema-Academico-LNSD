@@ -1,0 +1,106 @@
+﻿@{
+    ViewData["Title"] = "Detalle del grado";
+}
+
+<div class="container-fluid mt-4">
+
+    <a class="btn btn-outline-secondary mb-3"
+       asp-controller="Grado"
+       asp-action="Index">
+        <i class="bi bi-arrow-left"></i>
+        Volver al listado
+    </a>
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+
+            <h3 class="mb-0" id="tituloDetalle">
+                Detalle del grado
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <p id="infoGrado" class="mb-4"></p>
+
+            <h5 class="mb-3">
+                Grupos o secciones asociadas
+            </h5>
+
+            <p id="sinSecciones" class="text-muted d-none">
+                No existen grupos o secciones asociadas.
+            </p>
+
+            <div class="table-responsive">
+
+                <table class="table table-striped table-hover"
+                       id="tblDetalleSecciones">
+
+                    <thead class="table-dark">
+
+                        <tr>
+                            <th>Sección</th>
+                            <th>Capacidad</th>
+                            <th>Cupos</th>
+                            <th>Estado</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script>
+        const idGrado = @ViewBag.IdGrado;
+
+        $.get('/Grado/GetDetalleGrado', { id: idGrado }, function (r) {
+            if (!r.esCorrecto || !r.dato) {
+                mostrarMensaje(r.mensaje || 'No se encontró el grado', 'danger');
+                return;
+            }
+
+            const g = r.dato.grado;
+
+            $('#tituloDetalle').text(g.nombre);
+            $('#infoGrado').text(
+                'Código: ' + g.codigo +
+                ' · Nivel: ' + g.nivel +
+                ' · Estado: ' + (g.estado ? 'Activo' : 'Inactivo')
+            );
+
+            if (!r.dato.secciones || r.dato.secciones.length === 0) {
+                $('#sinSecciones').removeClass('d-none');
+                return;
+            }
+
+            let filas = '';
+
+            r.dato.secciones.forEach(function (s) {
+                filas += `
+                    <tr>
+                        <td>${escapeHtml(s.nombre)}</td>
+                        <td>${s.capacidadMaxima}</td>
+                        <td>${s.cuposDisponibles}</td>
+                        <td>${s.estado ? 'Activo' : 'Inactivo'}</td>
+                    </tr>`;
+            });
+
+            $('#tblDetalleSecciones tbody').html(filas);
+        });
+    </script>
+
+}
