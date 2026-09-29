@@ -5,9 +5,14 @@
 
 <div class="container-fluid mt-4">
     <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0"><i class="bi bi-gear"></i> Configuración del sistema</h3>
-            <small>Datos institucionales, períodos lectivos y contenido del sitio</small>
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <div>
+                <h3 class="mb-0"><i class="bi bi-gear"></i> Configuración del sistema</h3>
+                <small>Datos institucionales, períodos lectivos y contenido del sitio</small>
+            </div>
+            <a asp-action="VistaPrevia" class="btn btn-light">
+                <i class="bi bi-eye"></i> Vista previa del sitio
+            </a>
         </div>
 
         <div class="card-body">
@@ -32,6 +37,11 @@
                 <li class="nav-item">
                     <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBloques" type="button">
                         <i class="bi bi-layout-text-window"></i> Página principal
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabBanners" type="button">
+                        <i class="bi bi-images"></i> Banners
                     </button>
                 </li>
             </ul>
@@ -139,6 +149,11 @@
                                 <div class="d-flex justify-content-between align-items-center">
                                     <small class="text-muted" id="fecha-@tipo"></small>
                                     <div>
+                                        <button type="button" id="btnDespublicar-@tipo"
+                                                class="btn btn-outline-danger btn-despublicar-contenido d-none"
+                                                data-tipo="@tipo">
+                                            <i class="bi bi-eye-slash"></i> Despublicar
+                                        </button>
                                         <button type="button" class="btn btn-outline-secondary btn-guardar-contenido"
                                                 data-tipo="@tipo" data-publicar="false">
                                             <i class="bi bi-save"></i> Guardar borrador
@@ -175,6 +190,32 @@
                                 </tr>
                             </thead>
                             <tbody id="tbodyBloques"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- HU 03: Banners -->
+                <div class="tab-pane fade" id="tabBanners">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Banners e imágenes del sitio</h5>
+                        <button type="button" id="btnNuevoBanner" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Nuevo banner
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Imagen</th>
+                                    <th>Título</th>
+                                    <th>Orden</th>
+                                    <th>Estado</th>
+                                    <th>Actualizado</th>
+                                    <th class="text-end">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyBanners"></tbody>
                         </table>
                     </div>
                 </div>
@@ -274,10 +315,67 @@
     </div>
 </div>
 
+<!-- Modal: crear / editar banner -->
+<div class="modal fade" id="modalBanner" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="formBanner" enctype="multipart/form-data" novalidate>
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IdContenido" id="bannerId" value="0" />
+                <input type="hidden" name="Tipo" value="Banner" />
+                <input type="hidden" id="bannerEstado" value="" />
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalBanner">Nuevo banner</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="bannerImagen">Imagen *</label>
+                        <div class="mb-2">
+                            <img id="bannerPreview" src="" alt="Vista previa" class="img-thumbnail d-none" style="max-height:160px;" />
+                        </div>
+                        <input type="file" name="imagen" id="bannerImagen" class="form-control"
+                               accept=".jpg,.jpeg,.png,.webp" />
+                        <div class="form-text">JPG, PNG o WEBP, máximo 2 MB. Al editar, deje vacío para conservar la imagen actual.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="bannerTitulo">Título *</label>
+                        <input type="text" name="Titulo" id="bannerTitulo" class="form-control" maxlength="150" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="bannerDescripcion">Descripción (obligatoria para publicar)</label>
+                        <textarea name="Descripcion" id="bannerDescripcion" class="form-control" rows="3" maxlength="5000"></textarea>
+                    </div>
+                    <div class="mb-3" style="max-width:180px;">
+                        <label class="form-label" for="bannerOrden">Orden de aparición</label>
+                        <input type="number" name="Orden" id="bannerOrden" class="form-control" min="0" value="0" />
+                        <div class="form-text">Menor número aparece primero.</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnBannerBorrador" class="btn btn-outline-secondary">
+                        <i class="bi bi-save"></i> Guardar borrador
+                    </button>
+                    <button type="button" id="btnBannerPublicar" class="btn btn-success">
+                        <i class="bi bi-cloud-upload"></i> Publicar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script src="~/js/configuracion.js" asp-append-version="true"></script>
     <script src="~/js/configuracion-periodos.js" asp-append-version="true"></script>
+    <script src="~/js/configuracion-publicacion.js" asp-append-version="true"></script>
     <script src="~/js/configuracion-contenido.js" asp-append-version="true"></script>
     <script src="~/js/configuracion-bloques.js" asp-append-version="true"></script>
+    <script src="~/js/configuracion-banners.js" asp-append-version="true"></script>
 }
+
 

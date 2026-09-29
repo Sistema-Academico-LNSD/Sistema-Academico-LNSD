@@ -11,5 +11,8 @@
 
         // Bloques de contenido de la landing (HU 04), solo publicados y ordenados.
         public List<ContenidoSitioDTO> Bloques { get; set; } = new();
+
+        // Banners del carrusel (HU 03), solo publicados y ordenados.
+        public List<ContenidoSitioDTO> Banners { get; set; } = new();
     }
 }

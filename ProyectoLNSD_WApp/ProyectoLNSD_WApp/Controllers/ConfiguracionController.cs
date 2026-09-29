@@ -171,5 +171,111 @@ namespace ProyectoLNSD_WApp.Controllers
             var respuesta = await _contenidoService.EliminarBloque(id);
             return Json(respuesta);
         }
+
+        // ---------- HU 03: Imágenes y banners ----------
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetBanners()
+        {
+            var respuesta = await _contenidoService.GetBanners();
+            return Json(respuesta);
+        }
+
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> GetBanner(int id)
+        {
+            var respuesta = await _contenidoService.GetBanner(id);
+            return Json(respuesta);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Editar")]
+        public async Task<IActionResult> GuardarBanner(ContenidoSitioDTO contenido, IFormFile? imagen, bool publicar)
+        {
+            if (!ModelState.IsValid)
+            {
+                return RespuestaModeloInvalido();
+            }
+
+            // Ruta de la imagen actual (si se está editando), para borrarla si se reemplaza
+            string? rutaAnterior = null;
+            if (contenido.IdContenido > 0)
+            {
+                var actual = await _contenidoService.GetBanner(contenido.IdContenido);
+                rutaAnterior = actual.Dato?.RutaImagen;
+            }
+
+            // HU escenario 4: archivo que no es imagen (o muy pesado) se rechaza
+            string? nuevaRuta = null;
+            if (imagen is { Length: > 0 })
+            {
+                var (ok, resultado) = await ImagenHelper.GuardarAsync(imagen, _entorno, "banners");
+                if (!ok)
+                    return Json(RespuestaDTO<ContenidoSitioDTO>.Error(resultado, 3204));
+
+                nuevaRuta = resultado;
+            }
+
+            var respuesta = await _contenidoService.GuardarBanner(contenido, publicar, nuevaRuta, IdUsuarioActual);
+
+            if (nuevaRuta != null)
+            {
+                // Si se guardó bien se borra la imagen vieja; si falló, se borra la recién subida
+                ImagenHelper.Eliminar(respuesta.EsCorrecto ? rutaAnterior : nuevaRuta, _entorno);
+            }
+
+            return Json(respuesta);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Eliminar")]
+        public async Task<IActionResult> EliminarBanner(int id)
+        {
+            var actual = await _contenidoService.GetBanner(id);
+            string? ruta = actual.Dato?.RutaImagen;
+
+            var respuesta = await _contenidoService.EliminarBanner(id);
+
+            if (respuesta.EsCorrecto)
+                ImagenHelper.Eliminar(ruta, _entorno);
+
+            return Json(respuesta);
+        }
+
+        // ---------- HU 08: Publicar / despublicar ----------
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Editar")]
+        public async Task<IActionResult> CambiarEstadoContenido(int id, bool publicar)
+        {
+            var respuesta = await _contenidoService.CambiarEstado(id, publicar, IdUsuarioActual);
+            return Json(respuesta);
+        }
+
+        // ---------- HU 07: Vista previa ----------
+
+        // Muestra la landing con los borradores incluidos; no cambia nada por sí sola.
+        [HttpGet]
+        [RequierePermiso("Configuracion", "Ver")]
+        public async Task<IActionResult> VistaPrevia()
+        {
+            var respuesta = await _contenidoService.GetVistaPrevia();
+            return View(respuesta.Dato ?? new LandingDTO());
+        }
+
+        // Botón "Confirmar publicación" de la vista previa
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Configuracion", "Editar")]
+        public async Task<IActionResult> PublicarPendientes()
+        {
+            var respuesta = await _contenidoService.PublicarPendientes(IdUsuarioActual);
+            return Json(respuesta);
+        }
     }
 }

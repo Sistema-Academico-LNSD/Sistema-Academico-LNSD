@@ -1,0 +1,83 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
+@{
+    ViewData["Title"] = "Vista previa";
+    ViewData["EsVistaPrevia"] = true;   // los partials marcan los borradores
+
+    var institucionales = new[] { Model.Mision, Model.Vision, Model.Historia };
+
+    // Escenario 4: sin ningún contenido ingresado no hay nada que previsualizar
+    bool hayContenido = Model.Banners.Count > 0 || Model.Bloques.Count > 0 || institucionales.Any(c => c != null);
+
+    bool hayPendientes = Model.Banners.Any(c => c.Estado != "Publicado")
+                      || Model.Bloques.Any(c => c.Estado != "Publicado")
+                      || institucionales.Any(c => c != null && c.Estado != "Publicado");
+}
+
+@Html.AntiForgeryToken()
+
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 sticky-top shadow-sm"
+     style="top: .5rem; z-index: 1030;">
+    <div>
+        <i class="bi bi-eye"></i> <strong>Vista previa</strong>: así se verá el sitio web.
+        Lo marcado como <span class="badge bg-warning text-dark">Borrador</span> aún no está publicado.
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil"></i> Volver a editar
+        </a>
+        @if (hayPendientes && User.TienePermiso("Configuracion", "Editar"))
+        {
+            <button type="button" id="btnConfirmarPublicacion" class="btn btn-success btn-sm">
+                <i class="bi bi-cloud-upload"></i> Confirmar publicación
+            </button>
+        }
+    </div>
+</div>
+
+@if (!hayContenido)
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i>
+        No hay contenido para previsualizar. Agregue contenido desde
+        <a asp-action="Index">Configuración</a>.
+    </div>
+}
+else
+{
+    <partial name="_BannersSitio" model="Model" view-data="ViewData" />
+    <partial name="_ContenidoSitio" model="Model" view-data="ViewData" />
+}
+
+@section Scripts {
+    <script>
+        $("#btnConfirmarPublicacion").click(function () {
+            if (!confirm("Se publicarán en el sitio web todos los cambios pendientes. ¿Confirmar la publicación?")) {
+                return;
+            }
+
+            $.ajax({
+                url: '/Configuracion/PublicarPendientes',
+                type: 'POST',
+                data: { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
+
+                success: function (response) {
+                    if (response.esCorrecto) {
+                        mostrarMensaje(response.mensaje, 'success');
+
+                        // Si quedó algo sin publicar por estar incompleto, se deja el mensaje a la vista
+                        if (response.mensaje.indexOf("No se publicaron") < 0) {
+                            setTimeout(function () { location.reload(); }, 1500);
+                        }
+                    }
+                    else {
+                        mostrarMensaje(response.mensaje, 'danger');
+                    }
+                },
+
+                error: function () {
+                    mostrarMensaje("Error al publicar los cambios.", 'danger');
+                }
+            });
+        });
+    </script>
+}

@@ -38,6 +38,15 @@ function cargarBloques() {
                         ? '<span class="badge bg-success">Publicado</span>'
                         : '<span class="badge bg-warning text-dark">Borrador</span>';
 
+                    // HU 08: interruptor publicar / despublicar
+                    let accionEstado = b.estado === 'Publicado'
+                        ? `<button class="btn btn-sm btn-outline-secondary" onclick="cambiarEstadoContenido(${b.idContenido}, false, cargarBloques)">
+                                <i class="bi bi-eye-slash"></i> Despublicar
+                           </button>`
+                        : `<button class="btn btn-sm btn-outline-success" onclick="cambiarEstadoContenido(${b.idContenido}, true, cargarBloques)">
+                                <i class="bi bi-cloud-upload"></i> Publicar
+                           </button>`;
+
                     filas += `
                         <tr>
                             <td>${b.orden}</td>
@@ -45,6 +54,7 @@ function cargarBloques() {
                             <td>${estado}</td>
                             <td>${new Date(b.fechaActualizacion + "Z").toLocaleString()}</td>
                             <td class="text-end">
+                                ${accionEstado}
                                 <button class="btn btn-sm btn-outline-primary" onclick="editarBloque(${b.idContenido})">
                                     <i class="bi bi-pencil"></i> Editar
                                 </button>
@@ -103,6 +113,13 @@ function editarBloque(id) {
 }
 
 function guardarBloque(publicar) {
+    // HU 08 escenario 5: publicar cambios de un contenido ya publicado pide confirmación.
+    if (publicar && $("#bloqueEstado").val() === "Publicado") {
+        if (!confirm("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?")) {
+            return;
+        }
+    }
+
     // Guardar como borrador un contenido ya publicado lo oculta del sitio: se pide confirmar.
     if (!publicar && $("#bloqueEstado").val() === "Publicado") {
         if (!confirm("Este contenido está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?")) {

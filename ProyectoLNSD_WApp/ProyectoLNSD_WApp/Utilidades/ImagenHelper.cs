@@ -29,5 +29,30 @@
 
             return (true, $"/uploads/{carpeta}/{nombreArchivo}");
         }
+
+        // Borra del disco un archivo subido antes (al reemplazar o eliminar). No lanza error si no existe.
+        public static void Eliminar(string? rutaPublica, IWebHostEnvironment entorno)
+        {
+            if (string.IsNullOrWhiteSpace(rutaPublica) || !rutaPublica.StartsWith("/uploads/"))
+                return;
+
+            string raiz = Path.GetFullPath(Path.Combine(entorno.WebRootPath, "uploads"));
+            string archivo = Path.GetFullPath(Path.Combine(
+                entorno.WebRootPath, rutaPublica.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)));
+
+            // Solo se borra dentro de wwwroot/uploads
+            if (!archivo.StartsWith(raiz + Path.DirectorySeparatorChar))
+                return;
+
+            try
+            {
+                if (File.Exists(archivo))
+                    File.Delete(archivo);
+            }
+            catch (IOException)
+            {
+                // Si el archivo está en uso no se interrumpe la operación
+            }
+        }
     }
 }
