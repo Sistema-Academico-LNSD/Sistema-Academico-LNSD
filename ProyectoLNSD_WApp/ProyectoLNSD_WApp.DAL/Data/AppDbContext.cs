@@ -24,6 +24,8 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<RolPermiso> RolesPermisos { get; set; }
         public virtual DbSet<LogAcceso> LogsAcceso { get; set; }
         public virtual DbSet<Tiquete> Tiquetes { get; set; }
+        public virtual DbSet<Grado> Grados { get; set; }
+        public virtual DbSet<Seccion> Secciones { get; set; }
 
 
 
@@ -490,6 +492,80 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdUsuarioValidador)
                       .OnDelete(DeleteBehavior.Restrict)
                       .HasConstraintName("FK_Tiquete_Validador");
+            });
+
+
+            modelBuilder.Entity<Grado>(entity =>
+            {
+                entity.ToTable("Grado");
+
+                entity.HasKey(e => e.IdGrado)
+                      .HasName("PK_Grado");
+
+                entity.Property(e => e.IdGrado)
+                      .HasColumnName("id_grado");
+
+                entity.Property(e => e.Codigo)
+                      .HasColumnName("codigo")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.Nivel)
+                      .HasColumnName("nivel")
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasDefaultValue(true);
+
+                entity.HasIndex(e => e.Codigo)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Grado_Codigo");
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Grado_Nombre");
+            });
+
+            modelBuilder.Entity<Seccion>(entity =>
+            {
+                entity.ToTable("Seccion");
+
+                entity.HasKey(e => e.IdSeccion)
+                      .HasName("PK_Seccion");
+
+                entity.Property(e => e.IdSeccion)
+                      .HasColumnName("id_seccion");
+
+                entity.Property(e => e.IdGrado)
+                      .HasColumnName("id_grado");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.Property(e => e.CapacidadMaxima)
+                      .HasColumnName("capacidad_maxima");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasDefaultValue(true);
+
+                entity.HasIndex(e => new { e.IdGrado, e.Nombre })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Seccion_Grado_Nombre");
+
+                entity.HasOne(d => d.Grado)
+                      .WithMany(p => p.Secciones)
+                      .HasForeignKey(d => d.IdGrado)
+                      .HasConstraintName("FK_Seccion_Grado");
             });
 
 

@@ -23,6 +23,12 @@ namespace ProyectoLNSD_WApp.BLL
             // Tiquete
             CreateMap<DAL.Entities.Tiquete, DTO.TiqueteDTO>();
 
+            // Grado
+            CreateMap<DAL.Entities.Grado, DTO.GradoDTO>().ReverseMap();
+
+            // Seccion
+            CreateMap<DAL.Entities.Seccion, DTO.SeccionDTO>().ReverseMap();
+
         }
     }
 }
