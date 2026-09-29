@@ -31,6 +31,14 @@ namespace ProyectoLNSD_WApp.BLL
 
             // Accesos rápidos
             CreateMap<DAL.Entities.AccesoRapido, DTO.AccesoRapidoDTO>().ReverseMap();
+            // Tiquete
+            CreateMap<DAL.Entities.Tiquete, DTO.TiqueteDTO>();
+
+            // Grado
+            CreateMap<DAL.Entities.Grado, DTO.GradoDTO>().ReverseMap();
+
+            // Seccion
+            CreateMap<DAL.Entities.Seccion, DTO.SeccionDTO>().ReverseMap();
 
         }
     }

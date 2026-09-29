@@ -1,0 +1,109 @@
+﻿@{
+    ViewData["Title"] = "Control de Tiquetes";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+
+        <div>
+            <h3 class="mb-0">
+                <i class="bi bi-clipboard-data"></i>
+                Control de Tiquetes
+            </h3>
+            <small class="text-muted">Uso del servicio de comedor</small>
+        </div>
+
+        <button type="button" id="btnActualizar" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-clockwise"></i>
+            Actualizar
+        </button>
+
+    </div>
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-ticket-perforated fs-2 text-primary"></i>
+                    <h2 class="mb-0" id="cntGenerados">0</h2>
+                    <p class="text-muted mb-0">Tiquetes generados</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-hourglass-split fs-2 text-success"></i>
+                    <h2 class="mb-0" id="cntDisponibles">0</h2>
+                    <p class="text-muted mb-0">Disponibles</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 text-center">
+                <div class="card-body">
+                    <i class="bi bi-check-circle fs-2 text-secondary"></i>
+                    <h2 class="mb-0" id="cntUtilizados">0</h2>
+                    <p class="text-muted mb-0">Utilizados</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="card shadow border-0">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">Tiquetes</h5>
+
+            <div class="d-flex align-items-center gap-2">
+                <label for="cmbEstado" class="form-label mb-0">Estado</label>
+                <select id="cmbEstado" class="form-select form-select-sm" style="width:auto;">
+                    <option value="">Todos</option>
+                    <option value="Disponible">Disponible</option>
+                    <option value="Utilizado">Utilizado</option>
+                </select>
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table id="tblTiquetes" class="table table-striped table-hover">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Código</th>
+                            <th>Usuario</th>
+                            <th>Estado</th>
+                            <th>Generado</th>
+                            <th>Utilizado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script src="~/js/boleteria-comun.js"></script>
+    <script src="~/js/boleteria-consulta.js"></script>
+
+}

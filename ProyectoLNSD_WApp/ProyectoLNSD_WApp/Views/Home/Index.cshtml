@@ -80,6 +80,30 @@
                 </a>
             }
 
+                        <a asp-controller="Boleteria" asp-action="Index" class="module-card">
+                <div class="module-icon"><i class="bi bi-ticket-perforated"></i></div>
+                <h3>Mi tiquete</h3>
+                <p>Genera y consulta tu tiquete digital del comedor.</p>
+            </a>
+
+            @if (User.TienePermiso("Boleteria", "Editar"))
+            {
+                <a asp-controller="Boleteria" asp-action="Validar" class="module-card">
+                    <div class="module-icon"><i class="bi bi-qr-code-scan"></i></div>
+                    <h3>Validar tiquetes</h3>
+                    <p>Verifica y marca como utilizados los tiquetes del comedor.</p>
+                </a>
+            }
+
+            @if (User.TienePermiso("Boleteria", "Ver"))
+            {
+                <a asp-controller="Boleteria" asp-action="Consulta" class="module-card">
+                    <div class="module-icon"><i class="bi bi-clipboard-data"></i></div>
+                    <h3>Control de tiquetes</h3>
+                    <p>Consulta los tiquetes generados, utilizados y sus cantidades.</p>
+                </a>
+            }
+
         </div>
 
     </section>

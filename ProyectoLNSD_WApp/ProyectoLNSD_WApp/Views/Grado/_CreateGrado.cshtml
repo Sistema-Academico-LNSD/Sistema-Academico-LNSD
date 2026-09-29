@@ -1,0 +1,110 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.GradoDTO
+
+<div class="modal fade"
+     id="modalCrearGrado"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title">
+                    Nuevo grado
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formCrearGrado">
+
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+
+                        <label asp-for="Codigo"
+                               class="form-label">
+                            Código
+                        </label>
+
+                        <input asp-for="Codigo"
+                               class="form-control" />
+
+                        <span asp-validation-for="Codigo"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nombre"
+                               class="form-label">
+                            Nombre
+                        </label>
+
+                        <input asp-for="Nombre"
+                               class="form-control" />
+
+                        <span asp-validation-for="Nombre"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label asp-for="Nivel"
+                               class="form-label">
+                            Nivel académico
+                        </label>
+
+                        <select asp-for="Nivel"
+                                class="form-select">
+                            <option value="">Seleccione</option>
+                            <option value="Sétimo">Sétimo</option>
+                            <option value="Octavo">Octavo</option>
+                            <option value="Noveno">Noveno</option>
+                            <option value="Décimo">Décimo</option>
+                            <option value="Undécimo">Undécimo</option>
+                        </select>
+
+                        <span asp-validation-for="Nivel"
+                              class="text-danger">
+                        </span>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        id="btnGuardarGrado"
+                        class="btn btn-primary">
+                    Guardar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
