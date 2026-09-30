@@ -31,7 +31,9 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Tiquete> Tiquetes { get; set; }
         public virtual DbSet<Grado> Grados { get; set; }
         public virtual DbSet<Seccion> Secciones { get; set; }
-
+        public virtual DbSet<Curso> Cursos { get; set; }
+        public virtual DbSet<AreaAcademica> AreasAcademicas { get; set; }
+        public virtual DbSet<CursoGrado> CursosGrados { get; set; }
 
 
         //Tables override mode builder
@@ -758,7 +760,103 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdGrado)
                       .HasConstraintName("FK_Seccion_Grado");
             });
+            modelBuilder.Entity<Curso>(entity =>
+            {
+                entity.ToTable("Curso");
 
+                entity.HasKey(e => e.IdCurso)
+                      .HasName("PK_Curso");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.Codigo)
+                      .HasColumnName("codigo")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(500)
+                      .IsRequired();
+
+                entity.Property(e => e.IdArea)
+                      .HasColumnName("id_area")
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasDefaultValue(true);
+
+                entity.HasIndex(e => e.Codigo)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Curso_Codigo");
+
+                entity.HasOne(e => e.Area)
+                      .WithMany(a => a.Cursos)
+                      .HasForeignKey(e => e.IdArea)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Curso_Area");
+            });
+
+            modelBuilder.Entity<AreaAcademica>(entity =>
+            {
+                entity.ToTable("Area_Academica");
+
+                entity.HasKey(e => e.IdArea)
+                      .HasName("PK_Area_Academica");
+
+                entity.Property(e => e.IdArea)
+                      .HasColumnName("id_area");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasDefaultValue(true);
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Area_Academica_Nombre");
+            });
+
+            modelBuilder.Entity<CursoGrado>(entity =>
+            {
+                entity.ToTable("Curso_Grado");
+
+                entity.HasKey(e => new
+                {
+                    e.IdCurso,
+                    e.IdGrado
+                })
+                .HasName("PK_Curso_Grado");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.IdGrado)
+                      .HasColumnName("id_grado");
+
+                entity.HasOne(e => e.Curso)
+                      .WithMany(c => c.CursosGrados)
+                      .HasForeignKey(e => e.IdCurso)
+                      .OnDelete(DeleteBehavior.Cascade)
+                      .HasConstraintName("FK_Curso_Grado_Curso");
+
+                entity.HasOne(e => e.Grado)
+                      .WithMany()
+                      .HasForeignKey(e => e.IdGrado)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Curso_Grado_Grado");
+            });
 
             OnModelCreatingPartial(modelBuilder);
         }

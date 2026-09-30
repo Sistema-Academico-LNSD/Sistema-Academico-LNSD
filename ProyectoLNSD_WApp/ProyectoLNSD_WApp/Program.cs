@@ -29,7 +29,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.ContenidoSitio;
 using ProyectoLNSD_WApp.DAL.Repositories.Tiquete;
 using ProyectoLNSD_WApp.DAL.Repositories.Grado;
 using ProyectoLNSD_WApp.DAL.Repositories.Seccion;
-
+using ProyectoLNSD_WApp.BLL.Service.Curso;
+using ProyectoLNSD_WApp.DAL.Repositories.Curso;
 
 namespace ProyectoLNSD_WApp
 {
@@ -74,6 +75,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<ITiqueteService, TiqueteService>();
             builder.Services.AddScoped<IGradoService, GradoService>();
             builder.Services.AddScoped<ISeccionService, SeccionService>();
+            builder.Services.AddScoped<ICursoRepository, CursoRepository>();
+            builder.Services.AddScoped<ICursoService, CursoService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

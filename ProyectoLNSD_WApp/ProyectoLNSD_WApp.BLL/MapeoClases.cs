@@ -40,6 +40,10 @@ namespace ProyectoLNSD_WApp.BLL
             // Seccion
             CreateMap<DAL.Entities.Seccion, DTO.SeccionDTO>().ReverseMap();
 
+            //Curso
+            CreateMap<DAL.Entities.Curso, DTO.Curso.CursoDTO>().ReverseMap();
+            //Area Academica
+            CreateMap<DAL.Entities.AreaAcademica, DTO.Curso.AreaAcademicaDTO>().ReverseMap();
         }
     }
 }

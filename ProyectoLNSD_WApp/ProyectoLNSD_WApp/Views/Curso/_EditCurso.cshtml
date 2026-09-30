@@ -1,0 +1,142 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDTO
+
+<div class="modal fade"
+     id="modalEditarCurso"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-warning">
+
+                <h5 class="modal-title">
+                    <i class="bi bi-pencil-square"></i>
+                    Editar curso
+                </h5>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formEditarCurso">
+
+                    @Html.AntiForgeryToken()
+
+                    <input type="hidden"
+                           id="editIdCurso" />
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+
+                            <label class="form-label">
+                                Código
+                            </label>
+
+                            <input type="text"
+                                   id="editCodigoCurso"
+                                   class="form-control"
+                                   maxlength="30" />
+
+                        </div>
+
+                        <div class="col-md-8 mb-3">
+
+                            <label class="form-label">
+                                Nombre
+                            </label>
+
+                            <input type="text"
+                                   id="editNombreCurso"
+                                   class="form-control"
+                                   maxlength="150" />
+
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Descripción
+                        </label>
+
+                        <textarea id="editDescripcionCurso"
+                                  class="form-control"
+                                  rows="3"
+                                  maxlength="500"></textarea>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Área académica
+                            </label>
+
+                            <select id="editAreaCurso"
+                                    class="form-select">
+
+                                <option value="">
+                                    Seleccione un área
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Grados asociados
+                            </label>
+
+                            <select id="editGradosCurso"
+                                    class="form-select"
+                                    multiple
+                                    size="6">
+                            </select>
+
+                            <small class="text-muted">
+                                Puede seleccionar uno o varios grados.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        id="btnActualizarCurso"
+                        class="btn btn-warning">
+                    <i class="bi bi-save"></i>
+                    Actualizar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

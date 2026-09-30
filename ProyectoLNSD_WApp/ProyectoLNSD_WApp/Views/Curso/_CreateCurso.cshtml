@@ -1,0 +1,135 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDTO
+
+<div class="modal fade"
+     id="modalCrearCurso"
+     tabindex="-1"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle"></i>
+                    Nuevo curso
+                </h5>
+
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <form id="formCrearCurso">
+
+                    @Html.AntiForgeryToken()
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">
+                                Código
+                            </label>
+
+                            <input type="text"
+                                   id="crearCodigo"
+                                   class="form-control"
+                                   maxlength="30" />
+                        </div>
+
+                        <div class="col-md-8 mb-3">
+                            <label class="form-label">
+                                Nombre
+                            </label>
+
+                            <input type="text"
+                                   id="crearNombre"
+                                   class="form-control"
+                                   maxlength="150" />
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+
+                        <label class="form-label">
+                            Descripción
+                        </label>
+
+                        <textarea id="crearDescripcion"
+                                  class="form-control"
+                                  rows="3"
+                                  maxlength="500"></textarea>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Área académica
+                            </label>
+
+                            <select id="crearArea"
+                                    class="form-select">
+
+                                <option value="">
+                                    Seleccione un área
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+
+                            <label class="form-label">
+                                Grados asociados
+                            </label>
+
+                            <select id="crearGrados"
+                                    class="form-select"
+                                    multiple
+                                    size="6">
+                            </select>
+
+                            <small class="text-muted">
+                                Puede seleccionar uno o varios grados.
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </form>
+
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+
+                <button type="button"
+                        id="btnGuardarCurso"
+                        class="btn btn-primary">
+                    <i class="bi bi-save"></i>
+                    Guardar
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

@@ -1,0 +1,124 @@
+﻿@{
+    ViewData["Title"] = "Cursos";
+}
+
+<div class="container-fluid mt-4">
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+
+                <div>
+                    <h3 class="mb-0">
+                        <i class="bi bi-book"></i>
+                        Cursos
+                    </h3>
+                    <small>Administración de la oferta académica</small>
+                </div>
+
+                <button type="button"
+                        class="btn btn-light"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalCrearCurso">
+                    <i class="bi bi-plus-circle"></i>
+                    Nuevo curso
+                </button>
+
+            </div>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-2 mb-3">
+
+                <div class="col-md-4">
+                    <input type="text"
+                           id="txtBuscarCurso"
+                           class="form-control"
+                           placeholder="Buscar por nombre o código" />
+                </div>
+
+                <div class="col-md-3">
+                    <select id="filtroArea"
+                            class="form-select">
+                        <option value="">Todas las áreas</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="filtroGrado"
+                            class="form-select">
+                        <option value="">Todos los grados</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="filtroEstado"
+                            class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="true">Activos</option>
+                        <option value="false">Inactivos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <button type="button"
+                            id="btnBuscarCursos"
+                            class="btn btn-primary w-100"
+                            title="Buscar">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+                <button type="button"
+                        id="btnLimpiarCursos"
+                        class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-circle"></i>
+                    Limpiar filtros
+                </button>
+            </div>
+
+            <div class="table-responsive">
+
+                <table id="tblCursos"
+                       class="table table-striped table-hover align-middle">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Código</th>
+                            <th>Curso</th>
+                            <th>Área</th>
+                            <th>Grados</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+@await Html.PartialAsync(
+    "_CreateCurso",
+    new ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDTO())
+
+@await Html.PartialAsync(
+    "_EditCurso",
+    new ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDTO())
+
+@section Scripts {
+
+    <partial name="_ValidationScriptsPartial" />
+
+    <script src="~/js/curso.js"></script>
+}

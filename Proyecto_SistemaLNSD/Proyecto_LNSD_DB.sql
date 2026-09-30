@@ -122,13 +122,59 @@ CREATE TABLE Beca
 GO
 
 
+/* ---- Áreas Académicas ---- */
+
+CREATE TABLE Area_Academica
+(
+    id_area INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    estado BIT NOT NULL CONSTRAINT DF_Area_Academica_Estado DEFAULT 1,
+
+    CONSTRAINT PK_Area_Academica PRIMARY KEY (id_area),
+    CONSTRAINT UQ_Area_Academica_Nombre UNIQUE (nombre)
+);
+GO
+
+
 /* ---- Cursos ---- */
 
 CREATE TABLE Curso
 (
     id_curso INT IDENTITY(1,1) NOT NULL,
+    codigo NVARCHAR(30) NOT NULL,
     nombre NVARCHAR(150) NOT NULL,
-    CONSTRAINT PK_Curso PRIMARY KEY (id_curso)
+    descripcion NVARCHAR(500) NOT NULL,
+    id_area INT NOT NULL,
+    estado BIT NOT NULL CONSTRAINT DF_Curso_Estado DEFAULT 1,
+
+    CONSTRAINT PK_Curso PRIMARY KEY (id_curso),
+    CONSTRAINT UQ_Curso_Codigo UNIQUE (codigo),
+    CONSTRAINT UQ_Curso_Nombre_Area UNIQUE (nombre, id_area),
+
+    CONSTRAINT FK_Curso_Area
+        FOREIGN KEY (id_area)
+        REFERENCES Area_Academica(id_area)
+);
+GO
+
+
+/* ---- Relación Cursos - Grados ---- */
+
+CREATE TABLE Curso_Grado
+(
+    id_curso INT NOT NULL,
+    id_grado INT NOT NULL,
+
+    CONSTRAINT PK_Curso_Grado
+        PRIMARY KEY (id_curso, id_grado),
+
+    CONSTRAINT FK_Curso_Grado_Curso
+        FOREIGN KEY (id_curso)
+        REFERENCES Curso(id_curso),
+
+    CONSTRAINT FK_Curso_Grado_Grado
+        FOREIGN KEY (id_grado)
+        REFERENCES Grado(id_grado)
 );
 GO
 
@@ -465,6 +511,18 @@ GO
 USE Proyecto_LNSD_DB;
 GO
  
+ /* ----TEST INSERT: Áreas Académicas Iniciales ---- */
+
+INSERT INTO Area_Academica (nombre, estado)
+VALUES
+    (N'Matemáticas', 1),
+    (N'Ciencias', 1),
+    (N'Idiomas', 1),
+    (N'Estudios Sociales', 1),
+    (N'Arte', 1);
+GO
+
+
 /* ---- HU 01: datos de la institución (una sola fila) ---- */
 IF OBJECT_ID(N'Institucion', N'U') IS NULL
 CREATE TABLE Institucion
@@ -725,6 +783,15 @@ IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Grados')
     VALUES (N'Grados', N'Gestión de grados académicos, grupos y secciones.');
 GO
 
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Cursos')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES
+    (
+        N'Cursos',
+        N'Gestión de cursos y oferta académica de la institución.'
+    );
+GO
+
 INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
 SELECT r.id_rol, m.id_modulo, 1, 1, 1, 0
 FROM Rol r
@@ -737,4 +804,34 @@ WHERE r.nombre = N'Administrador'
   );
 GO
 
+INSERT INTO Rol_Permiso
+(
+    id_rol,
+    id_modulo,
+    puede_ver,
+    puede_crear,
+    puede_editar,
+    puede_eliminar
+)
+SELECT
+    r.id_rol,
+    m.id_modulo,
+    1,
+    1,
+    1,
+    1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND m.nombre = N'Cursos'
+  AND NOT EXISTS
+  (
+      SELECT 1
+      FROM Rol_Permiso rp
+      WHERE rp.id_rol = r.id_rol
+        AND rp.id_modulo = m.id_modulo
+  );
+GO
    
+   SELECT *
+FROM Area_Academica;
