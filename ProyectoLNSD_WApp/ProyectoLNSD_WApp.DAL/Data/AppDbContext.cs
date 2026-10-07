@@ -150,7 +150,8 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
             modelBuilder.Entity<Docente>(entity =>
             {
-                entity.ToTable("Docente");
+                entity.ToTable("Docente", t =>
+                    t.HasCheckConstraint("CK_Docente_Experiencia", "anios_experiencia >= 0 AND anios_experiencia <= 60"));
 
                 entity.HasKey(e => e.IdDocente);
 
@@ -160,10 +161,57 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.IdUsuario)
                       .HasColumnName("id_usuario");
 
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(100)
+                      .IsRequired();
+
+                entity.Property(e => e.Apellidos)
+                      .HasColumnName("apellidos")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Identificacion)
+                      .HasColumnName("identificacion")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Correo)
+                      .HasColumnName("correo")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Telefono)
+                      .HasColumnName("telefono")
+                      .HasMaxLength(30);
+
+                entity.Property(e => e.Direccion)
+                      .HasColumnName("direccion")
+                      .HasMaxLength(300);
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasDefaultValue(true);
+
+                entity.Property(e => e.Titulos)
+                      .HasColumnName("titulos")
+                      .HasMaxLength(1000);
+
                 entity.Property(e => e.Especialidad)
                       .HasColumnName("especialidad")
                       .HasMaxLength(150);
 
+                entity.Property(e => e.AniosExperiencia)
+                      .HasColumnName("anios_experiencia");
+
+                entity.Property(e => e.IdArea)
+                      .HasColumnName("id_area");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                // La cuenta es opcional.
                 entity.HasOne(d => d.Usuario)
                       .WithOne(p => p.Docente)
                       .HasForeignKey<Docente>(d => d.IdUsuario)
@@ -171,8 +219,21 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.HasIndex(e => e.IdUsuario)
                       .IsUnique()
-                      .HasDatabaseName("UQ_Docente_Usuario");
+                      .HasFilter("[id_usuario] IS NOT NULL")
+                      .HasDatabaseName("UX_Docente_Usuario");
 
+                entity.HasIndex(e => e.Identificacion)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Docente_Identificacion");
+
+                entity.HasIndex(e => e.Correo)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Docente_Correo");
+
+                entity.HasOne(d => d.Area)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdArea)
+                      .HasConstraintName("FK_Docente_Area");
             });
 
             modelBuilder.Entity<Estudiante>(entity =>

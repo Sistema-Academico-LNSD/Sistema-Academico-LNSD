@@ -9,5 +9,6 @@
         Task<bool> DeleteRol(int id);
         Task<bool> ExisteNombre(string nombre, int? excluirIdRol = null);
         Task<bool> TieneUsuariosAsignados(int idRol);
+        Task<Entities.Rol?> GetRolByNombre(string nombre);
     }
 }

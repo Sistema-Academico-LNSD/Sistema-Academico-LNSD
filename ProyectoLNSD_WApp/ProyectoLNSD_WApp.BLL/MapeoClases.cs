@@ -44,6 +44,13 @@ namespace ProyectoLNSD_WApp.BLL
             CreateMap<DAL.Entities.Curso, DTO.Curso.CursoDTO>().ReverseMap();
             //Area Academica
             CreateMap<DAL.Entities.AreaAcademica, DTO.Curso.AreaAcademicaDTO>().ReverseMap();
+
+            // Docente
+            CreateMap<DAL.Entities.Docente, DTO.DocenteDTO>()
+                .ForMember(d => d.NombreArea, o => o.MapFrom(s => s.Area != null ? s.Area.Nombre : null))
+                .ForMember(d => d.TieneCuenta, o => o.MapFrom(s => s.IdUsuario.HasValue));
+
+            CreateMap<DTO.DocenteDTO, DAL.Entities.Docente>();
         }
     }
 }

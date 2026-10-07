@@ -1,0 +1,100 @@
+﻿
+
+<div class="modal fade" id="modalDocente" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="lblTituloModalDocente">Nuevo docente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnIdDocente" value="0" />
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-person-vcard"></i> Datos personales y de contacto
+                </h6>
+
+                <div class="row g-3 mb-4">
+
+                    <div class="col-md-6">
+                        <label for="txtNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" id="txtNombre" class="form-control" maxlength="100" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtApellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                        <input type="text" id="txtApellidos" class="form-control" maxlength="150" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtIdentificacion" class="form-label">Identificación <span class="text-danger">*</span></label>
+                        <input type="text" id="txtIdentificacion" class="form-control" maxlength="30" placeholder="1-2345-6789" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtCorreo" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                        <input type="email" id="txtCorreo" class="form-control" maxlength="150" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtTelefono" class="form-label">Teléfono</label>
+                        <input type="tel" id="txtTelefono" class="form-control" maxlength="30" placeholder="+506 0000-0000" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtDireccion" class="form-label">Dirección</label>
+                        <input type="text" id="txtDireccion" class="form-control" maxlength="300" />
+                    </div>
+
+                </div>
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-mortarboard"></i> Información profesional
+                </h6>
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="txtEspecialidad" class="form-label">Especialidad</label>
+                        <input type="text" id="txtEspecialidad" class="form-control" maxlength="150" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="ddlArea" class="form-label">Área de enseñanza</label>
+                        <select id="ddlArea" class="form-select">
+                            <option value="">Sin asignar</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="txtExperiencia" class="form-label">Años de experiencia</label>
+                        <input type="number" id="txtExperiencia" class="form-control" min="0" max="60" />
+                    </div>
+
+                    <div class="col-12">
+                        <label for="txtTitulos" class="form-label">Títulos académicos</label>
+                        <textarea id="txtTitulos" class="form-control" rows="3" maxlength="1000"
+                                  placeholder="Un título por línea. Ej.: Licenciatura en Enseñanza de la Matemática"></textarea>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarDocente" class="btn btn-primary">
+                    <i class="bi bi-save"></i> <span id="lblBotonGuardar">Registrar</span>
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
