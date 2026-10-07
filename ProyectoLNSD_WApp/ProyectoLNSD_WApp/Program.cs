@@ -31,6 +31,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.Grado;
 using ProyectoLNSD_WApp.DAL.Repositories.Seccion;
 using ProyectoLNSD_WApp.BLL.Service.Curso;
 using ProyectoLNSD_WApp.DAL.Repositories.Curso;
+using ProyectoLNSD_WApp.BLL.Service.Docente;
+using ProyectoLNSD_WApp.DAL.Repositories.Docente;
 
 namespace ProyectoLNSD_WApp
 {
@@ -61,6 +63,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<ITiqueteRepository, TiqueteRepository>();
             builder.Services.AddScoped<IGradoRepository, GradoRepository>();
             builder.Services.AddScoped<ISeccionRepository, SeccionRepository>();
+            builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -77,6 +80,9 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<ISeccionService, SeccionService>();
             builder.Services.AddScoped<ICursoRepository, CursoRepository>();
             builder.Services.AddScoped<ICursoService, CursoService>();
+            builder.Services.AddScoped<IDocenteService, DocenteService>();
+            builder.Services.AddScoped<IDocenteCuentaService, DocenteCuentaService>();
+
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

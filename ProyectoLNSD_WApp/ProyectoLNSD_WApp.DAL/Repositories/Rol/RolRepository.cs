@@ -80,5 +80,12 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Rol
         {
             return await _context.Usuarios.AnyAsync(u => u.IdRol == idRol);
         }
+
+        public async Task<Entities.Rol?> GetRolByNombre(string nombre)
+        {
+            return await _context.Roles
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.Nombre == nombre);
+        }
     }
 }

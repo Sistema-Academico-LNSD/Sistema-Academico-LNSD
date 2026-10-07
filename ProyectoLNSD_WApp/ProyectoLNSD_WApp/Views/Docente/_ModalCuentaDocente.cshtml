@@ -1,0 +1,127 @@
+﻿<div class="modal fade" id="modalCuentaDocente" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-person-gear"></i> Cuenta de usuario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnIdDocenteCuenta" value="0" />
+
+                <p class="mb-3">
+                    Docente: <strong id="lblNombreDocenteCuenta"></strong>
+                </p>
+
+                <!-- ============ CON CUENTA ============ -->
+                <div id="panelConCuenta" class="d-none">
+
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-person-check"></i>
+                        Este docente inicia sesión con la cuenta
+                        <strong id="lblCorreoCuenta"></strong>
+                        <span id="lblEstadoCuenta"></span>
+                    </div>
+
+                    <p class="text-muted small mb-0">
+                        Desvincular no elimina la cuenta: el docente deja de estar asociado a ella,
+                        y la cuenta sigue existiendo en el módulo de Usuarios.
+                    </p>
+
+                </div>
+
+                <!-- ============ SIN CUENTA ============ -->
+                <div id="panelSinCuenta" class="d-none">
+
+                    <ul class="nav nav-pills nav-fill mb-3" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tabVincular" type="button" role="tab">
+                                <i class="bi bi-link-45deg"></i> Vincular existente
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tabCrear" type="button" role="tab">
+                                <i class="bi bi-person-plus"></i> Crear cuenta nueva
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div class="tab-pane fade show active" id="tabVincular" role="tabpanel">
+
+                            <label for="ddlUsuariosDisponibles" class="form-label">Cuenta con rol Docente</label>
+                            <select id="ddlUsuariosDisponibles" class="form-select"></select>
+
+                            <div id="lblSinDisponibles" class="form-text text-warning d-none">
+                                No hay cuentas con rol Docente disponibles para vincular.
+                                Cree una en la pestaña "Crear cuenta nueva".
+                            </div>
+
+                            <div class="form-text">
+                                Solo se listan cuentas activas, con rol Docente, que no estén vinculadas a otro docente.
+                            </div>
+
+                            <div class="text-end mt-3">
+                                <button type="button" id="btnVincularCuenta" class="btn btn-primary">
+                                    <i class="bi bi-link-45deg"></i> Vincular
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div class="tab-pane fade" id="tabCrear" role="tabpanel">
+
+                            <div class="mb-3">
+                                <label for="txtCorreoCuenta" class="form-label">Correo para iniciar sesión</label>
+                                <input type="email" id="txtCorreoCuenta" class="form-control" maxlength="150" />
+                                <div class="form-text">Por defecto, el correo del expediente.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="txtPasswordCuenta" class="form-label">Contraseña inicial</label>
+                                <input type="password" id="txtPasswordCuenta" class="form-control" autocomplete="new-password" />
+                            </div>
+
+                            <div class="mb-2">
+                                <label for="txtConfirmarCuenta" class="form-label">Confirmar contraseña</label>
+                                <input type="password" id="txtConfirmarCuenta" class="form-control" autocomplete="new-password" />
+                            </div>
+
+                            <div class="form-text">
+                                La cuenta se crea con el rol Docente. Mínimo 8 caracteres. El docente puede
+                                cambiarla luego con "¿Olvidó su contraseña?" en la pantalla de inicio de sesión.
+                            </div>
+
+                            <div class="text-end mt-3">
+                                <button type="button" id="btnCrearCuenta" class="btn btn-primary">
+                                    <i class="bi bi-person-plus"></i> Crear y vincular
+                                </button>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" id="btnDesvincularCuenta" class="btn btn-outline-danger me-auto d-none">
+                    <i class="bi bi-link-45deg"></i> Desvincular cuenta
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
