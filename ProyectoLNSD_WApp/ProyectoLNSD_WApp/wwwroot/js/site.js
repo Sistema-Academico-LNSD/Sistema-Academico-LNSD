@@ -114,4 +114,29 @@ function confirmar(mensaje, textoBoton = 'Confirmar', tipoBoton = 'danger') {
         $modal.appendTo('body');
         modal.show();
     });
+
+    
+// ============================================================
+// Fechas UTC renderizadas en servidor
+// El navegador convierte la fecha UTC a la hora local del usuario.
+// ============================================================
+$(function ()
+{
+    $("[data-fecha-utc]").each(function ()
+    {
+        let fecha = new Date($(this).attr("data-fecha-utc"));
+
+        if (isNaN(fecha))
+        {
+            return;
+        }
+
+        let opciones = $(this).attr("data-formato") === "fecha-hora"
+            ? { dateStyle: 'medium', timeStyle: 'short' }
+            : { dateStyle: 'medium' };
+
+        $(this).text(fecha.toLocaleString('es-CR', opciones));
+    });
+});
+
 }

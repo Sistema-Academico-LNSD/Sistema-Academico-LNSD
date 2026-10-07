@@ -17,9 +17,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Docente
             _mapper = mapper;
         }
 
-        public async Task<RespuestaDTO<List<DocenteDTO>>> Buscar(string? texto, int? idArea, bool? estado)
+        public async Task<RespuestaDTO<List<DocenteDTO>>> Buscar(string? texto, int? idArea, int? idCurso, bool? estado)
         {
-            var docentes = await _docenteRepository.Buscar(texto, idArea, estado);
+            var docentes = await _docenteRepository.Buscar(texto, idArea, idCurso, estado);
 
             return RespuestaDTO<List<DocenteDTO>>.Exito(_mapper.Map<List<DocenteDTO>>(docentes));
         }

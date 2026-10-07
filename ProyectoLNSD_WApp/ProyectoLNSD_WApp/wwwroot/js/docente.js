@@ -1,16 +1,16 @@
 ﻿const puedeEditarDocentes = $("#hdnPuedeEditar").val() === "true";
+const puedeVerCursosDocente = $("#hdnPuedeVerCursos").val() === "true";
 
 $(document).ready(function ()
 {
     cargarAreas();
+    cargarCursosFiltro();
     buscarDocentes();
 
     $("#btnBuscar").on("click", buscarDocentes);
     $("#btnLimpiar").on("click", limpiarFiltros);
     $("#btnNuevoDocente").on("click", abrirModalNuevo);
     $("#btnGuardarDocente").on("click", guardarDocente);
-
-    // Eventos de cuenta de usuario
     $("#btnVincularCuenta").on("click", vincularCuenta);
     $("#btnCrearCuenta").on("click", crearCuenta);
     $("#btnDesvincularCuenta").on("click", desvincularCuenta);
@@ -30,6 +30,7 @@ function buscarDocentes()
     let filtros = {
         texto: $("#txtBuscar").val(),
         idArea: $("#ddlFiltroArea").val(),
+        idCurso: $("#ddlFiltroCurso").val(),
         estado: $("#ddlFiltroEstado").val()
     };
 
@@ -59,7 +60,7 @@ function buscarDocentes()
 
 function renderizarDocentes(docentes)
 {
-    let columnas = puedeEditarDocentes ? 8 : 7;
+    let columnas = 8;
     let filas = '';
 
     $.each(docentes, function (index, d)
@@ -72,7 +73,23 @@ function renderizarDocentes(docentes)
             ? '<span class="badge bg-success">Activo</span>'
             : '<span class="badge bg-danger">Inactivo</span>';
 
+        // Expediente completo (MDOF-01-12): todos los que ven esta pantalla pueden abrirlo.
+        let botonExpediente = `
+            <a class="btn btn-secondary btn-sm me-1" title="Ver expediente"
+               href="/Docente/Expediente/${d.idDocente}">
+                <i class="bi bi-folder2-open"></i>
+            </a>`;
+
         let acciones = '';
+
+        // Botón "Cursos" (MDOF-01-05): lo ven quienes consultan asignaciones,
+        // aunque no puedan editar el expediente (ej. el Director).
+        let botonCursos = puedeVerCursosDocente
+            ? `<button class="btn btn-primary btn-sm me-1" title="Cursos asignados"
+                       onclick="abrirModalCursos(${d.idDocente})">
+                   <i class="bi bi-journal-bookmark"></i>
+               </button>`
+            : '';
 
         if (puedeEditarDocentes)
         {
@@ -88,18 +105,22 @@ function renderizarDocentes(docentes)
 
             acciones = `
                 <td class="text-nowrap">
+                    ${botonExpediente}
                     <button class="btn btn-warning btn-sm me-1" title="Editar"
                             onclick="abrirModalEditar(${d.idDocente})">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-
                     <button class="btn btn-info btn-sm me-1" title="Cuenta de usuario"
                             onclick="abrirModalCuenta(${d.idDocente})">
                         <i class="bi bi-person-gear"></i>
                     </button>
-
+                    ${botonCursos}
                     ${botonEstado}
                 </td>`;
+        }
+        else
+        {
+            acciones = `<td class="text-nowrap">${botonExpediente}${botonCursos}</td>`;
         }
 
         filas += `
@@ -117,32 +138,52 @@ function renderizarDocentes(docentes)
 
     if (filas === '')
     {
-        filas = `<tr>
-                    <td colspan="${columnas}" class="text-center text-muted">
-                        No se encontraron docentes
-                    </td>
-                </tr>`;
+        filas = `<tr><td colspan="${columnas}" class="text-center text-muted">No se encontraron docentes</td></tr>`;
     }
 
     $("#tblDocentes tbody").html(filas);
-
-    $("#lblTotal").text(
-        docentes.length === 1
-            ? "1 docente"
-            : `${docentes.length} docentes`
-    );
+    $("#lblTotal").text(docentes.length === 1 ? "1 docente" : `${docentes.length} docentes`);
 }
-
 
 function limpiarFiltros()
 {
     $("#txtBuscar").val('');
     $("#ddlFiltroArea").val('');
+    $("#ddlFiltroCurso").val('');
     $("#ddlFiltroEstado").val('');
 
     buscarDocentes();
 }
 
+function cargarCursosFiltro()
+{
+    $.ajax({
+        url: '/Docente/GetCursosFiltro',
+        type: 'GET',
+
+        success: function (response)
+        {
+            if (!response.esCorrecto || response.dato == null)
+            {
+                return;
+            }
+
+            let opciones = '';
+
+            $.each(response.dato, function (index, c)
+            {
+                opciones += `<option value="${c.idCurso}">${escapeHtml(c.codigo)} — ${escapeHtml(c.nombre)}</option>`;
+            });
+
+            $("#ddlFiltroCurso").append(opciones);
+        },
+
+        error: function ()
+        {
+            mostrarMensaje('Error al cargar los cursos.', 'danger');
+        }
+    });
+}
 
 function cargarAreas()
 {

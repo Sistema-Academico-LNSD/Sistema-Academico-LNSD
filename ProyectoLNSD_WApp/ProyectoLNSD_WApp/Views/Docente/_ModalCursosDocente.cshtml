@@ -1,0 +1,72 @@
+﻿<div class="modal fade" id="modalCursosDocente" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-journal-bookmark"></i> Cursos del docente
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnIdDocenteCursos" value="0" />
+
+                <p class="mb-3">
+                    Docente: <strong id="lblNombreDocenteCursos"></strong>
+                    <span id="lblDocenteInactivo" class="badge bg-danger ms-1 d-none">Inactivo</span>
+                </p>
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-calendar-check"></i>
+                    Período actual: <span id="lblPeriodoActivo"></span>
+                </h6>
+
+                <div id="alertaAsignacion" class="alert alert-warning small d-none"></div>
+
+                <div id="panelAsignar" class="row g-2 mb-3 d-none">
+                    <div class="col-md-9">
+                        <select id="ddlCursosDisponibles" class="form-select"></select>
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="button" id="btnAsignarCurso" class="btn btn-success">
+                            <i class="bi bi-plus-circle"></i> Asignar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table id="tblCursosActuales" class="table table-sm table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Código</th>
+                                <th>Curso</th>
+                                <th>Área</th>
+                                <th>Asignado el</th>
+                                <th class="col-quitar"></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-clock-history"></i> Historial de cursos impartidos
+                </h6>
+
+                <div id="panelHistorial"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

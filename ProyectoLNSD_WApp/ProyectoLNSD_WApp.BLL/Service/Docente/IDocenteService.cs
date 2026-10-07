@@ -4,7 +4,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Docente
 {
     public interface IDocenteService
     {
-        Task<RespuestaDTO<List<DocenteDTO>>> Buscar(string? texto, int? idArea, bool? estado);
+        Task<RespuestaDTO<List<DocenteDTO>>> Buscar(string? texto, int? idArea, int? idCurso, bool? estado);
         Task<RespuestaDTO<DocenteDTO?>> GetById(int idDocente);
         Task<RespuestaDTO<DocenteDTO>> Crear(DocenteDTO docente);
         Task<RespuestaDTO<DocenteDTO>> Actualizar(DocenteDTO docente);

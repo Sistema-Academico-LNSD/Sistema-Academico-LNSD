@@ -1,7 +1,10 @@
 ﻿@{
     ViewData["Title"] = "Docentes";
     bool puedeCrear = User.TienePermiso("Docentes", "Crear");
-    bool puedeEditar = User.TienePermiso("Docentes", "Editar");
+    bool puedeEditar = User.TienePermiso("Docentes", "Editar");    
+    bool puedeVerCursos = User.TienePermiso("AsignacionCursos", "Ver");
+    bool puedeAsignarCursos = User.TienePermiso("AsignacionCursos", "Crear");
+    bool puedeQuitarCursos = User.TienePermiso("AsignacionCursos", "Eliminar");
 }
 
 <div class="container-fluid mt-4">
@@ -36,14 +39,20 @@
 
             <div class="row g-2 mb-3">
 
-                <div class="col-md-5">
+                <div class="col-md-4">
                     <input type="text" id="txtBuscar" class="form-control"
                            placeholder="Nombre, identificación, correo o especialidad..." />
                 </div>
 
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <select id="ddlFiltroArea" class="form-select">
                         <option value="">Todas las áreas</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <select id="ddlFiltroCurso" class="form-select" title="Curso asignado en el período activo">
+                        <option value="">Todos los cursos</option>
                     </select>
                 </div>
 
@@ -79,10 +88,7 @@
                             <th>Área</th>
                             <th>Cuenta</th>
                             <th>Estado</th>
-                            @if (puedeEditar)
-                            {
-                                <th>Acciones</th>
-                            }
+                            <th>Acciones</th>
                         </tr>
                     </thead>
 
@@ -103,6 +109,10 @@
 
 @* Permisos JS *@
 <input type="hidden" id="hdnPuedeEditar" value="@(puedeEditar ? "true" : "false")" />
+<input type="hidden" id="hdnPuedeVerCursos" value="@(puedeVerCursos ? "true" : "false")" />
+<input type="hidden" id="hdnPuedeAsignarCursos" value="@(puedeAsignarCursos ? "true" : "false")" />
+<input type="hidden" id="hdnPuedeQuitarCursos" value="@(puedeQuitarCursos ? "true" : "false")" />
+
 
 @if (puedeCrear || puedeEditar)
 {
@@ -114,6 +124,13 @@
     @await Html.PartialAsync("_ModalCuentaDocente")
 }
 
+@if (puedeVerCursos)
+{
+    @await Html.PartialAsync("_ModalCursosDocente")
+}
+
+
 @section Scripts {
     <script src="~/js/docente.js" asp-append-version="true"></script>
+    <script src="~/js/docente-cursos.js" asp-append-version="true"></script>
 }

@@ -1,0 +1,44 @@
+﻿@model ProyectoLNSD_WApp.BLL.DTO.ExpedienteDocenteDTO
+@{
+    ViewData["Title"] = "Mi perfil docente";
+}
+
+<div class="container-fluid mt-4">
+
+    @if (Model == null)
+    {
+        <div class="d-flex justify-content-center">
+            <div class="card shadow border-0 text-center" style="width: 100%; max-width: 560px;">
+                <div class="card-header bg-primary text-white py-3">
+                    <h4 class="mb-0"><i class="bi bi-person-video3"></i> Mi perfil docente</h4>
+                </div>
+                <div class="card-body p-4">
+                    <p class="mb-4">@ViewData["Mensaje"]</p>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                        <i class="bi bi-house-door"></i> Volver al inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-3 no-print">
+            <h4 class="mb-0 text-primary">
+                <i class="bi bi-person-video3"></i> Mi perfil docente
+            </h4>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+        </div>
+
+        <div class="alert alert-info small no-print">
+            <i class="bi bi-info-circle"></i>
+            Revisá que tus datos sean correctos. Si encontrás algún error, comunicalo
+            a la administración del liceo para que lo actualice en tu expediente.
+        </div>
+
+        @await Html.PartialAsync("_ExpedienteDocente", Model)
+    }
+
+</div>

@@ -2,9 +2,9 @@
 {
     public interface IDocenteRepository
     {
-
-        Task<List<Entities.Docente>> Buscar(string? texto, int? idArea, bool? estado);
+        Task<List<Entities.Docente>> Buscar(string? texto, int? idArea, int? idCurso, bool? estado);
         Task<Entities.Docente?> GetById(int idDocente);
+        Task<Entities.Docente?> GetByIdUsuario(int idUsuario);
         Task<bool> ExisteIdentificacion(string identificacion, int? excluirIdDocente = null);
         Task<bool> ExisteCorreo(string correo, int? excluirIdDocente = null);
         Task<bool> Crear(Entities.Docente docente);

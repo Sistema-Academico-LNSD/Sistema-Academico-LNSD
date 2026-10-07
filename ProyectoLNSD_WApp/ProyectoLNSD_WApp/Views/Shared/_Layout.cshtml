@@ -179,6 +179,16 @@
                                             @User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
                                         </span>
                                     </li>
+
+                                    @if (User.IsInRole("Docente"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="MiPerfil" asp-action="Index">
+                                                <i class="bi bi-person-video3"></i> Mi perfil docente
+                                            </a>
+                                        </li>
+                                    }
+
                                     <li><hr class="dropdown-divider" /></li>
                                     <li>
                                         <button type="button" id="btnLogout" class="dropdown-item text-danger">
