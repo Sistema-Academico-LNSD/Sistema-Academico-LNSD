@@ -12,15 +12,18 @@ namespace ProyectoLNSD_WApp.Controllers
     {
         private readonly IDocenteService _docenteService;
         private readonly IDocenteCuentaService _cuentaService;
+        private readonly IExpedienteDocenteService _expedienteService;
         private readonly ICursoService _cursoService;
 
         public DocenteController(
             IDocenteService docenteService,
             IDocenteCuentaService cuentaService,
+            IExpedienteDocenteService expedienteService,
             ICursoService cursoService)
         {
             _docenteService = docenteService;
             _cuentaService = cuentaService;
+            _expedienteService = expedienteService;
             _cursoService = cursoService;
         }
 
@@ -33,11 +36,25 @@ namespace ProyectoLNSD_WApp.Controllers
 
         [HttpGet]
         [RequierePermiso("Docentes", "Ver")]
-        public async Task<IActionResult> Buscar(string? texto, int? idArea, bool? estado)
+        public async Task<IActionResult> Buscar(string? texto, int? idArea, int? idCurso, bool? estado)
         {
-            var respuesta = await _docenteService.Buscar(texto, idArea, estado);
+            var respuesta = await _docenteService.Buscar(texto, idArea, idCurso, estado);
 
             return Json(respuesta);
+        }
+
+        [HttpGet]
+        [RequierePermiso("Docentes", "Ver")]
+        public async Task<IActionResult> Expediente(int id)
+        {
+            var respuesta = await _expedienteService.GetPorDocente(id);
+
+            if (!respuesta.EsCorrecto || respuesta.Dato == null)
+            {
+                return NotFound();
+            }
+
+            return View(respuesta.Dato);
         }
 
         [HttpGet]
@@ -54,6 +71,15 @@ namespace ProyectoLNSD_WApp.Controllers
         public async Task<IActionResult> GetAreas()
         {
             var respuesta = await _cursoService.GetAreasActivas();
+
+            return Json(respuesta);
+        }
+
+        [HttpGet]
+        [RequierePermiso("Docentes", "Ver")]
+        public async Task<IActionResult> GetCursosFiltro()
+        {
+            var respuesta = await _cursoService.GetCursos(texto: null, idGrado: null, idArea: null, estado: true);
 
             return Json(respuesta);
         }

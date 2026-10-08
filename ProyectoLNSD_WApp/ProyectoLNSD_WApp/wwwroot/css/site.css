@@ -415,3 +415,61 @@ a.module-card:hover {
     .footer-lnsd .footer-link:hover {
         text-decoration: underline;
     }
+
+
+/* -------------------------------------------------------------
+   Expediente docente
+--------------------------------------------------------------- */
+.expediente-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--lnsd-primary);
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.expediente-datos dt {
+    font-weight: 600;
+    color: var(--lnsd-text-muted);
+}
+
+.expediente-datos dd {
+    margin-bottom: 0.6rem;
+}
+
+@media print {
+    header,
+    footer,
+    .no-print {
+        display: none !important;
+    }
+
+    body {
+        background: #fff;
+        margin-bottom: 0;
+    }
+
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #dee2e6 !important;
+        break-inside: avoid;
+    }
+
+        .card > .card-header.bg-primary {
+            background: none !important;
+            color: #000 !important;
+            border-bottom: 2px solid #000 !important;
+        }
+
+    .expediente-avatar {
+        border: 2px solid #000;
+        color: #000;
+        background: none;
+    }
+}

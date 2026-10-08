@@ -34,6 +34,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Curso> Cursos { get; set; }
         public virtual DbSet<AreaAcademica> AreasAcademicas { get; set; }
         public virtual DbSet<CursoGrado> CursosGrados { get; set; }
+        public virtual DbSet<DocenteCurso> DocentesCursos { get; set; }
 
 
         //Tables override mode builder
@@ -980,6 +981,59 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .OnDelete(DeleteBehavior.Restrict)
                       .HasConstraintName("FK_Curso_Grado_Grado");
             });
+
+            modelBuilder.Entity<DocenteCurso>(entity =>
+            {
+                entity.ToTable("Docente_Curso");
+
+                entity.HasKey(e => e.IdDocenteCurso)
+                      .HasName("PK_Docente_Curso");
+
+                entity.Property(e => e.IdDocenteCurso)
+                      .HasColumnName("id_docente_curso");
+
+                entity.Property(e => e.IdDocente)
+                      .HasColumnName("id_docente");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.FechaAsignacion)
+                      .HasColumnName("fecha_asignacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasIndex(e => new { e.IdDocente, e.IdCurso, e.IdPeriodo })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Docente_Curso_Periodo");
+
+                entity.HasIndex(e => e.IdCurso)
+                      .HasDatabaseName("IX_DocenteCurso_Curso");
+
+                entity.HasIndex(e => e.IdPeriodo)
+                      .HasDatabaseName("IX_DocenteCurso_Periodo");
+
+                entity.HasOne(d => d.Docente)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdDocente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_DocenteCurso_Docente");
+
+                entity.HasOne(d => d.Curso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdCurso)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_DocenteCurso_Curso");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_DocenteCurso_Periodo");
+            });
+
 
             OnModelCreatingPartial(modelBuilder);
         }

@@ -37,6 +37,7 @@ using ProyectoLNSD_WApp.BLL.Service.Estudiante;
 using ProyectoLNSD_WApp.DAL.Repositories.Estudiante;
 using ProyectoLNSD_WApp.BLL.Service.Encargado;
 using ProyectoLNSD_WApp.DAL.Repositories.Encargado;
+using ProyectoLNSD_WApp.DAL.Repositories.DocenteCurso;
 
 namespace ProyectoLNSD_WApp
 {
@@ -70,6 +71,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
             builder.Services.AddScoped<IEstudianteRepository, EstudianteRepository>();
             builder.Services.AddScoped<IEncargadoRepository, EncargadoRepository>();
+            builder.Services.AddScoped<IDocenteCursoRepository, DocenteCursoRepository>();
+            
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -91,11 +94,11 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IEstudianteService, EstudianteService>();
             builder.Services.AddScoped<IEncargadoService, EncargadoService>();
 
+            builder.Services.AddScoped<IDocenteCursoService, DocenteCursoService>();
+            builder.Services.AddScoped<IExpedienteDocenteService, ExpedienteDocenteService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
-
-            // Correo (MUSF-01-06)
             builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
             builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 

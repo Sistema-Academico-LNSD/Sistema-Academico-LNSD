@@ -105,6 +105,7 @@ CREATE UNIQUE INDEX UX_Docente_Usuario
     WHERE id_usuario IS NOT NULL;
 GO
 
+
 -- ESTUDIANTE ESTÁ ALTER *****NUEVA*****
 
 CREATE TABLE Estudiante
@@ -674,6 +675,28 @@ CREATE TABLE Periodo_Lectivo
 );
 GO
 
+-- TABLA INTERMEDIA DOCENTE_CURSO *****NUEVA*****
+
+CREATE TABLE Docente_Curso
+(
+    id_docente_curso INT IDENTITY(1,1) NOT NULL,
+    id_docente INT NOT NULL,
+    id_curso INT NOT NULL,
+    id_periodo INT NOT NULL,
+    fecha_asignacion DATETIME NOT NULL
+        CONSTRAINT DF_DocenteCurso_Fecha DEFAULT GETUTCDATE(),
+    CONSTRAINT PK_Docente_Curso PRIMARY KEY (id_docente_curso),
+    CONSTRAINT UQ_Docente_Curso_Periodo UNIQUE (id_docente, id_curso, id_periodo),
+    CONSTRAINT FK_DocenteCurso_Docente FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
+    CONSTRAINT FK_DocenteCurso_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
+    CONSTRAINT FK_DocenteCurso_Periodo FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo)
+);
+
+
+CREATE INDEX IX_DocenteCurso_Curso ON Docente_Curso(id_curso);
+CREATE INDEX IX_DocenteCurso_Periodo ON Docente_Curso(id_periodo);
+
+
 CREATE UNIQUE INDEX UQ_Periodo_Activo
     ON Periodo_Lectivo(activo)
     WHERE activo = 1;
@@ -814,6 +837,12 @@ VALUES
     1
 );
 GO
+
+-- User: admin@lnsd.local 
+-- Pass: Admin123!
+-- TEST
+-- User: FMendez@ejemplo.com 
+-- Pass: aaaaaaaa
 
 INSERT INTO Modulo (nombre, descripcion)
 VALUES
@@ -960,4 +989,31 @@ IF NOT EXISTS (
         (SELECT es.id_estudiante FROM Estudiante es JOIN Usuario u ON u.id_usuario = es.id_usuario
           WHERE u.correo = N'estudiante.prueba@lnsd.local'),
         N'Madre', 1);
+
+/* 2. Módulo de permisos para testing de docentes* *****NUEVO*****/
+
+
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'AsignacionCursos')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'AsignacionCursos', N'Asignación de cursos a docentes por período lectivo, consulta e historial.');
+GO
+
+-- Administrador: todo
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Administrador'
+  AND m.nombre = N'AsignacionCursos'
+  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+
+-- Director: consultar, asignar y quitar (MDOF-01-04 / 01-05 dicen "administrador o director")
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 0, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre = N'Director'
+  AND m.nombre = N'AsignacionCursos'
+  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO

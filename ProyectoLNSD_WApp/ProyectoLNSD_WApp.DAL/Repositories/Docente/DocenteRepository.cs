@@ -12,7 +12,7 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Docente
             _context = context;
         }
 
-        public async Task<List<Entities.Docente>> Buscar(string? texto, int? idArea, bool? estado)
+        public async Task<List<Entities.Docente>> Buscar(string? texto, int? idArea, int? idCurso, bool? estado)
         {
             var query = _context.Docentes
                 .AsNoTracking()
@@ -36,6 +36,14 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Docente
                 query = query.Where(d => d.IdArea == idArea.Value);
             }
 
+            if (idCurso.HasValue)
+            {
+                query = query.Where(d => _context.DocentesCursos.Any(dc =>
+                    dc.IdDocente == d.IdDocente &&
+                    dc.IdCurso == idCurso.Value &&
+                    dc.Periodo != null && dc.Periodo.Activo));
+            }
+
             if (estado.HasValue)
             {
                 query = query.Where(d => d.Estado == estado.Value);
@@ -56,6 +64,14 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Docente
                 .FirstOrDefaultAsync(d => d.IdDocente == idDocente);
         }
 
+        public async Task<Entities.Docente?> GetByIdUsuario(int idUsuario)
+        {
+            return await _context.Docentes
+                .AsNoTracking()
+                .Include(d => d.Area)
+                .Include(d => d.Usuario)
+                .FirstOrDefaultAsync(d => d.IdUsuario == idUsuario);
+        }
         public async Task<bool> ExisteIdentificacion(string identificacion, int? excluirIdDocente = null)
         {
             return await _context.Docentes.AnyAsync(d =>
