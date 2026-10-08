@@ -254,6 +254,61 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasMaxLength(30)
                       .IsRequired();
 
+                entity.Property(e => e.Carnet)
+                      .HasColumnName("carnet")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.FechaNacimiento)
+                      .HasColumnName("fecha_nacimiento");
+
+                entity.Property(e => e.FechaIngreso)
+                      .HasColumnName("fecha_ingreso");
+
+                entity.Property(e => e.Telefono)
+                      .HasColumnName("telefono")
+                      .HasMaxLength(30);
+
+                entity.Property(e => e.Direccion)
+                      .HasColumnName("direccion")
+                      .HasMaxLength(300);
+
+                entity.Property(e => e.CorreoEmergencia)
+                      .HasColumnName("correo_emergencia")
+                      .HasMaxLength(150);
+
+                entity.Property(e => e.IdGrado)
+                      .HasColumnName("id_grado");
+
+                entity.Property(e => e.EstadoAcademico)
+                      .HasColumnName("estado_academico")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Alergias)
+                      .HasColumnName("alergias")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.ObservacionesMedicas)
+                      .HasColumnName("observaciones_medicas")
+                      .HasMaxLength(1000);
+
+                entity.Property(e => e.AdecuacionesEducativas)
+                      .HasColumnName("adecuaciones_educativas")
+                      .HasMaxLength(1000);
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado");
+
+                entity.HasOne(d => d.Grado)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdGrado)
+                      .HasConstraintName("FK_Estudiante_Grado");
+
+                entity.HasIndex(e => e.Carnet)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Estudiante_Carnet");
+
                 entity.HasOne(d => d.Usuario)
                       .WithOne(p => p.Estudiante)
                       .HasForeignKey<Estudiante>(d => d.IdUsuario)
@@ -281,6 +336,10 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.Property(e => e.IdUsuario)
                       .HasColumnName("id_usuario");
+
+                entity.Property(e => e.Telefono)
+                      .HasColumnName("telefono")
+                      .HasMaxLength(30);
 
                 entity.HasOne(d => d.Usuario)
                       .WithOne(p => p.Encargado)
@@ -341,6 +400,9 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasColumnName("parentesco")
                       .HasMaxLength(50)
                       .IsRequired();
+
+                entity.Property(e => e.EsPrincipal)
+                      .HasColumnName("es_principal");
 
                 entity.HasOne(d => d.Encargado)
                       .WithMany(p => p.EncargadosEstudiantes)

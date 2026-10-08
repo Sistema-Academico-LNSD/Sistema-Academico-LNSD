@@ -7,6 +7,8 @@
 
         public int IdUsuario { get; set; }
 
+        public string? Telefono { get; set; }
+
         public virtual Usuario? Usuario { get; set; }
 
         public virtual ICollection<EncargadoEstudiante> EncargadosEstudiantes { get; set; }

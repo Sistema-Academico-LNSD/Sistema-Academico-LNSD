@@ -140,6 +140,87 @@ CREATE TABLE Encargado
         FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
 );
 GO
+/* ---------- Estudiante (agregados) ---------- */
+IF COL_LENGTH('Estudiante','fecha_nacimiento') IS NULL
+    ALTER TABLE Estudiante ADD fecha_nacimiento DATE NULL;           
+GO
+IF COL_LENGTH('Estudiante','correo_emergencia') IS NULL
+    ALTER TABLE Estudiante ADD correo_emergencia NVARCHAR(150) NULL; 
+GO
+IF COL_LENGTH('Estudiante','id_grado') IS NULL
+    ALTER TABLE Estudiante ADD id_grado INT NULL;                    
+GO
+IF COL_LENGTH('Estudiante','estado_academico') IS NULL
+    ALTER TABLE Estudiante ADD estado_academico NVARCHAR(30) NOT NULL
+        CONSTRAINT DF_Estudiante_EstadoAcademico DEFAULT N'Regular'; 
+GO
+IF COL_LENGTH('Estudiante','alergias') IS NULL
+    ALTER TABLE Estudiante ADD alergias NVARCHAR(500) NULL;          
+GO
+IF COL_LENGTH('Estudiante','observaciones_medicas') IS NULL
+    ALTER TABLE Estudiante ADD observaciones_medicas NVARCHAR(1000) NULL;
+GO
+IF COL_LENGTH('Estudiante','adecuaciones_educativas') IS NULL
+    ALTER TABLE Estudiante ADD adecuaciones_educativas NVARCHAR(1000) NULL;
+GO
+ 
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Estudiante_Grado')
+    ALTER TABLE Estudiante ADD CONSTRAINT FK_Estudiante_Grado
+        FOREIGN KEY (id_grado) REFERENCES Grado(id_grado);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_Estudiante_EstadoAcademico')
+    ALTER TABLE Estudiante ADD CONSTRAINT CK_Estudiante_EstadoAcademico
+        CHECK (estado_academico IN (N'Regular', N'Repitente', N'Retirado', N'Egresado'));
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Estudiante_Grado')
+    CREATE INDEX IX_Estudiante_Grado ON Estudiante(id_grado);
+GO
+ 
+/* ---------- Encargado (agregados) ---------- */
+IF COL_LENGTH('Encargado','telefono') IS NULL
+    ALTER TABLE Encargado ADD telefono NVARCHAR(30) NULL;            
+GO
+ 
+/* ---------- Encargado_Estudiante ---------- */
+IF COL_LENGTH('Encargado_Estudiante','es_principal') IS NULL
+    ALTER TABLE Encargado_Estudiante ADD es_principal BIT NOT NULL
+        CONSTRAINT DF_EncEst_EsPrincipal DEFAULT 0;                  
+GO
+-- Solo un encargado principal por estudiante
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Encargado_Estudiante_Principal')
+    CREATE UNIQUE INDEX UX_Encargado_Estudiante_Principal
+        ON Encargado_Estudiante(id_estudiante) WHERE es_principal = 1;
+GO
+
+USE Proyecto_LNSD_DB;
+GO
+ 
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Estudiantes')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Estudiantes', N'Expedientes estudiantiles: registro, edición, estado, carné y consulta.');
+GO
+ 
+-- Administrador: todos los permisos sobre Estudiantes
+IF NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+               JOIN Rol r ON r.id_rol = rp.id_rol
+               JOIN Modulo m ON m.id_modulo = rp.id_modulo
+               WHERE r.nombre = N'Administrador' AND m.nombre = N'Estudiantes')
+    INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+    SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+    FROM Rol r CROSS JOIN Modulo m
+    WHERE r.nombre = N'Administrador' AND m.nombre = N'Estudiantes';
+GO
+ 
+-- Director: solo consulta
+IF NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+               JOIN Rol r ON r.id_rol = rp.id_rol
+               JOIN Modulo m ON m.id_modulo = rp.id_modulo
+               WHERE r.nombre = N'Director' AND m.nombre = N'Estudiantes')
+    INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+    SELECT r.id_rol, m.id_modulo, 1, 0, 0, 0
+    FROM Rol r CROSS JOIN Modulo m
+    WHERE r.nombre = N'Director' AND m.nombre = N'Estudiantes';
+GO
 
 /* ============================================================
    2. ÁREAS ACADÉMICAS *****NUEVA*****
@@ -845,6 +926,69 @@ CROSS JOIN Rol r
 WHERE r.nombre = N'Administrador';
 GO
 
+/* ============================================================
+   MÓDULO ESTUDIANTES - DATOS DE PRUEBA
+   Ejecutar DESPUÉS de 01_ALTER_Modulo_Estudiantes.sql (no duplica).
+ 
+   Usuarios de prueba:
+     estudiante.prueba@lnsd.local  /  Estudiante123*   (rol Estudiante)
+     encargado.prueba@lnsd.local   /  Encargado123*    (rol Encargado)
+   ============================================================ */
+USE Proyecto_LNSD_DB;
+GO
+ 
+/* ---------- Usuario estudiante ---------- */
+IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'estudiante.prueba@lnsd.local')
+    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
+    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Estudiante'),
+            N'Estudiante', N'Prueba', N'estudiante.prueba@lnsd.local',
+            0x0100000001000186A0000000108760C60D5E72121B52832E5B76E8C2D38B7594203BFD27E0345D59EB4C449C76A4166C59C2F2C683396299ABE595520A, 1);
+GO
+ 
+IF NOT EXISTS (SELECT 1 FROM Estudiante e JOIN Usuario u ON u.id_usuario = e.id_usuario
+               WHERE u.correo = N'estudiante.prueba@lnsd.local')
+    INSERT INTO Estudiante
+        (id_usuario, identificacion, carnet, fecha_ingreso, fecha_nacimiento,
+         telefono, direccion, correo_emergencia, id_grado, estado_academico,
+         alergias, observaciones_medicas, adecuaciones_educativas, estado)
+    VALUES
+        ((SELECT id_usuario FROM Usuario WHERE correo = N'estudiante.prueba@lnsd.local'),
+         N'1-1111-1111', N'PRUEBA-0001', '2026-02-01', '2012-05-10',
+         N'8888-0001', N'San José, Costa Rica', N'emergencia.prueba@lnsd.local',
+         (SELECT TOP 1 id_grado FROM Grado ORDER BY id_grado),
+         N'Regular',
+         N'Alergia al maní', N'Usa lentes', N'Tiempo adicional en exámenes', 1);
+GO
+ 
+/* ---------- Usuario encargado ---------- */
+IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'encargado.prueba@lnsd.local')
+    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
+    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Encargado'),
+            N'Encargado', N'Prueba', N'encargado.prueba@lnsd.local',
+            0x0100000001000186A000000010979CBF60A620784CF213010E9F5B14A1FEE56743FBC1CFEFFF35E2CCEA915B377F1FC3CBF9DABB4591A82D8BC0E60B2F, 1);
+GO
+ 
+IF NOT EXISTS (SELECT 1 FROM Encargado e JOIN Usuario u ON u.id_usuario = e.id_usuario
+               WHERE u.correo = N'encargado.prueba@lnsd.local')
+    INSERT INTO Encargado (id_usuario, telefono)
+    VALUES ((SELECT id_usuario FROM Usuario WHERE correo = N'encargado.prueba@lnsd.local'),
+            N'8888-0002');
+GO
+ 
+/* ---------- Vínculo encargado principal ---------- */
+IF NOT EXISTS (
+    SELECT 1
+    FROM Encargado_Estudiante ee
+    JOIN Encargado en ON en.id_encargado = ee.id_encargado
+    JOIN Usuario ue ON ue.id_usuario = en.id_usuario
+    WHERE ue.correo = N'encargado.prueba@lnsd.local')
+    INSERT INTO Encargado_Estudiante (id_encargado, id_estudiante, parentesco, es_principal)
+    VALUES (
+        (SELECT en.id_encargado FROM Encargado en JOIN Usuario u ON u.id_usuario = en.id_usuario
+          WHERE u.correo = N'encargado.prueba@lnsd.local'),
+        (SELECT es.id_estudiante FROM Estudiante es JOIN Usuario u ON u.id_usuario = es.id_usuario
+          WHERE u.correo = N'estudiante.prueba@lnsd.local'),
+        N'Madre', 1);
 
 /* 2. Módulo de permisos para testing de docentes* *****NUEVO*****/
 

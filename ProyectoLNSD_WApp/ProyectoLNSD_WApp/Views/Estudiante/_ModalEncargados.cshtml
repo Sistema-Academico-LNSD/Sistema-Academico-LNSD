@@ -1,0 +1,130 @@
+<div class="modal fade" id="modalEncargados" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-people"></i>
+                    <span id="lblTituloEncargados">Encargados</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnIdEstudianteEnc" value="0" />
+
+                <div class="table-responsive mb-4">
+                    <table id="tblEncargados" class="table table-sm table-striped align-middle mb-1">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Parentesco</th>
+                                <th>Teléfono</th>
+                                <th>Correo</th>
+                                <th>Principal</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                    <small class="text-muted">
+                        El encargado principal recibe la información prioritaria de la institución.
+                    </small>
+                </div>
+
+                <ul class="nav nav-tabs mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabEncExistente"
+                                type="button" role="tab">
+                            <i class="bi bi-search"></i> Asociar existente
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabEncNuevo"
+                                type="button" role="tab">
+                            <i class="bi bi-person-plus"></i> Registrar nuevo
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content">
+
+                    @* ---- Asociar un encargado que ya existe ---- *@
+                    <div class="tab-pane fade show active" id="tabEncExistente" role="tabpanel">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-9">
+                                <input type="text" id="txtEncBuscar" class="form-control"
+                                       placeholder="Nombre o correo del encargado..." />
+                            </div>
+                            <div class="col-md-3">
+                                <button type="button" id="btnEncBuscar" class="btn btn-success w-100">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="lstEncResultados" class="list-group mb-3"></div>
+
+                        <div class="row g-2">
+                            <div class="col-md-6">
+                                <label for="ddlEncParentescoExistente" class="form-label">Parentesco <span class="text-danger">*</span></label>
+                                <select id="ddlEncParentescoExistente" class="form-select enc-parentesco"></select>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="button" id="btnEncAsociar" class="btn btn-primary">
+                                    <i class="bi bi-link-45deg"></i> Asociar encargado
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* ---- Registrar un encargado nuevo ---- *@
+                    <div class="tab-pane fade" id="tabEncNuevo" role="tabpanel">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="txtEncNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                                <input type="text" id="txtEncNombre" class="form-control" maxlength="100" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="txtEncApellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                                <input type="text" id="txtEncApellidos" class="form-control" maxlength="100" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="txtEncCorreo" class="form-label">Correo electrónico <span class="text-danger">*</span></label>
+                                <input type="email" id="txtEncCorreo" class="form-control" maxlength="150" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="txtEncTelefono" class="form-label">Teléfono <span class="text-danger">*</span></label>
+                                <input type="tel" id="txtEncTelefono" class="form-control" maxlength="30" placeholder="+506 0000-0000" />
+                            </div>
+                            <div class="col-md-6">
+                                <label for="ddlEncParentescoNuevo" class="form-label">Parentesco <span class="text-danger">*</span></label>
+                                <select id="ddlEncParentescoNuevo" class="form-select enc-parentesco"></select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="txtEncPassword" class="form-label">Contraseña inicial (opcional)</label>
+                                <input type="password" id="txtEncPassword" class="form-control" autocomplete="new-password" />
+                                <small class="text-muted">
+                                    Si la deja vacía, el encargado la define con "Olvidé mi contraseña".
+                                </small>
+                            </div>
+                            <div class="col-12">
+                                <button type="button" id="btnEncCrear" class="btn btn-primary">
+                                    <i class="bi bi-person-plus"></i> Registrar y asociar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>

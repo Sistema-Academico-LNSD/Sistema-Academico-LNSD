@@ -15,4 +15,9 @@
 		<PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.12" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Service\Estudiante\" />
+	  <Folder Include="Service\Encargado\" />
+	</ItemGroup>
+
 </Project>

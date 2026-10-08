@@ -1,0 +1,146 @@
+<div class="modal fade" id="modalEstudiante" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="lblTituloModalEstudiante">Nuevo estudiante</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="hdnIdEstudiante" value="0" />
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-person-vcard"></i> Datos personales y de contacto
+                </h6>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label for="txtNombre" class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" id="txtNombre" class="form-control" maxlength="100" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtApellidos" class="form-label">Apellidos <span class="text-danger">*</span></label>
+                        <input type="text" id="txtApellidos" class="form-control" maxlength="100" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtIdentificacion" class="form-label">Identificación <span class="text-danger">*</span></label>
+                        <input type="text" id="txtIdentificacion" class="form-control" maxlength="30" placeholder="1-2345-6789" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtFechaNacimiento" class="form-label">Fecha de nacimiento <span class="text-danger">*</span></label>
+                        <input type="date" id="txtFechaNacimiento" class="form-control" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtCorreo" class="form-label">Correo electrónico (usuario de acceso) <span class="text-danger">*</span></label>
+                        <input type="email" id="txtCorreo" class="form-control" maxlength="150" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtCorreoEmergencia" class="form-label">Correo de emergencia</label>
+                        <input type="email" id="txtCorreoEmergencia" class="form-control" maxlength="150" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtTelefono" class="form-label">Teléfono</label>
+                        <input type="tel" id="txtTelefono" class="form-control" maxlength="30" placeholder="+506 0000-0000" />
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="txtDireccion" class="form-label">Dirección</label>
+                        <input type="text" id="txtDireccion" class="form-control" maxlength="300" />
+                    </div>
+                </div>
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-mortarboard"></i> Información académica
+                </h6>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-4">
+                        <label for="ddlGrado" class="form-label">Grado de referencia <span class="text-danger">*</span></label>
+                        <select id="ddlGrado" class="form-select">
+                            <option value="">Seleccione...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="ddlEstadoAcademico" class="form-label">Estado académico <span class="text-danger">*</span></label>
+                        <select id="ddlEstadoAcademico" class="form-select">
+                            <option value="Regular">Regular</option>
+                            <option value="Repitente">Repitente</option>
+                            <option value="Retirado">Retirado</option>
+                            <option value="Egresado">Egresado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="txtFechaIngreso" class="form-label">Fecha de ingreso <span class="text-danger">*</span></label>
+                        <input type="date" id="txtFechaIngreso" class="form-control" />
+                    </div>
+
+                    <div class="col-12">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            El carné se genera automáticamente al registrar al estudiante.
+                        </small>
+                    </div>
+                </div>
+
+                <h6 class="text-primary border-bottom pb-1 mb-3">
+                    <i class="bi bi-heart-pulse"></i> Información médica y de atención
+                </h6>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-12">
+                        <label for="txtAlergias" class="form-label">Alergias</label>
+                        <textarea id="txtAlergias" class="form-control" rows="2" maxlength="500"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="txtObservacionesMedicas" class="form-label">Observaciones médicas</label>
+                        <textarea id="txtObservacionesMedicas" class="form-control" rows="2" maxlength="1000"></textarea>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="txtAdecuaciones" class="form-label">Adecuaciones educativas</label>
+                        <textarea id="txtAdecuaciones" class="form-control" rows="2" maxlength="1000"></textarea>
+                    </div>
+                </div>
+
+                <div id="seccionCuenta">
+                    <h6 class="text-primary border-bottom pb-1 mb-3">
+                        <i class="bi bi-key"></i> Cuenta de acceso
+                    </h6>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="txtPassword" class="form-label">Contraseña inicial <span class="text-danger">*</span></label>
+                            <input type="password" id="txtPassword" class="form-control" autocomplete="new-password" />
+                            <small class="text-muted">Mínimo 8 caracteres.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="txtConfirmarPassword" class="form-label">Confirmar contraseña <span class="text-danger">*</span></label>
+                            <input type="password" id="txtConfirmarPassword" class="form-control" autocomplete="new-password" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarEstudiante" class="btn btn-primary">
+                    <i class="bi bi-save"></i> <span id="lblBotonGuardar">Registrar</span>
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
