@@ -89,6 +89,15 @@
                                 </li>
                             }
 
+                            @if (User.TienePermiso("Estudiantes", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Estudiante")" asp-controller="Estudiante" asp-action="Index">
+                                        <i class="bi bi-backpack2"></i> Estudiantes
+                                    </a>
+                                </li>
+                            }
+
                             @if (User.TienePermiso("Grados", "Ver"))
                             {
                                 <li class="nav-item">

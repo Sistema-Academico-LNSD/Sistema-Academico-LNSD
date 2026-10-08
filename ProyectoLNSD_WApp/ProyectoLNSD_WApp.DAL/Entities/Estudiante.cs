@@ -8,6 +8,32 @@
 
         public string Identificacion { get; set; } = string.Empty;
 
+        public string Carnet { get; set; } = string.Empty;
+
+        public DateOnly? FechaNacimiento { get; set; }
+
+        public DateOnly FechaIngreso { get; set; }
+
+        public string? Telefono { get; set; }
+
+        public string? Direccion { get; set; }
+
+        public string? CorreoEmergencia { get; set; }
+
+        public int? IdGrado { get; set; }
+
+        public string EstadoAcademico { get; set; } = "Regular";
+
+        public string? Alergias { get; set; }
+
+        public string? ObservacionesMedicas { get; set; }
+
+        public string? AdecuacionesEducativas { get; set; }
+
+        public bool Estado { get; set; } = true;
+
+        public virtual Grado? Grado { get; set; }
+
         public virtual Usuario? Usuario { get; set; }
 
         //public virtual ICollection<Beca> Becas { get; set; }

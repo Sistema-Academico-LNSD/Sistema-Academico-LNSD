@@ -51,6 +51,13 @@ namespace ProyectoLNSD_WApp.BLL
                 .ForMember(d => d.TieneCuenta, o => o.MapFrom(s => s.IdUsuario.HasValue));
 
             CreateMap<DTO.DocenteDTO, DAL.Entities.Docente>();
+
+            // Estudiante (nombre, apellidos y correo viven en Usuario)
+            CreateMap<DAL.Entities.Estudiante, DTO.EstudianteDTO>()
+                .ForMember(d => d.Nombre, o => o.MapFrom(s => s.Usuario != null ? s.Usuario.Nombre : string.Empty))
+                .ForMember(d => d.Apellidos, o => o.MapFrom(s => s.Usuario != null ? s.Usuario.Apellido : string.Empty))
+                .ForMember(d => d.Correo, o => o.MapFrom(s => s.Usuario != null ? s.Usuario.Correo : string.Empty))
+                .ForMember(d => d.NombreGrado, o => o.MapFrom(s => s.Grado != null ? s.Grado.Nombre : null));
         }
     }
 }
