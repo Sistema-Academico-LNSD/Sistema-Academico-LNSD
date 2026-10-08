@@ -57,7 +57,7 @@ function renderizarEstudiantes(estudiantes)
     estudiantesCache = {};
     $.each(estudiantes, function (i, e) { estudiantesCache[e.idEstudiante] = e; });
 
-    let columnas = puedeEditarEstudiantes ? 8 : 7;
+    let columnas = 8;
     let filas = '';
 
     $.each(estudiantes, function (index, e)
@@ -66,7 +66,11 @@ function renderizarEstudiantes(estudiantes)
             ? '<span class="badge bg-success">Activo</span>'
             : '<span class="badge bg-danger">Inactivo</span>';
 
-        let acciones = '';
+        let botones = `
+            <button class="btn btn-secondary btn-sm me-1" title="Ver expediente"
+                    onclick="abrirExpediente(${e.idEstudiante})">
+                <i class="bi bi-eye"></i>
+            </button>`;
 
         if (puedeEditarEstudiantes)
         {
@@ -80,19 +84,19 @@ function renderizarEstudiantes(estudiantes)
                        <i class="bi bi-check-circle"></i>
                    </button>`;
 
-            acciones = `
-                <td class="text-nowrap">
-                    <button class="btn btn-warning btn-sm me-1" title="Editar"
-                            onclick="abrirModalEditar(${e.idEstudiante})">
-                        <i class="bi bi-pencil-square"></i>
-                    </button>
-                    <button class="btn btn-info btn-sm me-1" title="Encargados"
-                            onclick="abrirModalEncargados(${e.idEstudiante})">
-                        <i class="bi bi-people"></i>
-                    </button>
-                    ${botonEstado}
-                </td>`;
+            botones += `
+                <button class="btn btn-warning btn-sm me-1" title="Editar"
+                        onclick="abrirModalEditar(${e.idEstudiante})">
+                    <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-info btn-sm me-1" title="Encargados"
+                        onclick="abrirModalEncargados(${e.idEstudiante})">
+                    <i class="bi bi-people"></i>
+                </button>
+                ${botonEstado}`;
         }
+
+        let acciones = `<td class="text-nowrap">${botones}</td>`;
 
         filas += `
             <tr>
@@ -362,4 +366,119 @@ async function cambiarEstadoEstudiante(idEstudiante, nuevoEstado)
             mostrarMensaje('Error al cambiar el estado del estudiante.', 'danger');
         }
     });
+}
+
+
+
+// ============================================================
+// Expediente completo (MESF-01-13)
+// ============================================================
+
+function textoOGuion(valor)
+{
+    return (valor === null || valor === undefined || String(valor).trim() === '')
+        ? '—'
+        : valor;
+}
+
+
+function formatearFecha(iso)
+{
+    if (!iso)
+    {
+        return '—';
+    }
+
+    let partes = String(iso).split('-');
+
+    return partes.length === 3
+        ? `${partes[2]}/${partes[1]}/${partes[0]}`
+        : iso;
+}
+
+
+function abrirExpediente(idEstudiante)
+{
+    $.when(
+        $.get('/Estudiante/GetEstudiante', { id: idEstudiante }),
+        $.get('/Estudiante/GetEncargados', { idEstudiante: idEstudiante })
+    )
+    .done(function (respEstudiante, respEncargados)
+    {
+        let rEst = respEstudiante[0];
+        let rEnc = respEncargados[0];
+
+        if (!rEst.esCorrecto || rEst.dato == null)
+        {
+            mostrarMensaje(rEst.mensaje, 'danger');
+            return;
+        }
+
+        let e = rEst.dato;
+
+        $("#expNombre").text(`${e.nombre} ${e.apellidos}`);
+        $("#expCarnet").text(e.carnet);
+
+        $("#expEstado")
+            .text(e.estado ? 'Activo' : 'Inactivo')
+            .attr('class', e.estado ? 'badge bg-success fs-6' : 'badge bg-danger fs-6');
+
+        $("#expIdentificacion").text(textoOGuion(e.identificacion));
+        $("#expFechaNacimiento").text(formatearFecha(e.fechaNacimiento));
+        $("#expCorreo").text(textoOGuion(e.correo));
+        $("#expCorreoEmergencia").text(textoOGuion(e.correoEmergencia));
+        $("#expTelefono").text(textoOGuion(e.telefono));
+        $("#expDireccion").text(textoOGuion(e.direccion));
+
+        $("#expGrado").text(textoOGuion(e.nombreGrado));
+        $("#expEstadoAcademico").text(textoOGuion(e.estadoAcademico));
+        $("#expFechaIngreso").text(formatearFecha(e.fechaIngreso));
+
+        $("#expAlergias").text(textoOGuion(e.alergias));
+        $("#expObservacionesMedicas").text(textoOGuion(e.observacionesMedicas));
+        $("#expAdecuaciones").text(textoOGuion(e.adecuacionesEducativas));
+
+        renderizarEncargadosExpediente(rEnc.esCorrecto ? (rEnc.dato ?? []) : []);
+
+        bootstrap.Modal
+            .getOrCreateInstance(document.getElementById("modalExpediente"))
+            .show();
+    })
+    .fail(function ()
+    {
+        mostrarMensaje('Error al cargar el expediente.', 'danger');
+    });
+}
+
+
+function renderizarEncargadosExpediente(encargados)
+{
+    let filas = '';
+
+    $.each(encargados, function (i, enc)
+    {
+        let principal = enc.esPrincipal
+            ? '<span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> Principal</span>'
+            : '';
+
+        filas += `
+            <tr>
+                <td>${escapeHtml(enc.apellidos)}, ${escapeHtml(enc.nombre)}</td>
+                <td>${escapeHtml(enc.parentesco)}</td>
+                <td>${escapeHtml(enc.telefono ?? '—')}</td>
+                <td>${escapeHtml(enc.correo)}</td>
+                <td>${principal}</td>
+            </tr>`;
+    });
+
+    if (filas === '')
+    {
+        filas = `<tr>
+                    <td colspan="5" class="text-center text-muted">
+                        Sin encargados asociados
+                    </td>
+                </tr>`;
+    }
+
+    $("#tblExpEncargados tbody").html(filas);
 }

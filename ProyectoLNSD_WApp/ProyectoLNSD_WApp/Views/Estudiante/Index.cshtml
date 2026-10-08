@@ -29,7 +29,7 @@
             <div class="row g-2 mb-3">
                 <div class="col-md-5">
                     <input type="text" id="txtBuscar" class="form-control"
-                           placeholder="Nombre, identificación, correo o carné..." />
+                           placeholder="Nombre, identificación, correo, carné o encargado..." />
                 </div>
 
                 <div class="col-md-3">
@@ -67,10 +67,7 @@
                             <th>Grado</th>
                             <th>Estado académico</th>
                             <th>Estado</th>
-                            @if (puedeEditar)
-                            {
-                                <th>Acciones</th>
-                            }
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -90,6 +87,8 @@
 {
     @await Html.PartialAsync("_ModalEstudiante")
 }
+
+@await Html.PartialAsync("_ModalExpediente")
 
 @if (puedeEditar)
 {

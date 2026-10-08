@@ -25,14 +25,26 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Estudiante
 
             if (!string.IsNullOrWhiteSpace(texto))
             {
-                string t = texto.Trim();
+                // Cada palabra debe coincidir con alguno de los campos (nombre, apellido,
+                // identificación, correo, carné o datos de un encargado), de modo que
+                // "Ana Mora" encuentra a Ana Mora aunque nombre y apellido estén separados.
+                var palabras = texto.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-                query = query.Where(e =>
-                    e.Usuario!.Nombre.Contains(t) ||
-                    e.Usuario.Apellido.Contains(t) ||
-                    e.Usuario.Correo.Contains(t) ||
-                    e.Identificacion.Contains(t) ||
-                    e.Carnet.Contains(t));
+                foreach (string palabra in palabras)
+                {
+                    string p = palabra;
+
+                    query = query.Where(e =>
+                        e.Usuario!.Nombre.Contains(p) ||
+                        e.Usuario.Apellido.Contains(p) ||
+                        e.Usuario.Correo.Contains(p) ||
+                        e.Identificacion.Contains(p) ||
+                        e.Carnet.Contains(p) ||
+                        e.EncargadosEstudiantes.Any(v =>
+                            v.Encargado!.Usuario!.Nombre.Contains(p) ||
+                            v.Encargado.Usuario.Apellido.Contains(p) ||
+                            v.Encargado.Usuario.Correo.Contains(p)));
+                }
             }
 
             if (idGrado.HasValue)

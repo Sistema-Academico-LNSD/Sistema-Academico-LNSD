@@ -86,7 +86,7 @@ namespace ProyectoLNSD_WApp.Controllers
         // ---- Encargados (MESF-01-03 y MESF-01-04) ----
 
         [HttpGet]
-        [RequierePermiso("Estudiantes", "Editar")]
+        [RequierePermiso("Estudiantes", "Ver")]
         public async Task<IActionResult> GetEncargados(int idEstudiante)
         {
             return Json(await _encargadoService.GetPorEstudiante(idEstudiante));
