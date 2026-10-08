@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="Views\Estudiante\" />
+	  <Folder Include="Views\MiPerfil\" />
 	</ItemGroup>
 
 </Project>

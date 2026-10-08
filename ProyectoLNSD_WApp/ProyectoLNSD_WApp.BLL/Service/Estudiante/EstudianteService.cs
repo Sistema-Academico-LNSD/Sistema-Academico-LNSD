@@ -54,6 +54,24 @@ namespace ProyectoLNSD_WApp.BLL.Service.Estudiante
             return RespuestaDTO<EstudianteDTO?>.Exito(_mapper.Map<EstudianteDTO>(estudiante));
         }
 
+        public async Task<RespuestaDTO<EstudianteDTO?>> GetMiExpediente(int idUsuario)
+        {
+            var estudiante = await _estudianteRepository.GetByUsuario(idUsuario);
+
+            if (estudiante == null)
+                return RespuestaDTO<EstudianteDTO?>.Error("No hay un expediente de estudiante asociado a su cuenta", 404);
+
+            var dto = _mapper.Map<EstudianteDTO>(estudiante);
+
+            // MESF-01-11: el estudiante consulta información personal y académica;
+            // los datos médicos y de atención no se exponen en esta vista.
+            dto.Alergias = null;
+            dto.ObservacionesMedicas = null;
+            dto.AdecuacionesEducativas = null;
+
+            return RespuestaDTO<EstudianteDTO?>.Exito(dto);
+        }
+
         public async Task<RespuestaDTO<EstudianteDTO>> Crear(EstudianteCrearDTO dto)
         {
             Normalizar(dto);

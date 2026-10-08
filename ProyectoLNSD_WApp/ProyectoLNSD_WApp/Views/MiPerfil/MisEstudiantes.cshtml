@@ -1,0 +1,77 @@
+@using ProyectoLNSD_WApp.BLL.DTO
+@model RespuestaDTO<List<EstudianteEncargadoDTO>>
+
+@{
+    ViewData["Title"] = "Mis estudiantes";
+    var estudiantes = Model.Dato ?? new List<EstudianteEncargadoDTO>();
+}
+
+<div class="container mt-4">
+
+    <div class="mb-3">
+        <h3 class="mb-0"><i class="bi bi-people"></i> Mis estudiantes</h3>
+        <small class="text-muted">Información básica de los estudiantes asociados a su cuenta</small>
+    </div>
+
+    @if (estudiantes.Count == 0)
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            Aún no tiene estudiantes asociados a su cuenta. Comuníquese con la administración de la institución.
+        </div>
+    }
+
+    @foreach (var e in estudiantes)
+    {
+        <div class="card shadow-sm border-0 mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <strong>@e.Nombre @e.Apellidos</strong>
+                <span>
+                    @if (e.EsPrincipal)
+                    {
+                        <span class="badge bg-warning text-dark me-1">
+                            <i class="bi bi-star-fill"></i> Encargado principal
+                        </span>
+                    }
+                    <span class="badge @(e.Estado ? "bg-success" : "bg-danger")">
+                        @(e.Estado ? "Activo" : "Inactivo")
+                    </span>
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <div class="text-muted small">Carné</div>
+                        <div>@e.Carnet</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Identificación</div>
+                        <div>@e.Identificacion</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Fecha de nacimiento</div>
+                        <div>@(e.FechaNacimiento?.ToString("dd/MM/yyyy") ?? "—")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Su parentesco</div>
+                        <div>@e.Parentesco</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Grado</div>
+                        <div>@(e.NombreGrado ?? "—")</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Estado académico</div>
+                        <div>@e.EstadoAcademico</div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="text-muted small">Fecha de ingreso</div>
+                        <div>@e.FechaIngreso.ToString("dd/MM/yyyy")</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>

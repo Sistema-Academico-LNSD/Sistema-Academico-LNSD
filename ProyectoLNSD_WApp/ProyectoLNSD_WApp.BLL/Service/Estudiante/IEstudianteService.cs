@@ -6,6 +6,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Estudiante
     {
         Task<RespuestaDTO<List<EstudianteDTO>>> Buscar(string? texto, int? idGrado, bool? estado);
         Task<RespuestaDTO<EstudianteDTO?>> GetById(int idEstudiante);
+        Task<RespuestaDTO<EstudianteDTO?>> GetMiExpediente(int idUsuario);
         Task<RespuestaDTO<EstudianteDTO>> Crear(EstudianteCrearDTO estudiante);
         Task<RespuestaDTO<EstudianteDTO>> Actualizar(EstudianteDTO estudiante);
         Task<RespuestaDTO<bool>> CambiarEstado(int idEstudiante, bool estado);

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
+using ProyectoLNSD_WApp.BLL.Service.Encargado;
 using ProyectoLNSD_WApp.BLL.Service.Estudiante;
 using ProyectoLNSD_WApp.BLL.Service.Grado;
 
@@ -12,13 +13,16 @@ namespace ProyectoLNSD_WApp.Controllers
     {
         private readonly IEstudianteService _estudianteService;
         private readonly IGradoService _gradoService;
+        private readonly IEncargadoService _encargadoService;
 
         public EstudianteController(
             IEstudianteService estudianteService,
-            IGradoService gradoService)
+            IGradoService gradoService,
+            IEncargadoService encargadoService)
         {
             _estudianteService = estudianteService;
             _gradoService = gradoService;
+            _encargadoService = encargadoService;
         }
 
         [HttpGet]
@@ -77,6 +81,60 @@ namespace ProyectoLNSD_WApp.Controllers
         public async Task<IActionResult> CambiarEstado(int id, bool estado)
         {
             return Json(await _estudianteService.CambiarEstado(id, estado));
+        }
+
+        // ---- Encargados (MESF-01-03 y MESF-01-04) ----
+
+        [HttpGet]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> GetEncargados(int idEstudiante)
+        {
+            return Json(await _encargadoService.GetPorEstudiante(idEstudiante));
+        }
+
+        [HttpGet]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> BuscarEncargados(string? texto, int idEstudiante)
+        {
+            return Json(await _encargadoService.Buscar(texto, idEstudiante));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> VincularEncargado(VincularEncargadoDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return RespuestaModeloInvalido();
+
+            return Json(await _encargadoService.Vincular(dto));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> CrearEncargado(CrearEncargadoDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return RespuestaModeloInvalido();
+
+            return Json(await _encargadoService.CrearYVincular(dto));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> DefinirEncargadoPrincipal(int idEstudiante, int idEncargado)
+        {
+            return Json(await _encargadoService.DefinirPrincipal(idEstudiante, idEncargado));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequierePermiso("Estudiantes", "Editar")]
+        public async Task<IActionResult> DesvincularEncargado(int idEstudiante, int idEncargado)
+        {
+            return Json(await _encargadoService.Desvincular(idEstudiante, idEncargado));
         }
     }
 }

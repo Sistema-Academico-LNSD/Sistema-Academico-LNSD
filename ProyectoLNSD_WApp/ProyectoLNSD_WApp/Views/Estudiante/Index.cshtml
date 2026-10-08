@@ -91,6 +91,15 @@
     @await Html.PartialAsync("_ModalEstudiante")
 }
 
+@if (puedeEditar)
+{
+    @await Html.PartialAsync("_ModalEncargados")
+}
+
 @section Scripts {
     <script src="~/js/estudiante.js" asp-append-version="true"></script>
+    @if (puedeEditar)
+    {
+        <script src="~/js/estudiante-encargados.js" asp-append-version="true"></script>
+    }
 }

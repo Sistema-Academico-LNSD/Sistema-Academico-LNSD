@@ -56,6 +56,15 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Estudiante
                 .FirstOrDefaultAsync(e => e.IdEstudiante == idEstudiante);
         }
 
+        public async Task<Entities.Estudiante?> GetByUsuario(int idUsuario)
+        {
+            return await _context.Estudiantes
+                .AsNoTracking()
+                .Include(e => e.Usuario)
+                .Include(e => e.Grado)
+                .FirstOrDefaultAsync(e => e.IdUsuario == idUsuario);
+        }
+
         public async Task<bool> ExisteIdentificacion(string identificacion, int? excluirIdEstudiante = null)
         {
             return await _context.Estudiantes.AnyAsync(e =>

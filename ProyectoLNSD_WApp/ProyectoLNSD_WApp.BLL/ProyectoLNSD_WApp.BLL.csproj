@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Service\Estudiante\" />
+	  <Folder Include="Service\Encargado\" />
 	</ItemGroup>
 
 </Project>

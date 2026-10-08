@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 	  <Folder Include="Repositories\Estudiante\" />
+	  <Folder Include="Repositories\Encargado\" />
 	</ItemGroup>
 
 </Project>

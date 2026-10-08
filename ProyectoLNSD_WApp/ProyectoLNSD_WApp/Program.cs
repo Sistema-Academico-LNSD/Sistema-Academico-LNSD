@@ -35,6 +35,8 @@ using ProyectoLNSD_WApp.BLL.Service.Docente;
 using ProyectoLNSD_WApp.DAL.Repositories.Docente;
 using ProyectoLNSD_WApp.BLL.Service.Estudiante;
 using ProyectoLNSD_WApp.DAL.Repositories.Estudiante;
+using ProyectoLNSD_WApp.BLL.Service.Encargado;
+using ProyectoLNSD_WApp.DAL.Repositories.Encargado;
 
 namespace ProyectoLNSD_WApp
 {
@@ -67,6 +69,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<ISeccionRepository, SeccionRepository>();
             builder.Services.AddScoped<IDocenteRepository, DocenteRepository>();
             builder.Services.AddScoped<IEstudianteRepository, EstudianteRepository>();
+            builder.Services.AddScoped<IEncargadoRepository, EncargadoRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -86,6 +89,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IDocenteService, DocenteService>();
             builder.Services.AddScoped<IDocenteCuentaService, DocenteCuentaService>();
             builder.Services.AddScoped<IEstudianteService, EstudianteService>();
+            builder.Services.AddScoped<IEncargadoService, EncargadoService>();
 
 
             // Seguridad

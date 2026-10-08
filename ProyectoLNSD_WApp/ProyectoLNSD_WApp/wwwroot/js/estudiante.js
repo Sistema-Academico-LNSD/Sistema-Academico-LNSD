@@ -50,8 +50,13 @@ function buscarEstudiantes()
 }
 
 
+let estudiantesCache = {};
+
 function renderizarEstudiantes(estudiantes)
 {
+    estudiantesCache = {};
+    $.each(estudiantes, function (i, e) { estudiantesCache[e.idEstudiante] = e; });
+
     let columnas = puedeEditarEstudiantes ? 8 : 7;
     let filas = '';
 
@@ -80,6 +85,10 @@ function renderizarEstudiantes(estudiantes)
                     <button class="btn btn-warning btn-sm me-1" title="Editar"
                             onclick="abrirModalEditar(${e.idEstudiante})">
                         <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn btn-info btn-sm me-1" title="Encargados"
+                            onclick="abrirModalEncargados(${e.idEstudiante})">
+                        <i class="bi bi-people"></i>
                     </button>
                     ${botonEstado}
                 </td>`;

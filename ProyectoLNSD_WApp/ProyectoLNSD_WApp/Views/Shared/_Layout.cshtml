@@ -98,6 +98,24 @@
                                 </li>
                             }
 
+                            @if (User.IsInRole("Estudiante"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("MiPerfil")" asp-controller="MiPerfil" asp-action="MiExpediente">
+                                        <i class="bi bi-person-vcard"></i> Mi información
+                                    </a>
+                                </li>
+                            }
+ 
+                            @if (User.IsInRole("Encargado"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("MiPerfil")" asp-controller="MiPerfil" asp-action="MisEstudiantes">
+                                        <i class="bi bi-people"></i> Mis estudiantes
+                                    </a>
+                                </li>
+                            }
+
                             @if (User.TienePermiso("Grados", "Ver"))
                             {
                                 <li class="nav-item">
