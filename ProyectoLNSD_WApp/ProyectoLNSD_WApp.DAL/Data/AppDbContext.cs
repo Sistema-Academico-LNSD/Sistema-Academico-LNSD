@@ -35,6 +35,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<AreaAcademica> AreasAcademicas { get; set; }
         public virtual DbSet<CursoGrado> CursosGrados { get; set; }
         public virtual DbSet<DocenteCurso> DocentesCursos { get; set; }
+        public virtual DbSet<RecursoAcademico> RecursosAcademicos { get; set; }
 
 
         //Tables override mode builder
@@ -1032,6 +1033,95 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdPeriodo)
                       .OnDelete(DeleteBehavior.Restrict)
                       .HasConstraintName("FK_DocenteCurso_Periodo");
+            });
+
+            modelBuilder.Entity<RecursoAcademico>(entity =>
+            {
+                entity.ToTable("Recursos_Academicos");
+
+                entity.HasKey(e => e.IdRecurso)
+                      .HasName("PK_Recursos_Academicos");
+
+                entity.Property(e => e.IdRecurso)
+                      .HasColumnName("id_recurso");
+
+                entity.Property(e => e.IdDocente)
+                      .HasColumnName("id_docente");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.IdGrado)
+                      .HasColumnName("id_grado");
+
+                entity.Property(e => e.Titulo)
+                      .HasColumnName("titulo")
+                      .HasMaxLength(200)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.TipoRecurso)
+                      .HasColumnName("tipo_recurso")
+                      .HasMaxLength(30)
+                      .IsRequired();
+
+                entity.Property(e => e.Modalidad)
+                      .HasColumnName("modalidad")
+                      .HasMaxLength(10)
+                      .IsRequired();
+
+                entity.Property(e => e.NombreArchivoOriginal)
+                      .HasColumnName("nombre_archivo_original")
+                      .HasMaxLength(260);
+
+                entity.Property(e => e.RutaArchivo)
+                      .HasColumnName("ruta_archivo")
+                      .HasMaxLength(300);
+
+                entity.Property(e => e.Extension)
+                      .HasColumnName("extension")
+                      .HasMaxLength(10);
+
+                entity.Property(e => e.TamanoBytes)
+                      .HasColumnName("tamano_bytes");
+
+                entity.Property(e => e.HashArchivo)
+                      .HasColumnName("hash_archivo")
+                      .HasMaxLength(64)
+                      .IsFixedLength()
+                      .IsUnicode(false);
+
+                entity.Property(e => e.UrlEnlace)
+                      .HasColumnName("url_enlace")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FechaPublicacion)
+                      .HasColumnName("fecha_publicacion")
+                      .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion");
+
+                entity.HasOne(d => d.Docente)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdDocente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Recurso_Docente");
+
+                entity.HasOne(d => d.Curso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdCurso)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Recurso_Curso");
+
+                entity.HasOne(d => d.Grado)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdGrado)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Recurso_Grado");
             });
 
 
