@@ -11,6 +11,8 @@ using ProyectoLNSD_WApp.BLL.Service.Usuario;
 using ProyectoLNSD_WApp.BLL.Service.Tiquete;
 using ProyectoLNSD_WApp.BLL.Service.Grado;
 using ProyectoLNSD_WApp.BLL.Service.Seccion;
+using ProyectoLNSD_WApp.BLL.Service.Recurso;
+using ProyectoLNSD_WApp.BLL.Storage;
 using ProyectoLNSD_WApp.DAL.Data;
 using ProyectoLNSD_WApp.DAL.Repositories.LogAcceso;
 using ProyectoLNSD_WApp.DAL.Repositories.Modulo;
@@ -38,6 +40,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.Estudiante;
 using ProyectoLNSD_WApp.BLL.Service.Encargado;
 using ProyectoLNSD_WApp.DAL.Repositories.Encargado;
 using ProyectoLNSD_WApp.DAL.Repositories.DocenteCurso;
+using ProyectoLNSD_WApp.DAL.Repositories.Recurso;
+using ProyectoLNSD_WApp.Utilidades;
 
 namespace ProyectoLNSD_WApp
 {
@@ -72,7 +76,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IEstudianteRepository, EstudianteRepository>();
             builder.Services.AddScoped<IEncargadoRepository, EncargadoRepository>();
             builder.Services.AddScoped<IDocenteCursoRepository, DocenteCursoRepository>();
-            
+            builder.Services.AddScoped<IRecursoRepository, RecursoRepository>();
+
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -93,12 +98,13 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IDocenteCuentaService, DocenteCuentaService>();
             builder.Services.AddScoped<IEstudianteService, EstudianteService>();
             builder.Services.AddScoped<IEncargadoService, EncargadoService>();
-
             builder.Services.AddScoped<IDocenteCursoService, DocenteCursoService>();
             builder.Services.AddScoped<IExpedienteDocenteService, ExpedienteDocenteService>();
+            builder.Services.AddScoped<IRecursoService, RecursoService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
+            builder.Services.AddSingleton<IAlmacenamientoRecursos, AlmacenamientoRecursosLocal>();
             builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("Smtp"));
             builder.Services.AddScoped<IEmailService, SmtpEmailService>();
 

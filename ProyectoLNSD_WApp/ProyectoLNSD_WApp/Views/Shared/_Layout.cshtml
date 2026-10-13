@@ -125,6 +125,15 @@
                                 </li>
                             }
 
+                            @if (User.TienePermiso("Cursos", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Curso")" asp-controller="Curso" asp-action="Index">
+                                        <i class="bi bi-book"></i> Cursos
+                                    </a>
+                                </li>
+                            }
+
                             <li class="nav-item">
                                 <a class="nav-link @EsActivoAccion("Boleteria", "Index")" asp-controller="Boleteria" asp-action="Index">
                                     <i class="bi bi-ticket-perforated"></i> Mi tiquete
@@ -148,7 +157,36 @@
                                     </a>
                                 </li>
                             }
+
+
+                            @if (User.TienePermiso("Recursos", "Crear"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivoAccion("Recurso", "Index")" asp-controller="Recurso" asp-action="Index">
+                                        <i class="bi bi-folder2-open"></i> Mis recursos
+                                    </a>
+                                </li>
+                            }
+
                         }
+
+                            @if (User.IsInRole("Estudiante") && User.TienePermiso("Recursos", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivoAccion("Recurso", "Material")" asp-controller="Recurso" asp-action="Material">
+                                        <i class="bi bi-journal-bookmark"></i> Material de estudio
+                                    </a>
+                                </li>
+                            }
+
+                            @if ((User.IsInRole("Administrador") || User.IsInRole("Director")) && User.TienePermiso("Recursos", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivoAccion("Recurso", "Supervision")" asp-controller="Recurso" asp-action="Supervision">
+                                        <i class="bi bi-card-checklist"></i> Supervisión de recursos
+                                    </a>
+                                </li>
+                            }
 
                         @if (User.TienePermiso("Configuracion", "Ver"))
                         {

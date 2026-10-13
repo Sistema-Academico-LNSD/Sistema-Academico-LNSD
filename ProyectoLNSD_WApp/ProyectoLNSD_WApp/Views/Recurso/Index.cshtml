@@ -1,0 +1,315 @@
+﻿@using ProyectoLNSD_WApp.BLL.Service.Recurso
+
+@{
+    ViewData["Title"] = "Mis Recursos";
+}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow border-0 mb-4">
+
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="bi bi-folder2-open"></i>
+                Publicar recurso académico
+            </h3>
+            <small>Comparte materiales y enlaces con tus estudiantes</small>
+        </div>
+
+        <div class="card-body">
+
+            <div id="avisoRecurso"></div>
+
+            <form id="formRecurso" novalidate>
+                <fieldset id="fsRecurso">
+
+                    <div class="mb-3">
+                        <label class="form-label d-block">Tipo de publicación</label>
+
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="Modalidad" id="modArchivo" value="Archivo" checked />
+                            <label class="btn btn-outline-primary" for="modArchivo">
+                                <i class="bi bi-file-earmark-arrow-up"></i> Archivo
+                            </label>
+
+                            <input type="radio" class="btn-check" name="Modalidad" id="modEnlace" value="Enlace" />
+                            <label class="btn btn-outline-primary" for="modEnlace">
+                                <i class="bi bi-link-45deg"></i> Enlace externo
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="recCurso" class="form-label">Curso</label>
+                            <select id="recCurso" name="IdCurso" class="form-select">
+                                <option value="">Cargando cursos...</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="recGrado" class="form-label">Grado</label>
+                            <select id="recGrado" name="IdGrado" class="form-select">
+                                <option value="">Seleccione un grado</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label for="recTitulo" class="form-label">Título</label>
+                            <input type="text" id="recTitulo" name="Titulo" class="form-control"
+                                   maxlength="200" autocomplete="off" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="recFecha" class="form-label">Fecha de publicación</label>
+                            <input type="date" id="recFecha" name="FechaPublicacion" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label for="recDescripcion" class="form-label">
+                                Descripción <span class="text-muted">(opcional)</span>
+                            </label>
+                            <textarea id="recDescripcion" name="Descripcion" class="form-control"
+                                      rows="2" maxlength="500"></textarea>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="recTipo" class="form-label">Tipo de recurso</label>
+                            <select id="recTipo" name="TipoRecurso" class="form-select">
+                            </select>
+                        </div>
+
+                        <div class="col-md-8" id="bloqueArchivo">
+                            <label for="recArchivo" class="form-label">
+                                Archivo <span class="text-muted">(PDF, Word, Excel o PowerPoint, máximo 10 MB)</span>
+                            </label>
+                            <input type="file" id="recArchivo" name="archivo" class="form-control" />
+                        </div>
+
+                        <div class="col-md-8 d-none" id="bloqueEnlace">
+                            <label for="recUrl" class="form-label">Enlace</label>
+                            <input type="url" id="recUrl" name="UrlEnlace" class="form-control"
+                                   maxlength="500" placeholder="https://..." autocomplete="off" />
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="submit" id="btnPublicarRecurso" class="btn btn-primary">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            Publicar
+                        </button>
+
+                        <button type="button" id="btnLimpiarRecurso" class="btn btn-outline-secondary">
+                            Limpiar
+                        </button>
+                    </div>
+
+                </fieldset>
+            </form>
+
+        </div>
+
+    </div>
+
+    <div id="resumenPublicacion"></div>
+
+        <div class="card shadow border-0 mt-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-collection"></i>
+                Mis recursos publicados
+            </h5>
+            <span id="contadorRecursos" class="badge bg-secondary"></span>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row g-2 mb-3">
+
+                <div class="col-md-3">
+                    <label for="filtroTitulo" class="form-label small mb-1">Título</label>
+                    <input type="text" id="filtroTitulo" class="form-control form-control-sm"
+                           placeholder="Buscar por título" autocomplete="off" />
+                </div>
+
+                <div class="col-md-3">
+                    <label for="filtroCurso" class="form-label small mb-1">Curso</label>
+                    <select id="filtroCurso" class="form-select form-select-sm">
+                        <option value="">Todos los cursos</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="filtroGrado" class="form-label small mb-1">Grado</label>
+                    <select id="filtroGrado" class="form-select form-select-sm">
+                        <option value="">Todos los grados</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="filtroDesde" class="form-label small mb-1">Publicado desde</label>
+                    <input type="date" id="filtroDesde" class="form-control form-control-sm" />
+                </div>
+
+                <div class="col-md-2">
+                    <label for="filtroHasta" class="form-label small mb-1">Publicado hasta</label>
+                    <input type="date" id="filtroHasta" class="form-control form-control-sm" />
+                </div>
+
+                <div class="col-md-3">
+                    <label for="filtroOrden" class="form-label small mb-1">Ordenar por</label>
+                    <select id="filtroOrden" class="form-select form-select-sm">
+                        <option value="fecha_desc">Más recientes primero</option>
+                        <option value="fecha_asc">Más antiguos primero</option>
+                        <option value="titulo">Título (A-Z)</option>
+                        <option value="curso">Curso (A-Z)</option>
+                    </select>
+                </div>
+
+                <div class="col-md-9 d-flex align-items-end gap-2">
+                    <button type="button" id="btnBuscarRecursos" class="btn btn-sm btn-primary">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                    <button type="button" id="btnRestablecerRecursos" class="btn btn-sm btn-outline-secondary">
+                        Restablecer
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table id="tblRecursos" class="table table-striped table-hover align-middle">
+
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Recurso</th>
+                            <th>Curso</th>
+                            <th>Grado</th>
+                            <th>Tipo</th>
+                            <th>Contenido</th>
+                            <th>Publicado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalEditarRecurso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <form id="formEditarRecurso" novalidate>
+
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i>
+                        Editar recurso
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="edIdRecurso" name="IdRecurso" />
+                    <input type="hidden" id="edIdCurso" name="IdCurso" />
+                    <input type="hidden" id="edModalidad" name="Modalidad" />
+
+                    <div class="row g-3">
+
+                        <div class="col-md-8">
+                            <label for="edCurso" class="form-label">Curso</label>
+                            <input type="text" id="edCurso" class="form-control" disabled />
+                            <div class="form-text">El curso no se puede cambiar. Si te equivocaste, elimina el recurso y publícalo de nuevo.</div>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="edGrado" class="form-label">Grado</label>
+                            <select id="edGrado" name="IdGrado" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-8">
+                            <label for="edTitulo" class="form-label">Título</label>
+                            <input type="text" id="edTitulo" name="Titulo" class="form-control"
+                                   maxlength="200" autocomplete="off" />
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="edFecha" class="form-label">Fecha de publicación</label>
+                            <input type="date" id="edFecha" name="FechaPublicacion" class="form-control" />
+                        </div>
+
+                        <div class="col-12">
+                            <label for="edDescripcion" class="form-label">
+                                Descripción <span class="text-muted">(opcional)</span>
+                            </label>
+                            <textarea id="edDescripcion" name="Descripcion" class="form-control"
+                                      rows="2" maxlength="500"></textarea>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="edTipo" class="form-label">Tipo de recurso</label>
+                            <select id="edTipo" name="TipoRecurso" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-8" id="edBloqueArchivo">
+                            <label for="edArchivo" class="form-label">
+                                Reemplazar archivo <span class="text-muted">(opcional)</span>
+                            </label>
+                            <input type="file" id="edArchivo" name="archivo" class="form-control" />
+                            <div class="form-text" id="edArchivoActual"></div>
+                        </div>
+
+                        <div class="col-md-8 d-none" id="edBloqueEnlace">
+                            <label for="edUrl" class="form-label">Enlace</label>
+                            <input type="url" id="edUrl" name="UrlEnlace" class="form-control"
+                                   maxlength="500" placeholder="https://..." autocomplete="off" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnGuardarEdicion" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar cambios
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script>
+        // Las reglas viven en un solo lugar (RecursoReglas) y se pasan al navegador desde aquí
+        const RECURSO_CONFIG = {
+            tiposArchivo: @Html.Raw(Json.Serialize(RecursoReglas.TiposArchivo)),
+            tiposEnlace: @Html.Raw(Json.Serialize(RecursoReglas.TiposEnlace)),
+            extensiones: @Html.Raw(Json.Serialize(RecursoReglas.ExtensionesPermitidas)),
+            tamanoMaximo: @RecursoReglas.TamanoMaximoBytes
+        };
+    </script>
+
+    <script src="~/js/recurso-comun.js"></script>
+    <script src="~/js/recurso.js"></script>
+
+}

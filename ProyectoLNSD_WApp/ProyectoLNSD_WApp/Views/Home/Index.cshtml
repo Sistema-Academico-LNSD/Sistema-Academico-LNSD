@@ -104,6 +104,33 @@
                 </a>
             }
 
+            @if (User.TienePermiso("Recursos", "Crear"))
+            {
+                <a asp-controller="Recurso" asp-action="Index" class="module-card">
+                    <div class="module-icon"><i class="bi bi-folder2-open"></i></div>
+                    <h3>Mis recursos</h3>
+                    <p>Publica y administra materiales y enlaces para tus estudiantes.</p>
+                </a>
+            }
+
+            @if (User.IsInRole("Estudiante") && User.TienePermiso("Recursos", "Ver"))
+            {
+                <a asp-controller="Recurso" asp-action="Material" class="module-card">
+                    <div class="module-icon"><i class="bi bi-journal-bookmark"></i></div>
+                    <h3>Material de estudio</h3>
+                    <p>Consulta y descarga los recursos de tus cursos.</p>
+                </a>
+            }
+
+            @if ((User.IsInRole("Administrador") || User.IsInRole("Director")) && User.TienePermiso("Recursos", "Ver"))
+            {
+                <a asp-controller="Recurso" asp-action="Supervision" class="module-card">
+                    <div class="module-icon"><i class="bi bi-card-checklist"></i></div>
+                    <h3>Supervisión de recursos</h3>
+                    <p>Consulta el material publicado por docente y curso, y expórtalo.</p>
+                </a>
+            }
+
         </div>
 
     </section>
