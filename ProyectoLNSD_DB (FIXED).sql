@@ -425,21 +425,90 @@ CREATE TABLE Beca
 );
 GO
 
-CREATE TABLE Recursos_Academicos
-(
-    id_recurso INT IDENTITY(1,1) NOT NULL,
-    id_horario INT NOT NULL,
-    titulo NVARCHAR(200) NOT NULL,
-    descripcion NVARCHAR(500) NULL,
-    url_recurso NVARCHAR(500) NULL,
-    fecha_publicacion DATETIME NOT NULL
-        CONSTRAINT DF_Recurso_Fecha DEFAULT GETDATE(),
 
-    CONSTRAINT PK_Recursos_Academicos PRIMARY KEY (id_recurso),
-    CONSTRAINT FK_Recurso_Horario
-        FOREIGN KEY (id_horario) REFERENCES Horario(id_horario)
-);
+/* ---- Recursos Académicos ---- */
+
+-- 1) La tabla original estaba ligada a Horario y no sirve para este módulo.
+--    Solo se reemplaza si tiene la estructura antigua y está vacía.
+IF COL_LENGTH(N'dbo.Recursos_Academicos', N'id_horario') IS NOT NULL
+BEGIN
+    IF EXISTS (SELECT 1 FROM Recursos_Academicos)
+        THROW 50001, N'Recursos_Academicos tiene datos con la estructura antigua. Revisar antes de reemplazarla.', 1;
+
+    DROP TABLE Recursos_Academicos;
+END
 GO
+
+-- 2) Tabla nueva
+IF OBJECT_ID(N'dbo.Recursos_Academicos', N'U') IS NULL
+BEGIN
+    CREATE TABLE Recursos_Academicos
+    (
+        id_recurso INT IDENTITY(1,1) NOT NULL,
+        id_docente INT NOT NULL,
+        id_curso INT NOT NULL,
+        id_grado INT NOT NULL,
+        titulo NVARCHAR(200) NOT NULL,
+        descripcion NVARCHAR(500) NULL,
+        tipo_recurso NVARCHAR(30) NOT NULL,
+        modalidad NVARCHAR(10) NOT NULL,
+        nombre_archivo_original NVARCHAR(260) NULL,
+        ruta_archivo NVARCHAR(300) NULL,
+        extension NVARCHAR(10) NULL,
+        tamano_bytes BIGINT NULL,
+        hash_archivo CHAR(64) NULL,
+        url_enlace NVARCHAR(500) NULL,
+        fecha_publicacion DATETIME NOT NULL
+            CONSTRAINT DF_Recurso_FechaPublicacion DEFAULT GETUTCDATE(),
+        fecha_modificacion DATETIME NULL,
+
+        CONSTRAINT PK_Recursos_Academicos PRIMARY KEY (id_recurso),
+        CONSTRAINT FK_Recurso_Docente FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
+        CONSTRAINT FK_Recurso_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
+        CONSTRAINT FK_Recurso_Grado FOREIGN KEY (id_grado) REFERENCES Grado(id_grado),
+        CONSTRAINT CK_Recurso_Modalidad CHECK (modalidad IN (N'Archivo', N'Enlace')),
+        CONSTRAINT CK_Recurso_Contenido CHECK
+        (
+            (modalidad = N'Archivo' AND ruta_archivo IS NOT NULL
+                                    AND hash_archivo IS NOT NULL
+                                    AND url_enlace IS NULL)
+            OR
+            (modalidad = N'Enlace'  AND url_enlace IS NOT NULL
+                                    AND ruta_archivo IS NULL
+                                    AND hash_archivo IS NULL)
+        )
+    );
+
+    -- Un mismo archivo o enlace no se puede registrar dos veces en el mismo curso
+    CREATE UNIQUE INDEX UX_Recurso_Curso_Hash
+        ON Recursos_Academicos(id_curso, hash_archivo) WHERE hash_archivo IS NOT NULL;
+
+    CREATE UNIQUE INDEX UX_Recurso_Curso_Url
+        ON Recursos_Academicos(id_curso, url_enlace) WHERE url_enlace IS NOT NULL;
+END
+GO
+
+-- 3) Módulo y permisos
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Recursos')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Recursos', N'Publicación, consulta y supervisión de recursos académicos.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM (VALUES
+        (N'Administrador', 1, 0, 0, 0),
+        (N'Director',      1, 0, 0, 0),
+        (N'Docente',       1, 1, 1, 1),
+        (N'Estudiante',    1, 0, 0, 0)
+     ) AS p(rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Recursos'
+WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+
+     
 
 /* ============================================================
    8. RELACIONES ESTUDIANTE / DOCENTE / ENCARGADO
@@ -1017,3 +1086,4 @@ WHERE r.nombre = N'Director'
   AND m.nombre = N'AsignacionCursos'
   AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO
+
