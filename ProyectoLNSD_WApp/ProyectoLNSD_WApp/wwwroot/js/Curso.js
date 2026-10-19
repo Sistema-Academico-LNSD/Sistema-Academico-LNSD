@@ -95,10 +95,9 @@ function cargarGrados() {
                     </option>`;
 
                 opciones += `
-                    <option value="${grado.idGrado}">
-                        ${escapeHtml(grado.nombre)}
-                        (${escapeHtml(grado.codigo)})
-                    </option>`;
+    <option value="${grado.idGrado}">
+        ${escapeHtml(grado.nombre)}
+    </option>`;
             });
         }
 

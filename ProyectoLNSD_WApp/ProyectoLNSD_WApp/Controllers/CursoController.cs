@@ -139,9 +139,12 @@ namespace ProyectoLNSD_WApp.Controllers
             var respuesta =
                 await _cursoService.UpdateCurso(curso);
 
-            return StatusCode(
-                respuesta.Codigo == 0 ? 200 : 400,
-                respuesta);
+            if (respuesta.EsCorrecto)
+            {
+                return Ok(respuesta);
+            }
+
+            return BadRequest(respuesta);
         }
 
         [HttpPost]
@@ -156,9 +159,12 @@ namespace ProyectoLNSD_WApp.Controllers
                     id,
                     estado);
 
-            return StatusCode(
-                respuesta.Codigo == 0 ? 200 : 400,
-                respuesta);
+            if (respuesta.EsCorrecto)
+            {
+                return Ok(respuesta);
+            }
+
+            return BadRequest(respuesta);
         }
 
         [HttpDelete]
@@ -170,9 +176,12 @@ namespace ProyectoLNSD_WApp.Controllers
             var respuesta =
                 await _cursoService.EliminarCurso(id);
 
-            return StatusCode(
-                respuesta.Codigo == 0 ? 200 : 400,
-                respuesta);
+            if (respuesta.EsCorrecto)
+            {
+                return Ok(respuesta);
+            }
+
+            return BadRequest(respuesta);
         }
     }
 }
