@@ -113,9 +113,12 @@ namespace ProyectoLNSD_WApp.Controllers
             var respuesta =
                 await _cursoService.CreateCurso(curso);
 
-            return StatusCode(
-                respuesta.Codigo == 0 ? 200 : 400,
-                respuesta);
+            if (respuesta.EsCorrecto)
+            {
+                return Ok(respuesta);
+            }
+
+            return BadRequest(respuesta);
         }
 
         [HttpPut]
