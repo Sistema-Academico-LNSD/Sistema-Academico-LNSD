@@ -85,6 +85,13 @@
                     </div>
                 </div>
 
+                <h6 class="text-primary border-bottom pb-1 mt-4 mb-3">
+                    <i class="bi bi-clipboard-check"></i> Estado de matrícula
+                </h6>
+                <div id="estadoMatriculaPropio" class="mb-3" aria-live="polite">
+                    <div class="text-muted"><span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Consultando el estado de su matrícula...</div>
+                </div>
+
                 <p class="text-muted small mt-4 mb-0">
                     <i class="bi bi-info-circle"></i>
                     Si algún dato es incorrecto, solicite la corrección a la administración.
@@ -94,3 +101,5 @@
     }
 
 </div>
+
+@section Scripts { <script src="~/js/estado-matricula-portal.js" asp-append-version="true"></script> }

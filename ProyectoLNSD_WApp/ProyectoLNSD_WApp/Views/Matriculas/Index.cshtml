@@ -56,31 +56,6 @@
         <div><label class="form-label" for="tMotivo">Motivo del traslado *</label><textarea class="form-control" id="tMotivo" maxlength="500" required></textarea></div>
     </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-info">Registrar traslado</button></div></form>
 </div></div></div>
-
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090" aria-live="polite" aria-atomic="true">
-    <div id="toastMatricula" class="toast border-0" role="status">
-        <div class="d-flex"><div id="toastMatriculaMensaje" class="toast-body">Operación realizada.</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button></div>
-    </div>
-</div>
-
-
-<div class="modal fade" id="modalAccionMatricula" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content">
-        <form id="formAccionMatricula">
-            <div class="modal-header" id="cabeceraAccionMatricula"><h5 class="modal-title" id="tituloAccionMatricula">Actualizar matrícula</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-            <div class="modal-body">
-                <div id="errorAccionMatricula" class="alert alert-danger d-none" role="alert"></div>
-                <input type="hidden" id="accionIdMatricula" /><input type="hidden" id="tipoAccionMatricula" />
-                <div id="campoEstadoMatricula" class="mb-3 d-none"><label class="form-label" for="nuevoEstadoMatricula">Nuevo estado *</label><select id="nuevoEstadoMatricula" class="form-select"><option value="Activa">Activa</option><option value="Inactiva">Inactiva</option><option value="Pendiente">Pendiente</option></select><div class="form-text">Seleccione el estado de la matrícula.</div></div>
-                <div id="campoMotivoMatricula" class="mb-3 d-none"><label class="form-label" for="motivoAccionMatricula">Motivo *</label><textarea id="motivoAccionMatricula" class="form-control" rows="3" maxlength="500" placeholder="Explique brevemente el motivo"></textarea></div>
-                <div id="campoObservacionMatricula" class="mb-3 d-none"><label class="form-label" for="textoObservacionMatricula">Observación *</label><textarea id="textoObservacionMatricula" class="form-control" rows="4" maxlength="1000" placeholder="Escriba la observación que desea registrar"></textarea></div>
-                <p id="avisoAnulacionMatricula" class="small text-danger d-none mb-0"><i class="bi bi-exclamation-triangle"></i> La anulación conserva el historial y permite registrar una nueva matrícula para el mismo período. Revise que el estudiante y período sean correctos.</p>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" id="guardarAccionMatricula" class="btn btn-primary">Guardar</button></div>
-        </form>
-    </div></div>
-</div>
-
 <!-- Notificaciones discretas y accesibles; reemplazan alertas del navegador -->
 <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090" aria-live="polite" aria-atomic="true">
     <div id="toastMatricula" class="toast border-0" role="status">

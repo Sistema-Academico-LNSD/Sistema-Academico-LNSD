@@ -16,6 +16,7 @@
     const toast = toastEl && window.bootstrap ? bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4500 }) : null;
     let catalogos = { estudiantes: [], grados: [], secciones: [], grupos: [], cursos: [] };
     let periodosCache = [];
+    let detalleAnteriorHtml = null;
 
     const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const showAlert = (message, ok = false) => {
@@ -89,7 +90,8 @@
             const cursos = (m.cursos || []).map(c => c.nombre).join(', ') || 'Sin cursos';
             const estadoClass = m.estado === 'Activa' ? 'success' : m.estado === 'Anulada' ? 'danger' : m.estado === 'Pendiente' ? 'warning text-dark' : 'secondary';
             let actions = actionButton('Detalle', 'detalle', m.idMatricula);
-            actions += actionButton('Historial', 'historial', m.idMatricula, 'btn-outline-secondary');
+            actions += actionButton('Cambios', 'historial', m.idMatricula, 'btn-outline-secondary');
+            actions += `<button type="button" class="btn btn-sm btn-outline-secondary me-1 mb-1" data-action="historial-estudiante" data-id="${m.idMatricula}" data-estudiante-id="${m.idEstudiante}">Historial estudiante</button>`;
             actions += actionButton('Observaciones', 'observaciones', m.idMatricula, 'btn-outline-secondary');
             if (puedeEditar && m.estado !== 'Anulada') {
                 actions += actionButton('Editar', 'editar', m.idMatricula, 'btn-outline-primary');
@@ -100,6 +102,12 @@
             return `<tr><td>${m.idMatricula}</td><td>${escapeHtml(m.nombreEstudiante)}</td><td>${escapeHtml(m.identificacion)}</td><td>${escapeHtml(m.nombrePeriodo)}</td><td>${escapeHtml(m.nombreGrado)}</td><td>${escapeHtml(m.nombreGrupo)}</td><td>${escapeHtml(m.nombreSeccion)}</td><td title="${escapeHtml(cursos)}">${escapeHtml(cursos)}</td><td><span class="badge text-bg-${estadoClass}">${escapeHtml(m.estado)}</span></td><td>${escapeHtml(m.fechaMatricula)}</td><td class="text-nowrap">${actions}</td></tr>`;
         }).join('');
         $('lblConteo').textContent = `${rows.length} matrícula(s) encontradas`;
+    }
+
+    function renderDetail(m, heading = 'Detalle de matrícula', permitirVolver = false) {
+        if (permitirVolver) detalleAnteriorHtml = $('contenidoDetalle').innerHTML;
+        const botonVolver = permitirVolver ? '<button type="button" class="btn btn-sm btn-outline-secondary mb-3" data-action="volver-lista-historica"><i class="bi bi-arrow-left"></i> Volver a resultados</button>' : '';
+        $('contenidoDetalle').innerHTML = `${botonVolver}<h5>${escapeHtml(heading)} #${m.idMatricula}</h5><dl class="row mt-3"><dt class="col-sm-4">Estudiante</dt><dd class="col-sm-8">${escapeHtml(m.nombreEstudiante)} (${escapeHtml(m.carnet)})</dd><dt class="col-sm-4">Identificación</dt><dd class="col-sm-8">${escapeHtml(m.identificacion)}</dd><dt class="col-sm-4">Encargado principal</dt><dd class="col-sm-8">${escapeHtml(m.encargadoPrincipal || '—')}</dd><dt class="col-sm-4">Período</dt><dd class="col-sm-8">${escapeHtml(m.nombrePeriodo)}</dd><dt class="col-sm-4">Grado / grupo / sección</dt><dd class="col-sm-8">${escapeHtml(m.nombreGrado)} / ${escapeHtml(m.nombreGrupo)} / ${escapeHtml(m.nombreSeccion)}</dd><dt class="col-sm-4">Estado</dt><dd class="col-sm-8">${escapeHtml(m.estado)}</dd><dt class="col-sm-4">Fecha</dt><dd class="col-sm-8">${escapeHtml(m.fechaMatricula)}</dd><dt class="col-sm-4">Cursos</dt><dd class="col-sm-8">${(m.cursos || []).map(c => escapeHtml(c.nombre)).join(', ') || 'Sin cursos'}</dd><dt class="col-sm-4">Observaciones generales</dt><dd class="col-sm-8">${escapeHtml(m.observaciones || '—')}</dd></dl>`;
     }
 
     async function loadPeriods() {
@@ -252,8 +260,20 @@
             if (action === 'editar') return await openEdit(id);
             if (action === 'detalle') {
                 const m = await request(`${api}/${id}`);
-                $('contenidoDetalle').innerHTML = `<dl class="row"><dt class="col-sm-4">Estudiante</dt><dd class="col-sm-8">${escapeHtml(m.nombreEstudiante)} (${escapeHtml(m.carnet)})</dd><dt class="col-sm-4">Identificación</dt><dd class="col-sm-8">${escapeHtml(m.identificacion)}</dd><dt class="col-sm-4">Encargado principal</dt><dd class="col-sm-8">${escapeHtml(m.encargadoPrincipal)}</dd><dt class="col-sm-4">Período</dt><dd class="col-sm-8">${escapeHtml(m.nombrePeriodo)}</dd><dt class="col-sm-4">Grado / grupo / sección</dt><dd class="col-sm-8">${escapeHtml(m.nombreGrado)} / ${escapeHtml(m.nombreGrupo)} / ${escapeHtml(m.nombreSeccion)}</dd><dt class="col-sm-4">Estado</dt><dd class="col-sm-8">${escapeHtml(m.estado)}</dd><dt class="col-sm-4">Fecha</dt><dd class="col-sm-8">${escapeHtml(m.fechaMatricula)}</dd><dt class="col-sm-4">Cursos</dt><dd class="col-sm-8">${(m.cursos || []).map(c => escapeHtml(c.nombre)).join(', ') || 'Sin cursos'}</dd><dt class="col-sm-4">Observaciones generales</dt><dd class="col-sm-8">${escapeHtml(m.observaciones || '—')}</dd></dl>`;
+                renderDetail(m);
                 modalDetalle?.show(); return;
+            }
+            if (action === 'historial-estudiante') {
+                const idEstudiante = Number(button.dataset.estudianteId);
+                const historial = await request(`${api}/estudiante/${idEstudiante}/historial`);
+                const rows = Array.isArray(historial) ? historial : [];
+                $('contenidoDetalle').innerHTML = `<h5>Historial de matrículas: ${escapeHtml(rows[0]?.nombreEstudiante || 'estudiante')}</h5><p class="text-muted small">Cada registro conserva su propio estado, cursos y detalle.</p>${rows.length ? `<div class="table-responsive"><table class="table table-sm table-striped align-middle"><thead><tr><th>Período</th><th>Grado</th><th>Grupo</th><th>Sección</th><th>Estado</th><th>Fecha</th><th></th></tr></thead><tbody>${rows.map(h => `<tr><td>${escapeHtml(h.nombrePeriodo)}</td><td>${escapeHtml(h.nombreGrado)}</td><td>${escapeHtml(h.nombreGrupo)}</td><td>${escapeHtml(h.nombreSeccion)}</td><td>${escapeHtml(h.estado)}</td><td>${escapeHtml(h.fechaMatricula)}</td><td><button type="button" class="btn btn-sm btn-outline-primary" data-action="detalle-historico" data-id="${h.idMatricula}">Ver detalle</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="alert alert-info">El estudiante no tiene matrículas registradas.</div>'}`;
+                modalDetalle?.show(); return;
+            }
+            if (action === 'detalle-historico') {
+                const m = await request(`${api}/${id}`);
+                renderDetail(m, 'Detalle histórico de matrícula', true);
+                return;
             }
             if (action === 'historial') {
                 const cambios = await request(`${api}/${id}/historial-cambios`);
@@ -298,8 +318,15 @@
     });
 
     modalDetalleEl?.addEventListener('click', async e => {
-        const btn = e.target.closest('#btnAgregarObservacion'); if (!btn) return;
-        openAction('observacion', Number(btn.dataset.id));
+        const observationButton = e.target.closest('#btnAgregarObservacion');
+        if (observationButton) { openAction('observacion', Number(observationButton.dataset.id)); return; }
+        const backButton = e.target.closest('button[data-action="volver-lista-historica"]');
+        if (backButton && detalleAnteriorHtml !== null) { $('contenidoDetalle').innerHTML = detalleAnteriorHtml; detalleAnteriorHtml = null; return; }
+        const detailButton = e.target.closest('button[data-action="detalle-historico"]');
+        if (detailButton) {
+            try { const m = await request(`${api}/${Number(detailButton.dataset.id)}`); renderDetail(m, 'Detalle de matrícula', true); }
+            catch (err) { showAlert(err.message); }
+        }
     });
 
     $('formAccionMatricula')?.addEventListener('submit', async e => {
@@ -339,7 +366,8 @@
     $('btnReporte')?.addEventListener('click', async () => {
         try {
             const r = await request(`${api}/reporte?${queryFromFilters()}`);
-            $('contenidoDetalle').innerHTML = `<h5>Reporte de matrículas</h5><div class="row g-3">${[['Total',r.total],['Activas',r.activas],['Inactivas',r.inactivas],['Pendientes',r.pendientes],['Anuladas',r.anuladas]].map(([label,n]) => `<div class="col-6 col-md-4"><div class="card card-body"><small>${label}</small><strong class="fs-4">${n}</strong></div></div>`).join('')}</div>`;
+            const rows = Array.isArray(r.matriculas) ? r.matriculas : [];
+            $('contenidoDetalle').innerHTML = `<h5>Reporte de matrículas</h5><div class="row g-3 mb-4">${[['Total',r.total],['Activas',r.activas],['Inactivas',r.inactivas],['Pendientes',r.pendientes],['Anuladas',r.anuladas]].map(([label,n]) => `<div class="col-6 col-md"><div class="card card-body h-100"><small>${label}</small><strong class="fs-4">${n}</strong></div></div>`).join('')}</div><h6>Detalle de resultados (${rows.length})</h6>${rows.length ? `<div class="table-responsive"><table class="table table-sm table-striped align-middle"><thead><tr><th>Estudiante</th><th>Período</th><th>Grado</th><th>Grupo</th><th>Sección</th><th>Estado</th><th></th></tr></thead><tbody>${rows.map(m => `<tr><td>${escapeHtml(m.nombreEstudiante)}</td><td>${escapeHtml(m.nombrePeriodo)}</td><td>${escapeHtml(m.nombreGrado)}</td><td>${escapeHtml(m.nombreGrupo)}</td><td>${escapeHtml(m.nombreSeccion)}</td><td>${escapeHtml(m.estado)}</td><td><button type="button" class="btn btn-sm btn-outline-primary" data-action="detalle-historico" data-id="${m.idMatricula}">Ver detalle</button></td></tr>`).join('')}</tbody></table></div>` : '<div class="alert alert-info">No hay matrículas para los filtros seleccionados.</div>'}`;
             modalDetalle?.show();
         } catch (err) { showAlert(err.message); }
     });
