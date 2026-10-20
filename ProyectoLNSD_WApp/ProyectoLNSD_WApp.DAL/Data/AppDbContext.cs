@@ -36,6 +36,11 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<CursoGrado> CursosGrados { get; set; }
         public virtual DbSet<DocenteCurso> DocentesCursos { get; set; }
         public virtual DbSet<RecursoAcademico> RecursosAcademicos { get; set; }
+        public virtual DbSet<Grupo> Grupos { get; set; }
+        public virtual DbSet<Matricula> Matriculas { get; set; }
+        public virtual DbSet<MatriculaCurso> MatriculasCursos { get; set; }
+        public virtual DbSet<MatriculaObservacion> MatriculasObservaciones { get; set; }
+        public virtual DbSet<MatriculaHistorial> MatriculasHistorial { get; set; }
 
 
         //Tables override mode builder
@@ -1124,6 +1129,82 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasConstraintName("FK_Recurso_Grado");
             });
 
+
+            modelBuilder.Entity<Grupo>(entity =>
+            {
+                entity.ToTable("Grupo");
+                entity.HasKey(e => e.IdGrupo).HasName("PK_Grupo");
+                entity.Property(e => e.IdGrupo).HasColumnName("id_grupo");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Nivel).HasColumnName("nivel").HasMaxLength(50).IsRequired();
+                entity.Property(e => e.Anio).HasColumnName("anio");
+                entity.HasIndex(e => new { e.Nombre, e.Anio }).IsUnique().HasDatabaseName("UQ_Grupo_Nombre_Anio");
+            });
+
+            modelBuilder.Entity<Matricula>(entity =>
+            {
+                entity.ToTable("Matricula");
+                entity.HasKey(e => e.IdMatricula).HasName("PK_Matricula");
+                entity.Property(e => e.IdMatricula).HasColumnName("id_matricula");
+                entity.Property(e => e.IdEstudiante).HasColumnName("id_estudiante");
+                entity.Property(e => e.IdPeriodo).HasColumnName("id_periodo");
+                entity.Property(e => e.IdGrupo).HasColumnName("id_grupo");
+                entity.Property(e => e.IdSeccion).HasColumnName("id_seccion");
+                entity.Property(e => e.FechaMatricula).HasColumnName("fecha_matricula").HasDefaultValueSql("CONVERT(DATE, GETDATE())");
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue("Activa").IsRequired();
+                entity.Property(e => e.Observaciones).HasColumnName("observaciones").HasMaxLength(500);
+                entity.HasIndex(e => new { e.IdEstudiante, e.IdPeriodo }).IsUnique().HasFilter("[estado] <> N'Anulada'").HasDatabaseName("UQ_Matricula_Estudiante_Periodo");
+                entity.HasIndex(e => new { e.Estado, e.IdPeriodo }).HasDatabaseName("IX_Matricula_Estado_Periodo");
+                entity.HasOne(e => e.Estudiante).WithMany().HasForeignKey(e => e.IdEstudiante).HasConstraintName("FK_Matricula_Estudiante");
+                entity.HasOne(e => e.PeriodoLectivo).WithMany().HasForeignKey(e => e.IdPeriodo).HasConstraintName("FK_Matricula_Periodo");
+                entity.HasOne(e => e.Grupo).WithMany(g => g.Matriculas).HasForeignKey(e => e.IdGrupo).HasConstraintName("FK_Matricula_Grupo");
+                entity.HasOne(e => e.Seccion).WithMany().HasForeignKey(e => e.IdSeccion).HasConstraintName("FK_Matricula_Seccion");
+            });
+
+            modelBuilder.Entity<MatriculaCurso>(entity =>
+            {
+                entity.ToTable("Matricula_Curso");
+                entity.HasKey(e => new { e.IdMatricula, e.IdCurso }).HasName("PK_Matricula_Curso");
+                entity.Property(e => e.IdMatricula).HasColumnName("id_matricula");
+                entity.Property(e => e.IdCurso).HasColumnName("id_curso");
+                entity.HasOne(e => e.Matricula).WithMany(m => m.MatriculasCursos).HasForeignKey(e => e.IdMatricula).HasConstraintName("FK_MatriculaCurso_Matricula");
+                entity.HasOne(e => e.Curso).WithMany().HasForeignKey(e => e.IdCurso).HasConstraintName("FK_MatriculaCurso_Curso");
+            });
+
+            modelBuilder.Entity<MatriculaObservacion>(entity =>
+            {
+                entity.ToTable("Matricula_Observacion");
+                entity.HasKey(e => e.IdObservacion).HasName("PK_Matricula_Observacion");
+                entity.Property(e => e.IdObservacion).HasColumnName("id_observacion");
+                entity.Property(e => e.IdMatricula).HasColumnName("id_matricula");
+                entity.Property(e => e.Observacion).HasColumnName("observacion").HasMaxLength(1000).IsRequired();
+                entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro").HasDefaultValueSql("CONVERT(DATE, GETDATE())");
+                entity.HasOne(e => e.Matricula).WithMany(m => m.ObservacionesRegistradas).HasForeignKey(e => e.IdMatricula).HasConstraintName("FK_Matricula_Observacion_Matricula");
+            });
+
+            modelBuilder.Entity<MatriculaHistorial>(entity =>
+            {
+                entity.ToTable("Matricula_Historial");
+                entity.HasKey(e => e.IdHistorial).HasName("PK_Matricula_Historial");
+                entity.Property(e => e.IdHistorial).HasColumnName("id_historial");
+                entity.Property(e => e.IdMatricula).HasColumnName("id_matricula");
+                entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+                entity.Property(e => e.TipoCambio).HasColumnName("tipo_cambio").HasMaxLength(30).IsRequired();
+                entity.Property(e => e.EstadoAnterior).HasColumnName("estado_anterior").HasMaxLength(20);
+                entity.Property(e => e.EstadoNuevo).HasColumnName("estado_nuevo").HasMaxLength(20);
+                entity.Property(e => e.GrupoAnterior).HasColumnName("grupo_anterior");
+                entity.Property(e => e.GrupoNuevo).HasColumnName("grupo_nuevo");
+                entity.Property(e => e.SeccionAnterior).HasColumnName("seccion_anterior");
+                entity.Property(e => e.SeccionNueva).HasColumnName("seccion_nueva");
+                entity.Property(e => e.Detalle).HasColumnName("detalle").HasMaxLength(1000);
+                entity.Property(e => e.FechaCambio).HasColumnName("fecha_cambio").HasColumnType("datetime2(0)").HasDefaultValueSql("SYSDATETIME()");
+                entity.HasOne(e => e.Matricula).WithMany(m => m.Historial).HasForeignKey(e => e.IdMatricula).HasConstraintName("FK_Matricula_Historial_Matricula");
+                entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.IdUsuario).HasConstraintName("FK_Matricula_Historial_Usuario");
+                entity.HasOne(e => e.GrupoAnteriorNavigation).WithMany().HasForeignKey(e => e.GrupoAnterior).HasConstraintName("FK_Matricula_Historial_GrupoAnterior");
+                entity.HasOne(e => e.GrupoNuevoNavigation).WithMany().HasForeignKey(e => e.GrupoNuevo).HasConstraintName("FK_Matricula_Historial_GrupoNuevo");
+                entity.HasOne(e => e.SeccionAnteriorNavigation).WithMany().HasForeignKey(e => e.SeccionAnterior).HasConstraintName("FK_Matricula_Historial_SeccionAnterior");
+                entity.HasOne(e => e.SeccionNuevaNavigation).WithMany().HasForeignKey(e => e.SeccionNueva).HasConstraintName("FK_Matricula_Historial_SeccionNueva");
+            });
 
             OnModelCreatingPartial(modelBuilder);
         }

@@ -1,0 +1,76 @@
+@{
+    ViewData["Title"] = "Grupos académicos";
+    bool puedeCrear = User.TienePermiso("Grados", "Crear");
+}
+<div class="container-fluid mt-4">
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div><h3 class="mb-0"><i class="bi bi-people-fill"></i> Grupos académicos</h3><small>Subdivisiones A/B usadas para materias que requieren separar una sección</small></div>
+            @if (puedeCrear) { <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#modalGrupo"><i class="bi bi-plus-circle"></i> Crear grupo</button> }
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                <strong>Cómo se usan:</strong> por ejemplo, para el período 2026 puede crear los grupos <b>A</b> y <b>B</b> para el nivel correspondiente. La matrícula combina el grupo elegido con la sección (por ejemplo, 7-1). El mismo grupo A/B puede reutilizarse para las distintas materias que dividen a los estudiantes de esa sección.
+                <br /><span class="small">Actualmente, el modelo guarda el grupo por nombre, nivel y año; la relación concreta con la sección se establece en cada matrícula.</span>
+            </div>
+            <div id="alertaGrupos" class="alert d-none" role="alert"></div>
+            <div class="row g-2 mb-3"><div class="col-sm-4 col-md-3"><label for="fAnio" class="form-label">Filtrar por año</label><select id="fAnio" class="form-select"><option value="">Todos los años</option></select></div><div class="col-sm-4 col-md-3 d-flex align-items-end"><button id="btnActualizar" class="btn btn-outline-primary"><i class="bi bi-arrow-clockwise"></i> Actualizar</button></div></div>
+            <div class="table-responsive"><table class="table table-striped table-hover align-middle"><thead class="table-dark"><tr><th>Nombre</th><th>Nivel</th><th>Año</th><th>Uso previsto</th></tr></thead><tbody id="tablaGrupos"><tr><td colspan="4" class="text-center text-muted">Cargando grupos...</td></tr></tbody></table></div>
+        </div>
+    </div>
+</div>
+@if (puedeCrear) {
+<div class="modal fade" id="modalGrupo" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content">
+    <form id="formGrupo"><div class="modal-header bg-primary text-white"><h5 class="modal-title">Crear grupo</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
+        <div class="modal-body">@Html.AntiForgeryToken()<div id="errorGrupo" class="alert alert-danger d-none"></div>
+            <div class="mb-3"><label for="nombreGrupo" class="form-label">Nombre *</label><input id="nombreGrupo" name="nombre" class="form-control" maxlength="50" required placeholder="A" /><div class="form-text">Puede usar A, B u otra etiqueta que utilice el centro.</div></div>
+            <div class="mb-3"><label for="nivelGrupo" class="form-label">Nivel académico *</label><select id="nivelGrupo" name="nivel" class="form-select" required><option value="">Cargando niveles...</option></select></div>
+            <div class="mb-3"><label for="anioGrupo" class="form-label">Año lectivo *</label><input id="anioGrupo" name="anio" class="form-control" type="number" min="2000" max="2100" required value="@DateTime.Today.Year" /><div class="form-text">Debe coincidir con el año de inicio del período lectivo usado en la matrícula.</div></div>
+        </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar grupo</button></div>
+    </form>
+</div></div></div>
+}
+@section Scripts {
+<script>
+(function () {
+    const alerta = document.getElementById('alertaGrupos');
+    const tabla = document.getElementById('tablaGrupos');
+    const filtroAnio = document.getElementById('fAnio');
+    function mostrarAlerta(mensaje, tipo) { alerta.className = 'alert alert-' + tipo; alerta.textContent = mensaje; }
+    function ocultarAlerta() { alerta.className = 'alert d-none'; alerta.textContent = ''; }
+    function htmlSeguro(v) { return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    async function cargarNiveles() {
+        const r = await fetch('/Grupos/Niveles'); const j = await r.json(); const select = document.getElementById('nivelGrupo');
+        if (!j.esCorrecto || !Array.isArray(j.dato) || j.dato.length === 0) { select.innerHTML = '<option value="">Primero cree un grado activo</option>'; return; }
+        select.innerHTML = '<option value="">Seleccione nivel</option>' + j.dato.map(n => `<option value="${htmlSeguro(n)}">${htmlSeguro(n)}</option>`).join('');
+    }
+    async function cargarGrupos() {
+        ocultarAlerta(); tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Cargando...</td></tr>';
+        try {
+            const q = filtroAnio.value ? '?anio=' + encodeURIComponent(filtroAnio.value) : '';
+            const r = await fetch('/Grupos/Listar' + q); const j = await r.json();
+            if (!r.ok || !j.esCorrecto) throw new Error(j.mensaje || 'No se pudieron cargar los grupos.');
+            const grupos = j.dato || [];
+            if (!grupos.length) { tabla.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No hay grupos registrados para este filtro. Use “Crear grupo” para agregar A y B.</td></tr>'; }
+            else { tabla.innerHTML = grupos.map(g => `<tr><td><strong>${htmlSeguro(g.nombre)}</strong></td><td>${htmlSeguro(g.nivel)}</td><td>${g.anio}</td><td>Subgrupo para las materias que lo requieran</td></tr>`).join(''); }
+            const anios = [...new Set(grupos.map(g => g.anio))].sort((a,b) => b-a); const actual = filtroAnio.value;
+            filtroAnio.innerHTML = '<option value="">Todos los años</option>' + anios.map(a => `<option value="${a}">${a}</option>`).join('');
+            if (actual && anios.includes(Number(actual))) filtroAnio.value = actual;
+        } catch (e) { tabla.innerHTML = '<tr><td colspan="4" class="text-center text-danger">No fue posible cargar los grupos.</td></tr>'; mostrarAlerta(e.message, 'danger'); }
+    }
+    filtroAnio.addEventListener('change', cargarGrupos); document.getElementById('btnActualizar').addEventListener('click', cargarGrupos);
+    const form = document.getElementById('formGrupo');
+    if (form) form.addEventListener('submit', async function (ev) {
+        ev.preventDefault(); const err = document.getElementById('errorGrupo'); err.classList.add('d-none');
+        const data = new URLSearchParams(new FormData(form));
+        try {
+            const r = await fetch('/Grupos/Crear', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' }, body: data.toString() });
+            const j = await r.json(); if (!r.ok || !j.esCorrecto) throw new Error(j.mensaje || 'No se pudo crear el grupo.');
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalGrupo')).hide(); form.reset(); document.getElementById('anioGrupo').value = new Date().getFullYear();
+            mostrarAlerta(j.mensaje || 'Grupo creado correctamente.', 'success'); await cargarGrupos();
+        } catch (e) { err.textContent = e.message; err.classList.remove('d-none'); }
+    });
+    cargarNiveles(); cargarGrupos();
+})();
+</script>
+}

@@ -98,6 +98,15 @@
                                 </li>
                             }
 
+                            @if (User.TienePermiso("Matricula", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Matriculas")" asp-controller="Matriculas" asp-action="Index">
+                                        <i class="bi bi-clipboard-check"></i> Matrículas
+                                    </a>
+                                </li>
+                            }
+
                             @if (User.IsInRole("Estudiante"))
                             {
                                 <li class="nav-item">
@@ -121,6 +130,15 @@
                                 <li class="nav-item">
                                     <a class="nav-link @EsActivo("Grado")" asp-controller="Grado" asp-action="Index">
                                         <i class="bi bi-diagram-3"></i> Grados y secciones
+                                    </a>
+                                </li>
+                            }
+
+                            @if (User.TienePermiso("Grados", "Ver"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link @EsActivo("Grupos")" asp-controller="Grupos" asp-action="Index">
+                                        <i class="bi bi-people-fill"></i> Grupos A/B
                                     </a>
                                 </li>
                             }

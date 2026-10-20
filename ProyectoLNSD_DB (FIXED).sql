@@ -1,8 +1,10 @@
 /* ============================================================
-   PROYECTO LNSD - SCRIPT INICIAL DE BASE DE DATOS
-   Crea la BD, tablas, restricciones, índices y datos iniciales.
+   PROYECTO LNSD - SCRIPT CONSOLIDADO DE BASE DE DATOS
+   Versión actualizada: Matrícula, cursos, observaciones e historial.
    ============================================================ */
-
+  
+      --Esto es para borrar la base y volverla a crear, cuidado
+  /*
 USE master;
 GO
 
@@ -12,12 +14,13 @@ BEGIN
     DROP DATABASE Proyecto_LNSD_DB;
 END
 GO
-
+*/
 CREATE DATABASE Proyecto_LNSD_DB;
 GO
 
 USE Proyecto_LNSD_DB;
 GO
+
 
 /* ============================================================
    1. SEGURIDAD Y USUARIOS
@@ -283,6 +286,22 @@ CREATE TABLE Grupo
 );
 GO
 
+/* Períodos lectivos se crea antes de Matrícula para permitir su FK. */
+
+CREATE TABLE Periodo_Lectivo
+(
+    id_periodo INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    fecha_inicio DATE NOT NULL,
+    fecha_fin DATE NOT NULL,
+    activo BIT NOT NULL CONSTRAINT DF_Periodo_Activo DEFAULT 0,
+
+    CONSTRAINT PK_Periodo_Lectivo PRIMARY KEY (id_periodo),
+    CONSTRAINT UQ_Periodo_Nombre UNIQUE (nombre),
+    CONSTRAINT CK_Periodo_Fechas CHECK (fecha_fin >= fecha_inicio)
+);
+GO
+
 /* ============================================================
    4. CURSOS
    ============================================================ */
@@ -327,16 +346,108 @@ CREATE TABLE Matricula
 (
     id_matricula INT IDENTITY(1,1) NOT NULL,
     id_estudiante INT NOT NULL,
+    id_periodo INT NOT NULL,
     id_grupo INT NOT NULL,
+    id_seccion INT NOT NULL,
+    fecha_matricula DATE NOT NULL
+        CONSTRAINT DF_Matricula_Fecha DEFAULT (CONVERT(DATE, GETDATE())),
+    estado NVARCHAR(20) NOT NULL
+        CONSTRAINT DF_Matricula_Estado DEFAULT N'Activa',
+    observaciones NVARCHAR(500) NULL,
 
     CONSTRAINT PK_Matricula PRIMARY KEY (id_matricula),
-    CONSTRAINT UQ_Matricula_Estudiante_Grupo
-        UNIQUE (id_estudiante, id_grupo),
+    CONSTRAINT UQ_Matricula_Estudiante_Periodo
+        UNIQUE (id_estudiante, id_periodo),
+    CONSTRAINT CK_Matricula_Estado
+        CHECK (estado IN (N'Activa', N'Pendiente', N'Anulada', N'Inactiva')),
     CONSTRAINT FK_Matricula_Estudiante
         FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
+    CONSTRAINT FK_Matricula_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
     CONSTRAINT FK_Matricula_Grupo
-        FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo)
+        FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo),
+    CONSTRAINT FK_Matricula_Seccion
+        FOREIGN KEY (id_seccion) REFERENCES Seccion(id_seccion)
 );
+GO
+
+CREATE INDEX IX_Matricula_Periodo ON Matricula(id_periodo);
+CREATE INDEX IX_Matricula_Seccion ON Matricula(id_seccion);
+CREATE INDEX IX_Matricula_Estado_Periodo ON Matricula(estado, id_periodo);
+GO
+
+CREATE TABLE Matricula_Curso
+(
+    id_matricula INT NOT NULL,
+    id_curso INT NOT NULL,
+
+    CONSTRAINT PK_Matricula_Curso PRIMARY KEY (id_matricula, id_curso),
+    CONSTRAINT FK_MatriculaCurso_Matricula
+        FOREIGN KEY (id_matricula) REFERENCES Matricula(id_matricula),
+    CONSTRAINT FK_MatriculaCurso_Curso
+        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso)
+);
+GO
+
+/* Observaciones múltiples asociadas a una matrícula (MMTF-01-12). */
+CREATE TABLE Matricula_Observacion
+(
+    id_observacion INT IDENTITY(1,1) NOT NULL,
+    id_matricula INT NOT NULL,
+    observacion NVARCHAR(1000) NOT NULL,
+    fecha_registro DATE NOT NULL
+        CONSTRAINT DF_Matricula_Observacion_Fecha DEFAULT (CONVERT(DATE, GETDATE())),
+
+    CONSTRAINT PK_Matricula_Observacion PRIMARY KEY (id_observacion),
+    CONSTRAINT CK_Matricula_Observacion_NoVacia
+        CHECK (LEN(LTRIM(RTRIM(observacion))) > 0),
+    CONSTRAINT FK_Matricula_Observacion_Matricula
+        FOREIGN KEY (id_matricula) REFERENCES Matricula(id_matricula)
+);
+GO
+
+CREATE INDEX IX_Matricula_Observacion_Matricula_Fecha
+    ON Matricula_Observacion(id_matricula, fecha_registro DESC);
+GO
+
+/* Historial de cambios de matrícula: traslados y cambios de estado.
+   La aplicación registrará aquí los cambios cuando se implemente esa función. */
+CREATE TABLE Matricula_Historial
+(
+    id_historial INT IDENTITY(1,1) NOT NULL,
+    id_matricula INT NOT NULL,
+    id_usuario INT NULL,
+    tipo_cambio NVARCHAR(30) NOT NULL,
+    estado_anterior NVARCHAR(20) NULL,
+    estado_nuevo NVARCHAR(20) NULL,
+    grupo_anterior INT NULL,
+    grupo_nuevo INT NULL,
+    seccion_anterior INT NULL,
+    seccion_nueva INT NULL,
+    detalle NVARCHAR(1000) NULL,
+    fecha_cambio DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Matricula_Historial_Fecha DEFAULT (SYSDATETIME()),
+
+    CONSTRAINT PK_Matricula_Historial PRIMARY KEY (id_historial),
+    CONSTRAINT CK_Matricula_Historial_Tipo
+        CHECK (tipo_cambio IN (N'Registro', N'Estado', N'Traslado', N'Edicion')),
+    CONSTRAINT FK_Matricula_Historial_Matricula
+        FOREIGN KEY (id_matricula) REFERENCES Matricula(id_matricula),
+    CONSTRAINT FK_Matricula_Historial_Usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Matricula_Historial_GrupoAnterior
+        FOREIGN KEY (grupo_anterior) REFERENCES Grupo(id_grupo),
+    CONSTRAINT FK_Matricula_Historial_GrupoNuevo
+        FOREIGN KEY (grupo_nuevo) REFERENCES Grupo(id_grupo),
+    CONSTRAINT FK_Matricula_Historial_SeccionAnterior
+        FOREIGN KEY (seccion_anterior) REFERENCES Seccion(id_seccion),
+    CONSTRAINT FK_Matricula_Historial_SeccionNueva
+        FOREIGN KEY (seccion_nueva) REFERENCES Seccion(id_seccion)
+);
+GO
+
+CREATE INDEX IX_Matricula_Historial_Matricula_Fecha
+    ON Matricula_Historial(id_matricula, fecha_cambio DESC);
 GO
 
 CREATE TABLE Horario
@@ -730,19 +841,6 @@ CREATE TABLE Institucion
 );
 GO
 
-CREATE TABLE Periodo_Lectivo
-(
-    id_periodo INT IDENTITY(1,1) NOT NULL,
-    nombre NVARCHAR(100) NOT NULL,
-    fecha_inicio DATE NOT NULL,
-    fecha_fin DATE NOT NULL,
-    activo BIT NOT NULL CONSTRAINT DF_Periodo_Activo DEFAULT 0,
-
-    CONSTRAINT PK_Periodo_Lectivo PRIMARY KEY (id_periodo),
-    CONSTRAINT UQ_Periodo_Nombre UNIQUE (nombre),
-    CONSTRAINT CK_Periodo_Fechas CHECK (fecha_fin >= fecha_inicio)
-);
-GO
 
 -- TABLA INTERMEDIA DOCENTE_CURSO *****NUEVA*****
 
@@ -1087,3 +1185,96 @@ WHERE r.nombre = N'Director'
   AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO
 
+
+/* ============================================================
+   19. PERMISOS DEL MÓDULO MATRÍCULAS 
+   Esto es ejecutable más de una vez sin duplicar módulo ni permisos.
+   ============================================================ */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Matriculas')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Matriculas', N'Registro, consulta, modificación, traslados, historial y reportes de matrícula.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre IN (N'Administrador', N'Personal administrativo')
+  AND m.nombre = N'Matriculas'
+  AND NOT EXISTS (
+      SELECT 1 FROM Rol_Permiso rp
+      WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo
+  );
+GO
+
+/* Permisos mínimos para los endpoints del módulo Matrícula.
+   puede ejecutarse más de una vez. */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Matricula')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Matricula', N'Registro, consulta, edición, traslados e informes de matrícula.');
+GO
+
+/* Administrador, Director y Personal administrativo pueden gestionar matrículas. */
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, 1, 1, 1, 0
+FROM Rol r
+CROSS JOIN Modulo m
+WHERE r.nombre IN (N'Administrador', N'Director', N'Personal administrativo')
+  AND m.nombre = N'Matricula'
+  AND NOT EXISTS (
+      SELECT 1 FROM Rol_Permiso rp
+      WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo
+  );
+GO
+
+/* Actualiza permisos de la matrícula si ya existía el vínculo rol-módulo. */
+UPDATE rp
+SET puede_ver = 1, puede_crear = 1, puede_editar = 1, puede_eliminar = 0
+FROM Rol_Permiso rp
+JOIN Rol r ON r.id_rol = rp.id_rol
+JOIN Modulo m ON m.id_modulo = rp.id_modulo
+WHERE r.nombre IN (N'Administrador', N'Director', N'Personal administrativo')
+  AND m.nombre = N'Matricula';
+GO
+
+/* Ejecutar una sola vez sobre la base de datos de desarrollo antes de crear grupos.
+   Permite tener Grupo A/B para distintos niveles en el mismo año lectivo,
+   manteniendo la unicidad de nombre + nivel + año. */
+IF EXISTS (
+    SELECT 1
+    FROM sys.key_constraints
+    WHERE name = N'UQ_Grupo_Nombre_Anio'
+      AND parent_object_id = OBJECT_ID(N'dbo.Grupo')
+)
+BEGIN
+    ALTER TABLE dbo.Grupo DROP CONSTRAINT UQ_Grupo_Nombre_Anio;
+END;
+GO
+
+IF NOT EXISTS (
+    SELECT 1
+    FROM sys.key_constraints
+    WHERE name = N'UQ_Grupo_Nombre_Nivel_Anio'
+      AND parent_object_id = OBJECT_ID(N'dbo.Grupo')
+)
+BEGIN
+    ALTER TABLE dbo.Grupo
+    ADD CONSTRAINT UQ_Grupo_Nombre_Nivel_Anio UNIQUE (nombre, nivel, anio);
+END;
+GO
+
+/* Ajuste de unicidad para permitir una nueva matrícula si la anterior fue anulada por error.
+   Ejecutar una sola vez en la base de datos del Sistema Académico LNSD.
+   Las matrículas activas, inactivas o pendientes siguen siendo únicas por estudiante/período. */
+IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = N'UQ_Matricula_Estudiante_Periodo' AND parent_object_id = OBJECT_ID(N'dbo.Matricula'))
+    ALTER TABLE dbo.Matricula DROP CONSTRAINT UQ_Matricula_Estudiante_Periodo;
+GO
+IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UQ_Matricula_Estudiante_Periodo' AND object_id = OBJECT_ID(N'dbo.Matricula'))
+    DROP INDEX UQ_Matricula_Estudiante_Periodo ON dbo.Matricula;
+GO
+CREATE UNIQUE NONCLUSTERED INDEX UQ_Matricula_Estudiante_Periodo
+ON dbo.Matricula (id_estudiante, id_periodo)
+WHERE estado <> N'Anulada';
+GO
+
+--aqui termina el sprint 2

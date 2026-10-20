@@ -1,3 +1,5 @@
+using ProyectoLNSD_WApp.BLL.Service.Matricula;
+using ProyectoLNSD_WApp.DAL.Repositories.Matricula;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using ProyectoLNSD_WApp.BLL.Service.Auth;
@@ -77,6 +79,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IEncargadoRepository, EncargadoRepository>();
             builder.Services.AddScoped<IDocenteCursoRepository, DocenteCursoRepository>();
             builder.Services.AddScoped<IRecursoRepository, RecursoRepository>();
+            builder.Services.AddScoped<IMatriculaRepository, MatriculaRepository>();
 
 
             //Servicios
@@ -101,6 +104,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IDocenteCursoService, DocenteCursoService>();
             builder.Services.AddScoped<IExpedienteDocenteService, ExpedienteDocenteService>();
             builder.Services.AddScoped<IRecursoService, RecursoService>();
+            builder.Services.AddScoped<IMatriculaService, MatriculaService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
