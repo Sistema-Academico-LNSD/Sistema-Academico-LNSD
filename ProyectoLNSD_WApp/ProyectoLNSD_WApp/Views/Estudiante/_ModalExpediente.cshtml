@@ -2,9 +2,9 @@
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
 
-            <div class="modal-header bg-primary text-white">
+            <div class="modal-header">
                 <h5 class="modal-title"><i class="bi bi-folder2-open"></i> Expediente del estudiante</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
             <div class="modal-body">
@@ -17,7 +17,7 @@
                     <span id="expEstado" class="badge fs-6"></span>
                 </div>
 
-                <h6 class="text-primary border-bottom pb-1 mb-3">
+                <h6 class="section-heading">
                     <i class="bi bi-person"></i> Datos personales y de contacto
                 </h6>
 
@@ -48,7 +48,7 @@
                     </div>
                 </div>
 
-                <h6 class="text-primary border-bottom pb-1 mb-3">
+                <h6 class="section-heading">
                     <i class="bi bi-mortarboard"></i> Información académica
                 </h6>
 
@@ -67,32 +67,32 @@
                     </div>
                 </div>
 
-                <h6 class="text-primary border-bottom pb-1 mb-3">
+                <h6 class="section-heading">
                     <i class="bi bi-heart-pulse"></i> Información médica y de atención
                 </h6>
 
                 <div class="row g-3 mb-4">
                     <div class="col-md-12">
                         <div class="text-muted small">Alergias</div>
-                        <div id="expAlergias" style="white-space: pre-wrap;"></div>
+                        <div id="expAlergias" class="pre-line"></div>
                     </div>
                     <div class="col-md-12">
                         <div class="text-muted small">Observaciones médicas</div>
-                        <div id="expObservacionesMedicas" style="white-space: pre-wrap;"></div>
+                        <div id="expObservacionesMedicas" class="pre-line"></div>
                     </div>
                     <div class="col-md-12">
                         <div class="text-muted small">Adecuaciones educativas</div>
-                        <div id="expAdecuaciones" style="white-space: pre-wrap;"></div>
+                        <div id="expAdecuaciones" class="pre-line"></div>
                     </div>
                 </div>
 
-                <h6 class="text-primary border-bottom pb-1 mb-3">
+                <h6 class="section-heading">
                     <i class="bi bi-people"></i> Encargados asociados
                 </h6>
 
                 <div class="table-responsive">
                     <table id="tblExpEncargados" class="table table-sm table-striped align-middle">
-                        <thead class="table-dark">
+                        <thead>
                             <tr>
                                 <th>Nombre</th>
                                 <th>Parentesco</th>

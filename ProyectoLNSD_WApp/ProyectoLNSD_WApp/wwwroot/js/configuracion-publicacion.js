@@ -1,12 +1,12 @@
-﻿// HU 08: publicar / despublicar contenido del sitio (misión, visión, historia, bloques y banners)
+// HU 08: publicar / despublicar contenido del sitio (misión, visión, historia, bloques y banners)
 // alTerminar: función que vuelve a cargar la lista o la tarjeta que corresponda.
 
-function cambiarEstadoContenido(id, publicar, alTerminar) {
+async function cambiarEstadoContenido(id, publicar, alTerminar) {
     let mensajeConfirmacion = publicar
         ? "¿Desea publicar este contenido en el sitio web?"
         : "¿Desea despublicar este contenido? Dejará de mostrarse en el sitio web.";
 
-    if (!confirm(mensajeConfirmacion)) {
+    if (!(await confirmar(mensajeConfirmacion, publicar ? "Publicar" : "Despublicar", publicar ? "success" : "warning"))) {
         return;
     }
 

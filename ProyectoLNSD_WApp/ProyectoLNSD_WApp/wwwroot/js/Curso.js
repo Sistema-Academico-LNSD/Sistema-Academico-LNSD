@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
 
     cargarCatalogos();
     cargarCursos();
@@ -195,13 +195,13 @@ function cargarCursos() {
                             <td class="text-center">
 
                                 <a href="/Curso/Detalle?id=${curso.idCurso}"
-                                   class="btn btn-info btn-sm me-1"
+                                   class="btn btn-outline-secondary btn-sm me-1"
                                    title="Ver detalle">
                                     <i class="bi bi-eye"></i>
                                 </a>
 
                                 <button type="button"
-                                        class="btn btn-warning btn-sm me-1"
+                                        class="btn btn-outline-primary btn-sm me-1"
                                         onclick="obtenerCurso(${curso.idCurso})"
                                         title="Editar">
                                     <i class="bi bi-pencil-square"></i>

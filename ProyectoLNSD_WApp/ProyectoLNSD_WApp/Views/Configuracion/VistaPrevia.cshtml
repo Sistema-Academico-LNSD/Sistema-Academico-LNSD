@@ -1,6 +1,7 @@
-﻿@model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
+@model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
 @{
     ViewData["Title"] = "Vista previa";
+    ViewData["OcultarEncabezado"] = true;
     ViewData["EsVistaPrevia"] = true;   // los partials marcan los borradores
 
     var institucionales = new[] { Model.Mision, Model.Vision, Model.Historia };
@@ -15,8 +16,7 @@
 
 @Html.AntiForgeryToken()
 
-<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 sticky-top shadow-sm"
-     style="top: .5rem; z-index: 1030;">
+<div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2 sticky-top shadow-sm preview-bar">
     <div>
         <i class="bi bi-eye"></i> <strong>Vista previa</strong>: así se verá el sitio web.
         Lo marcado como <span class="badge bg-warning text-dark">Borrador</span> aún no está publicado.
@@ -49,35 +49,5 @@ else
 }
 
 @section Scripts {
-    <script>
-        $("#btnConfirmarPublicacion").click(function () {
-            if (!confirm("Se publicarán en el sitio web todos los cambios pendientes. ¿Confirmar la publicación?")) {
-                return;
-            }
-
-            $.ajax({
-                url: '/Configuracion/PublicarPendientes',
-                type: 'POST',
-                data: { __RequestVerificationToken: $('input[name="__RequestVerificationToken"]').val() },
-
-                success: function (response) {
-                    if (response.esCorrecto) {
-                        mostrarMensaje(response.mensaje, 'success');
-
-                        // Si quedó algo sin publicar por estar incompleto, se deja el mensaje a la vista
-                        if (response.mensaje.indexOf("No se publicaron") < 0) {
-                            setTimeout(function () { location.reload(); }, 1500);
-                        }
-                    }
-                    else {
-                        mostrarMensaje(response.mensaje, 'danger');
-                    }
-                },
-
-                error: function () {
-                    mostrarMensaje("Error al publicar los cambios.", 'danger');
-                }
-            });
-        });
-    </script>
+    <script src="~/js/configuracion-vista-previa.js" asp-append-version="true"></script>
 }

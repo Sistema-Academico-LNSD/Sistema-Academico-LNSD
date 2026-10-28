@@ -1,4 +1,4 @@
-﻿// HU 05: Misión, Visión e Historia
+// HU 05: Misión, Visión e Historia
 // Estado actual de cada texto ("Publicado" | "Borrador" | undefined si aún no existe)
 let estadosContenido = {};
 // Id de cada fila existente, para poder despublicar
@@ -70,17 +70,17 @@ function cargarContenidosInstitucionales() {
     });
 }
 
-function guardarContenidoInstitucional(tipo, publicar) {
+async function guardarContenidoInstitucional(tipo, publicar) {
     // HU 08 escenario 5: publicar cambios de un texto ya publicado pide confirmación.
     if (publicar && estadosContenido[tipo] === "Publicado") {
-        if (!confirm("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?")) {
+        if (!(await confirmar("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?", "Publicar", "success"))) {
             return;
         }
     }
 
     // Guardar como borrador un texto ya publicado lo oculta del sitio: se pide confirmar.
     if (!publicar && estadosContenido[tipo] === "Publicado") {
-        if (!confirm("Este texto está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?")) {
+        if (!(await confirmar("Este texto está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?", "Guardar como borrador", "warning"))) {
             return;
         }
     }

@@ -1,6 +1,7 @@
-﻿// -------------------------------------------------------------
-// Utilidades globales del sitio (Carga en _Layout antes que los scripts de cada página).
-// Inyecta en todas las peticiones POST de una vez los hearders automaticamente , para evitar tener que hacerlo en cada llamada ajax.
+// -------------------------------------------------------------
+// Utilidades globales del sitio (se cargan en _Scripts antes que los scripts de cada página).
+// - ajaxSetup: agrega el token antiforgery a toda petición jQuery que no sea GET.
+// - escapeHtml / mostrarMensaje / confirmar: helpers compartidos por todas las pantallas.
 // -------------------------------------------------------------
 
 
@@ -114,8 +115,8 @@ function confirmar(mensaje, textoBoton = 'Confirmar', tipoBoton = 'danger') {
         $modal.appendTo('body');
         modal.show();
     });
+}
 
-    
 // ============================================================
 // Fechas UTC renderizadas en servidor
 // El navegador convierte la fecha UTC a la hora local del usuario.
@@ -138,5 +139,3 @@ $(function ()
         $(this).text(fecha.toLocaleString('es-CR', opciones));
     });
 });
-
-}

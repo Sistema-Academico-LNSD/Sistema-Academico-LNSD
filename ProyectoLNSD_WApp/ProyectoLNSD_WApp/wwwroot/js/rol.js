@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     cargarRoles();
 
     $("#btnGuardarRol").click(function () {
@@ -29,7 +29,7 @@ function cargarRoles() {
                             <td>
 
                                 <button
-                                    class="btn btn-warning btn-sm me-1"
+                                    class="btn btn-outline-primary btn-sm me-1"
                                     onclick="obtenerRol(${rol.idRol})">
 
                                     <i class="bi bi-pencil-square"></i>

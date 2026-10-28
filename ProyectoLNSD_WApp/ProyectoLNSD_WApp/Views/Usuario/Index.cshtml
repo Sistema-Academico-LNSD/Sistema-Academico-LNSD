@@ -1,44 +1,23 @@
-﻿@using ProyectoLNSD_WApp.BLL.DTO
+@using ProyectoLNSD_WApp.BLL.DTO
 @using ProyectoLNSD_WApp.BLL.DTO.UsuarioActions
 
 @{
     ViewData["Title"] = "Usuarios";
+    ViewData["Subtitle"] = "Administración de usuarios y roles";
+    ViewData["Icon"] = "bi-person-gear";
 }
 
-<div class="container-fluid mt-4">
+@section Acciones {
+    @if (User.TienePermiso("Usuarios", "Crear"))
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearUsuario">
+            <i class="bi bi-plus-circle"></i> Nuevo usuario
+        </button>
+    }
+}
 
-    <div class="card shadow border-0">
-
-        <div class="card-header bg-primary text-white">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-                <div>
-                    <h3 class="mb-0">
-                        <i class="bi bi-people-fill"></i>
-                        Gestión de Usuarios
-                    </h3>
-
-                    <small>
-                        Administración de usuarios y roles
-                    </small>
-                </div>
-
-                <button type="button"
-                        class="btn btn-light"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalCrearUsuario">
-
-                    <i class="bi bi-plus-circle"></i>
-                    Nuevo Usuario
-
-                </button>
-
-            </div>
-
-        </div>
-
-        <div class="card-body">
+<div class="card">
+    <div class="card-body">
 
             <div class="row mb-3">
 
@@ -79,7 +58,7 @@
                 <div class="col-md-2">
                     <button type="button"
                             id="btnBuscar"
-                            class="btn btn-success">
+                            class="btn btn-primary">
 
                         <i class="bi bi-search"></i>
                         Buscar
@@ -94,7 +73,7 @@
                 <table id="tblUsuarios"
                        class="table table-striped table-hover">
 
-                    <thead class="table-dark">
+                    <thead>
 
                         <tr>
                             <th>ID</th>
@@ -119,7 +98,7 @@
 
     </div>
 
-</div>
+
 
 @await Html.PartialAsync(
     "_Create",
@@ -135,6 +114,6 @@
 
     <partial name="_ValidationScriptsPartial" />
 
-    <script src="~/js/usuario.js"></script>
+    <script src="~/js/usuario.js" asp-append-version="true"></script>
 
 }

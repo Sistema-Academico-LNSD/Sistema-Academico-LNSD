@@ -1,0 +1,62 @@
+@*
+    Layout del SITIO PÚBLICO (visitantes NO registrados o loggeados)
+*@
+@{
+    bool ocultarEncabezado = ViewData["OcultarEncabezado"] as bool? == true
+                             || string.IsNullOrWhiteSpace(ViewData["Title"] as string);
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <partial name="_Head" />
+</head>
+<body class="public">
+
+    <a class="skip-link visually-hidden-focusable" href="#contenido">Saltar al contenido</a>
+
+    <header class="public-navbar">
+        <div class="container d-flex align-items-center justify-content-between gap-3">
+            <a class="public-brand" asp-controller="Home" asp-action="Index">
+                <img src="~/img/logo-lnsd.jpeg" alt="" width="40" height="40" />
+                <span>
+                    Sistema Académico LNSD
+                    <small>Liceo Nuevo de Santo Domingo</small>
+                </span>
+            </a>
+            <a class="btn btn-accent btn-sm" asp-controller="Auth" asp-action="Login">
+                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Iniciar sesión
+            </a>
+        </div>
+    </header>
+
+    <main id="contenido" class="container public-content" role="main">
+
+        @if (!ocultarEncabezado)
+        {
+            <partial name="_EncabezadoPagina" model="@null" />
+        }
+
+        @if (IsSectionDefined("Acciones"))
+        {
+            // Las acciones de página son de la aplicación; en el sitio público no se muestran.
+            IgnoreSection("Acciones");
+        }
+
+        @RenderBody()
+
+    </main>
+
+    <footer class="public-footer">
+        <div class="container d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span>
+                &copy; @DateTime.Now.Year Sistema Académico LNSD &middot;
+                <a asp-controller="Home" asp-action="Privacy">Aviso de privacidad</a>
+            </span>
+            <span class="app-footer-motto">Estudio &bull; Esfuerzo &bull; Superación</span>
+        </div>
+    </footer>
+
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

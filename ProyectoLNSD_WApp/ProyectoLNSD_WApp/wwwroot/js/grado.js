@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     cargarEstructura();
     cargarGradosActivos();
 
@@ -41,10 +41,10 @@ function cargarEstructura() {
                     const nuevoEstado = !item.estado;
 
                     let acciones = `
-                        <a class="btn btn-info btn-sm me-1" href="/Grado/Detalle/${item.idGrado}" title="Ver detalle">
+                        <a class="btn btn-outline-secondary btn-sm me-1" href="/Grado/Detalle/${item.idGrado}" title="Ver detalle">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <button class="btn btn-warning btn-sm me-1" onclick="obtenerGrado(${item.idGrado})">
+                        <button class="btn btn-outline-primary btn-sm me-1" onclick="obtenerGrado(${item.idGrado})">
                             <i class="bi bi-pencil-square"></i>
                         </button>
                         <button class="btn btn-secondary btn-sm me-1" onclick="cambiarEstadoGrado(${item.idGrado}, ${nuevoEstado})">
@@ -53,7 +53,7 @@ function cargarEstructura() {
 
                     if (item.idSeccion) {
                         acciones += `
-                        <button class="btn btn-warning btn-sm me-1" onclick="obtenerSeccion(${item.idSeccion})">
+                        <button class="btn btn-outline-primary btn-sm me-1" onclick="obtenerSeccion(${item.idSeccion})">
                             Sección
                         </button>
                         <button class="btn btn-secondary btn-sm" onclick="cambiarEstadoSeccion(${item.idSeccion}, ${!item.estado})">

@@ -1,15 +1,11 @@
-﻿$(document).ready(function ()
+// Pantallas de autenticación (_AuthLayout): login, recuperar y restablecer contraseña.
+// El cierre de sesión es un formulario POST normal en _Layout; no necesita JavaScript.
+$(document).ready(function ()
 {
     $("#formLogin").on("submit", function (e)
     {
         e.preventDefault();
         iniciarSesion();
-    });
-
-    $("#btnLogout").on("click", function (e)
-    {
-        e.preventDefault();
-        cerrarSesion();
     });
 
     $("#formRecuperar").on("submit", function (e)
@@ -72,22 +68,6 @@ function iniciarSesion()
         complete: function ()
         {
             $btn.prop("disabled", false).text("Ingresar");
-        }
-    });
-}
-
-function cerrarSesion()
-{
-    let token = $("input[name='__RequestVerificationToken']").val();
-
-    $.ajax({
-        url: '/Auth/Logout',
-        type: 'POST',
-        data: { __RequestVerificationToken: token },
-
-        complete: function ()
-        {
-            window.location.href = '/Auth/Login';
         }
     });
 }

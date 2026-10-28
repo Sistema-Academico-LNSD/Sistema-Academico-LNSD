@@ -1,140 +1,72 @@
-﻿
 @model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
 @{
     ViewData["Title"] = "Inicio";
+    ViewData["OcultarEncabezado"] = true;
 
     bool autenticado = User.Identity?.IsAuthenticated == true;
-    bool esAdmin = User.IsInRole("Administrador");
     string? nombreUsuario = User.Identity?.Name;
     string? rolUsuario = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value;
 }
 
-<!-- -----------------------------------------
-     HERO Section
----------------------------------------------- -->
-<section class="hero-lnsd">
-    <div class="hero-lnsd-content">
-
-        <span class="hero-badge">
-            <i class="bi bi-mortarboard-fill"></i>
-        </span>
-
-        @if (autenticado)
-        {
+@if (autenticado)
+{
+    @* Panel de inicio: los módulos están en el menú lateral; aquí solo bienvenida y accesos rápidos. *@
+    <section class="welcome">
+        <div>
             <h1>Bienvenido, @nombreUsuario</h1>
-            <p class="hero-subtitle">
-                @if (!string.IsNullOrWhiteSpace(rolUsuario))
-                {
-                    <span class="badge-rol"><i class="bi bi-person-check"></i> @rolUsuario</span>
-                }
-                Accedé a los módulos habilitados para tu cuenta desde el panel de abajo.
-            </p>
-        }
-        else
+        </div>
+        @if (!string.IsNullOrWhiteSpace(rolUsuario))
         {
+            <span class="badge-rol"><i class="bi bi-person-check" aria-hidden="true"></i> @rolUsuario</span>
+        }
+    </section>
+
+    @* Accesos rápidos: los administra Configuración > Accesos rápidos y se asignan por rol *@
+    @if (Model.Accesos.Count > 0)
+    {
+        <section class="mb-4">
+            <h2 class="section-title"><i class="bi bi-grid-1x2" aria-hidden="true"></i> Accesos rápidos</h2>
+
+            <div class="module-grid">
+                @foreach (var acceso in Model.Accesos)
+                {
+                    bool externo = acceso.Enlace.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+
+                    <a href="@acceso.Enlace" class="module-card"
+                       target="@(externo ? "_blank" : null)" rel="@(externo ? "noopener noreferrer" : null)">
+                        <div class="module-icon">
+                            <i class="bi @(string.IsNullOrWhiteSpace(acceso.Icono) ? "bi-link-45deg" : acceso.Icono)" aria-hidden="true"></i>
+                        </div>
+                        <h3>@acceso.Nombre</h3>
+                        @if (!string.IsNullOrWhiteSpace(acceso.Descripcion))
+                        {
+                            <p>@acceso.Descripcion</p>
+                        }
+                    </a>
+                }
+            </div>
+        </section>
+    }
+}
+else
+{
+    <section class="hero-lnsd">
+        <div class="hero-lnsd-content">
+            <span class="hero-badge"><i class="bi bi-mortarboard-fill" aria-hidden="true"></i></span>
             <h1>Sistema Académico LNSD</h1>
             <p class="hero-subtitle">
                 Bienvenidos a la plataforma digital de gestión académica, administrativa
                 y de seguridad del Liceo Nuevo de Santo Domingo.
             </p>
-            <a asp-controller="Auth" asp-action="Login" class="btn btn-login-nav btn-lg mt-3">
-                <i class="bi bi-box-arrow-in-right"></i> Iniciar sesión
+            <a asp-controller="Auth" asp-action="Login" class="btn btn-accent btn-lg mt-2">
+                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Iniciar sesión
             </a>
-        }
-
-    </div>
-</section>
-
-
-<!-- Banners publicados (carrusel) -->
-<partial name="_BannersSitio" model="Model" />
-
-<!-- -----------------------------------------
-     Accesos rápidos: los administra Configuración > Accesos rápidos y se asignan por rol (MCFG-01-06)
----------------------------------------------- -->
-@if (autenticado && Model.Accesos.Count > 0)
-{
-    <section class="mt-4">
-
-        <h2 class="section-title">
-            <i class="bi bi-grid-1x2"></i>
-            Accesos rápidos
-        </h2>
-
-        <div class="module-grid">
-
-            @foreach (var acceso in Model.Accesos)
-            {
-                bool externo = acceso.Enlace.StartsWith("http", StringComparison.OrdinalIgnoreCase);
-
-                <a href="@acceso.Enlace" class="module-card"
-                   target="@(externo ? "_blank" : null)" rel="@(externo ? "noopener noreferrer" : null)">
-                    <div class="module-icon">
-                        <i class="bi @(string.IsNullOrWhiteSpace(acceso.Icono) ? "bi-link-45deg" : acceso.Icono)"></i>
-                    </div>
-                    <h3>@acceso.Nombre</h3>
-                    @if (!string.IsNullOrWhiteSpace(acceso.Descripcion))
-                    {
-                        <p>@acceso.Descripcion</p>
-                    }
-                </a>
-            }
-
-                        <a asp-controller="Boleteria" asp-action="Index" class="module-card">
-                <div class="module-icon"><i class="bi bi-ticket-perforated"></i></div>
-                <h3>Mi tiquete</h3>
-                <p>Genera y consulta tu tiquete digital del comedor.</p>
-            </a>
-
-            @if (User.TienePermiso("Boleteria", "Editar"))
-            {
-                <a asp-controller="Boleteria" asp-action="Validar" class="module-card">
-                    <div class="module-icon"><i class="bi bi-qr-code-scan"></i></div>
-                    <h3>Validar tiquetes</h3>
-                    <p>Verifica y marca como utilizados los tiquetes del comedor.</p>
-                </a>
-            }
-
-            @if (User.TienePermiso("Boleteria", "Ver"))
-            {
-                <a asp-controller="Boleteria" asp-action="Consulta" class="module-card">
-                    <div class="module-icon"><i class="bi bi-clipboard-data"></i></div>
-                    <h3>Control de tiquetes</h3>
-                    <p>Consulta los tiquetes generados, utilizados y sus cantidades.</p>
-                </a>
-            }
-
-            @if (User.TienePermiso("Recursos", "Crear"))
-            {
-                <a asp-controller="Recurso" asp-action="Index" class="module-card">
-                    <div class="module-icon"><i class="bi bi-folder2-open"></i></div>
-                    <h3>Mis recursos</h3>
-                    <p>Publica y administra materiales y enlaces para tus estudiantes.</p>
-                </a>
-            }
-
-            @if (User.IsInRole("Estudiante") && User.TienePermiso("Recursos", "Ver"))
-            {
-                <a asp-controller="Recurso" asp-action="Material" class="module-card">
-                    <div class="module-icon"><i class="bi bi-journal-bookmark"></i></div>
-                    <h3>Material de estudio</h3>
-                    <p>Consulta y descarga los recursos de tus cursos.</p>
-                </a>
-            }
-
-            @if ((User.IsInRole("Administrador") || User.IsInRole("Director")) && User.TienePermiso("Recursos", "Ver"))
-            {
-                <a asp-controller="Recurso" asp-action="Supervision" class="module-card">
-                    <div class="module-icon"><i class="bi bi-card-checklist"></i></div>
-                    <h3>Supervisión de recursos</h3>
-                    <p>Consulta el material publicado por docente y curso, y expórtalo.</p>
-                </a>
-            }
-
         </div>
-
     </section>
 }
 
-<!-- Bloques, misión/visión/historia y contacto (solo lo publicado) -->
+@* Banners publicados (carrusel) *@
+<partial name="_BannersSitio" model="Model" />
+
+@* Bloques, misión/visión/historia y contacto (solo lo publicado) *@
 <partial name="_ContenidoSitio" model="Model" />

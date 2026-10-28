@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     cargarPeriodos();
  
     $("#btnNuevoPeriodo").click(function () {
@@ -111,7 +111,7 @@ function guardarPeriodo(confirmado) {
         processData: false,
         contentType: false,
  
-        success: function (response) {
+        success: async function (response) {
             if (response.esCorrecto) {
                 bootstrap.Modal.getOrCreateInstance(document.getElementById('modalPeriodo')).hide();
                 cargarPeriodos();
@@ -119,7 +119,7 @@ function guardarPeriodo(confirmado) {
             }
             else if (response.codigo === 3104) {
                 // Ya hay otro período activo: se pide confirmar el cambio (HU escenario 4)
-                if (confirm(response.mensaje)) {
+                if (await confirmar(response.mensaje, "Cambiar período activo", "warning")) {
                     guardarPeriodo(true);
                 }
             }

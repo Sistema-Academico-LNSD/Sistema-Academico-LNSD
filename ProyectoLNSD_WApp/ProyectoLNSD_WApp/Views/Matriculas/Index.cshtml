@@ -1,110 +1,311 @@
 @{
     ViewData["Title"] = "Matrículas";
+    ViewData["Subtitle"] = "Registro, búsqueda, estado, traslados e historial académico";
+    ViewData["Icon"] = "bi-clipboard-check";
     bool puedeCrear = User.TienePermiso("Matricula", "Crear");
     bool puedeEditar = User.TienePermiso("Matricula", "Editar");
 }
-<div class="container-fluid mt-4">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <div><h3 class="mb-0"><i class="bi bi-clipboard-check"></i> Gestión de matrículas</h3><small>Registro, búsqueda, estado, traslados e historial académico</small></div>
-            <div class="d-flex gap-2">
-                <button type="button" id="btnReporte" class="btn btn-outline-light"><i class="bi bi-file-earmark-bar-graph"></i> Reporte</button>
-                @if (puedeCrear) { <button type="button" id="btnNueva" class="btn btn-light"><i class="bi bi-plus-circle"></i> Nueva matrícula</button> }
-            </div>
-        </div>
-        <div class="card-body">
-            <div id="alertaMatricula" class="alert d-none" role="alert"></div>
-            <form id="formFiltros" class="row g-2 mb-3">
-                <div class="col-md-3"><select id="fIdEstudiante" class="form-select"><option value="">Todos los estudiantes</option></select></div>
-                <div class="col-md-2"><input id="fIdentificacion" class="form-control" placeholder="Identificación" /></div>
-                <div class="col-md-2"><select id="fIdGrado" class="form-select"><option value="">Todos los grados</option></select></div>
-                <div class="col-md-2"><select id="fIdGrupo" class="form-select"><option value="">Todos los grupos</option></select></div>
-                <div class="col-md-2"><select id="fIdSeccion" class="form-select"><option value="">Todas las secciones</option></select></div>
-                <div class="col-md-2"><select id="fIdPeriodo" class="form-select"><option value="">Todos los períodos</option></select></div>
-                <div class="col-md-3"><select id="fEstado" class="form-select"><option value="">Todos los estados</option><option>Activa</option><option>Inactiva</option><option>Pendiente</option><option>Anulada</option></select></div>
-                <div class="col-md-5"><input id="fTexto" class="form-control" placeholder="Nombre, carné o identificación" /></div>
-                <div class="col-md-2"><select id="fLimite" class="form-select"><option value="50">50 resultados</option><option value="100" selected>100 resultados</option><option value="250">250 resultados</option><option value="1000">1000 resultados</option></select></div>
-                <div class="col-md-2 d-flex gap-2"><button class="btn btn-success flex-grow-1" type="submit"><i class="bi bi-search"></i> Buscar</button><button class="btn btn-outline-secondary" id="btnLimpiar" type="button" title="Limpiar"><i class="bi bi-x-lg"></i></button></div>
-            </form>
-            <div class="table-responsive"><table class="table table-striped table-hover align-middle" id="tblMatriculas">
-                <thead class="table-dark"><tr><th>ID</th><th>Estudiante</th><th>Identificación</th><th>Período</th><th>Grado</th><th>Grupo</th><th>Sección</th><th>Cursos</th><th>Estado</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody><tr><td colspan="11" class="text-center text-muted">Cargando...</td></tr></tbody>
-            </table></div>
-            <small id="lblConteo" class="text-muted"></small>
-        </div>
-    </div>
-</div>
-@if (puedeCrear || puedeEditar) {
-<div class="modal fade" id="modalMatricula" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content">
-    <form id="formMatricula"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="tituloModal">Nueva matrícula</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-    <div class="modal-body"><div id="errorFormulario" class="alert alert-danger d-none"></div><input type="hidden" id="mIdMatricula" />
-        <div class="row g-3"><div class="col-md-6" id="grupoEstudiante"><label class="form-label" for="mIdEstudiante">Estudiante *</label><select class="form-select" id="mIdEstudiante" required><option value="">Cargando estudiantes...</option></select></div>
-        <div class="col-md-6"><label class="form-label" for="mIdPeriodo">Período lectivo *</label><select class="form-select" id="mIdPeriodo" required><option value="">Cargando períodos...</option></select><div id="ayudaPeriodos" class="form-text">Debe existir un período lectivo activo para registrar matrículas.</div></div>
-        <div class="col-md-4"><label class="form-label" for="mIdGrupo">Grupo *</label><select class="form-select" id="mIdGrupo" required><option value="">Seleccione período y sección</option></select></div>
-        <div class="col-md-4"><label class="form-label" for="mIdSeccion">Sección *</label><select class="form-select" id="mIdSeccion" required><option value="">Seleccione una sección</option></select></div>
-        <div class="col-md-4"><label class="form-label" for="mFecha">Fecha de matrícula</label><input class="form-control" id="mFecha" type="date" /></div>
-        <div class="col-12"><label class="form-label" for="mCursos">Cursos disponibles</label><select class="form-select" id="mCursos" multiple size="5" aria-describedby="ayudaCursos"></select><div id="ayudaCursos" class="form-text">Puede seleccionar varios cursos. La lista se ajusta al grado de la sección.</div></div>
-        <div class="col-12"><label class="form-label" for="mObservaciones">Observaciones</label><textarea class="form-control" id="mObservaciones" rows="2" maxlength="500"></textarea></div></div>
-    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar matrícula</button></div></form>
-</div></div></div>
+
+@section Acciones {
+    <button type="button" id="btnReporte" class="btn btn-outline-primary">
+        <i class="bi bi-file-earmark-bar-graph"></i> Reporte
+    </button>
+    @if (puedeCrear)
+    {
+        <button type="button" id="btnNueva" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Nueva matrícula
+        </button>
+    }
 }
-<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-lg modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalle de matrícula</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body" id="contenidoDetalle"></div></div></div></div>
-<div class="modal fade" id="modalTraslado" tabindex="-1" aria-hidden="true"><div class="modal-dialog"><div class="modal-content">
-    <form id="formTraslado"><div class="modal-header bg-info"><h5 class="modal-title">Trasladar matrícula</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-    <div class="modal-body"><div id="errorTraslado" class="alert alert-danger d-none"></div><input type="hidden" id="tIdMatricula" />
-        <div class="mb-3"><label class="form-label" for="tIdSeccion">Sección destino *</label><select class="form-select" id="tIdSeccion" required></select></div>
-        <div class="mb-3"><label class="form-label" for="tIdGrupo">Grupo destino *</label><select class="form-select" id="tIdGrupo" required></select></div>
-        <div><label class="form-label" for="tMotivo">Motivo del traslado *</label><textarea class="form-control" id="tMotivo" maxlength="500" required></textarea></div>
-    </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-info">Registrar traslado</button></div></form>
-</div></div></div>
 
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090" aria-live="polite" aria-atomic="true">
-    <div id="toastMatricula" class="toast border-0" role="status">
-        <div class="d-flex"><div id="toastMatriculaMensaje" class="toast-body">Operación realizada.</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button></div>
+<div class="card">
+    <div class="card-body">
+
+        <div id="alertaMatricula" class="alert d-none" role="alert"></div>
+
+        <form id="formFiltros" class="row g-2 filter-bar">
+            <div class="col-md-3">
+                <select id="fIdEstudiante" class="form-select" aria-label="Estudiante">
+                    <option value="">Todos los estudiantes</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input id="fIdentificacion" class="form-control" placeholder="Identificación" aria-label="Identificación" />
+            </div>
+            <div class="col-md-2">
+                <select id="fIdGrado" class="form-select" aria-label="Grado">
+                    <option value="">Todos los grados</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="fIdGrupo" class="form-select" aria-label="Grupo">
+                    <option value="">Todos los grupos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="fIdSeccion" class="form-select" aria-label="Sección">
+                    <option value="">Todas las secciones</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select id="fIdPeriodo" class="form-select" aria-label="Período">
+                    <option value="">Todos los períodos</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="fEstado" class="form-select" aria-label="Estado">
+                    <option value="">Todos los estados</option>
+                    <option>Activa</option>
+                    <option>Inactiva</option>
+                    <option>Pendiente</option>
+                    <option>Anulada</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input id="fTexto" class="form-control" placeholder="Nombre, carné o identificación" aria-label="Texto" />
+            </div>
+            <div class="col-md-2">
+                <select id="fLimite" class="form-select" aria-label="Cantidad de resultados">
+                    <option value="50">50 resultados</option>
+                    <option value="100" selected>100 resultados</option>
+                    <option value="250">250 resultados</option>
+                    <option value="1000">1000 resultados</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button class="btn btn-primary flex-grow-1" type="submit">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                <button class="btn btn-outline-secondary" id="btnLimpiar" type="button" title="Limpiar filtros">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle" id="tblMatriculas">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Estudiante</th>
+                        <th>Identificación</th>
+                        <th>Período</th>
+                        <th>Grado</th>
+                        <th>Grupo</th>
+                        <th>Sección</th>
+                        <th>Cursos</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="11" class="text-center text-muted">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <small id="lblConteo" class="text-muted"></small>
+
     </div>
 </div>
 
+@* ---------- Modal: registrar / editar matrícula ---------- *@
+@if (puedeCrear || puedeEditar)
+{
+    <div class="modal fade" id="modalMatricula" tabindex="-1" aria-hidden="true" aria-labelledby="tituloModal">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form id="formMatricula">
 
-<div class="modal fade" id="modalAccionMatricula" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content">
-        <form id="formAccionMatricula">
-            <div class="modal-header" id="cabeceraAccionMatricula"><h5 class="modal-title" id="tituloAccionMatricula">Actualizar matrícula</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-            <div class="modal-body">
-                <div id="errorAccionMatricula" class="alert alert-danger d-none" role="alert"></div>
-                <input type="hidden" id="accionIdMatricula" /><input type="hidden" id="tipoAccionMatricula" />
-                <div id="campoEstadoMatricula" class="mb-3 d-none"><label class="form-label" for="nuevoEstadoMatricula">Nuevo estado *</label><select id="nuevoEstadoMatricula" class="form-select"><option value="Activa">Activa</option><option value="Inactiva">Inactiva</option><option value="Pendiente">Pendiente</option></select><div class="form-text">Seleccione el estado de la matrícula.</div></div>
-                <div id="campoMotivoMatricula" class="mb-3 d-none"><label class="form-label" for="motivoAccionMatricula">Motivo *</label><textarea id="motivoAccionMatricula" class="form-control" rows="3" maxlength="500" placeholder="Explique brevemente el motivo"></textarea></div>
-                <div id="campoObservacionMatricula" class="mb-3 d-none"><label class="form-label" for="textoObservacionMatricula">Observación *</label><textarea id="textoObservacionMatricula" class="form-control" rows="4" maxlength="1000" placeholder="Escriba la observación que desea registrar"></textarea></div>
-                <p id="avisoAnulacionMatricula" class="small text-danger d-none mb-0"><i class="bi bi-exclamation-triangle"></i> La anulación conserva el historial y permite registrar una nueva matrícula para el mismo período. Revise que el estudiante y período sean correctos.</p>
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="tituloModal">Nueva matrícula</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div id="errorFormulario" class="alert alert-danger d-none"></div>
+                        <input type="hidden" id="mIdMatricula" />
+
+                        <div class="row g-3">
+                            <div class="col-md-6" id="grupoEstudiante">
+                                <label class="form-label" for="mIdEstudiante">Estudiante *</label>
+                                <select class="form-select" id="mIdEstudiante" required>
+                                    <option value="">Cargando estudiantes...</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="mIdPeriodo">Período lectivo *</label>
+                                <select class="form-select" id="mIdPeriodo" required>
+                                    <option value="">Cargando períodos...</option>
+                                </select>
+                                <div id="ayudaPeriodos" class="form-text">Debe existir un período lectivo activo para registrar matrículas.</div>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="mIdGrupo">Grupo *</label>
+                                <select class="form-select" id="mIdGrupo" required>
+                                    <option value="">Seleccione período y sección</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="mIdSeccion">Sección *</label>
+                                <select class="form-select" id="mIdSeccion" required>
+                                    <option value="">Seleccione una sección</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label" for="mFecha">Fecha de matrícula</label>
+                                <input class="form-control" id="mFecha" type="date" />
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="mCursos">Cursos disponibles</label>
+                                <select class="form-select" id="mCursos" multiple size="5" aria-describedby="ayudaCursos"></select>
+                                <div id="ayudaCursos" class="form-text">Puede seleccionar varios cursos. La lista se ajusta al grado de la sección.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label" for="mObservaciones">Observaciones</label>
+                                <textarea class="form-control" id="mObservaciones" rows="2" maxlength="500"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar matrícula</button>
+                    </div>
+
+                </form>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" id="guardarAccionMatricula" class="btn btn-primary">Guardar</button></div>
-        </form>
-    </div></div>
-</div>
+        </div>
+    </div>
+}
 
-<!-- Notificaciones discretas y accesibles; reemplazan alertas del navegador -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1090" aria-live="polite" aria-atomic="true">
-    <div id="toastMatricula" class="toast border-0" role="status">
-        <div class="d-flex"><div id="toastMatriculaMensaje" class="toast-body">Operación realizada.</div><button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button></div>
+@* ---------- Modal: detalle ---------- *@
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true" aria-labelledby="tituloDetalleMatricula">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="tituloDetalleMatricula">Detalle de matrícula</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="contenidoDetalle"></div>
+        </div>
     </div>
 </div>
 
-<!-- Modal reutilizable para cambiar estado, anular y agregar observaciones -->
-<div class="modal fade" id="modalAccionMatricula" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog"><div class="modal-content">
-        <form id="formAccionMatricula">
-            <div class="modal-header" id="cabeceraAccionMatricula"><h5 class="modal-title" id="tituloAccionMatricula">Actualizar matrícula</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div>
-            <div class="modal-body">
-                <div id="errorAccionMatricula" class="alert alert-danger d-none" role="alert"></div>
-                <input type="hidden" id="accionIdMatricula" /><input type="hidden" id="tipoAccionMatricula" />
-                <div id="campoEstadoMatricula" class="mb-3 d-none"><label class="form-label" for="nuevoEstadoMatricula">Nuevo estado *</label><select id="nuevoEstadoMatricula" class="form-select"><option value="Activa">Activa</option><option value="Inactiva">Inactiva</option><option value="Pendiente">Pendiente</option></select><div class="form-text">Seleccione el estado de la matrícula.</div></div>
-                <div id="campoMotivoMatricula" class="mb-3 d-none"><label class="form-label" for="motivoAccionMatricula">Motivo *</label><textarea id="motivoAccionMatricula" class="form-control" rows="3" maxlength="500" placeholder="Explique brevemente el motivo"></textarea></div>
-                <div id="campoObservacionMatricula" class="mb-3 d-none"><label class="form-label" for="textoObservacionMatricula">Observación *</label><textarea id="textoObservacionMatricula" class="form-control" rows="4" maxlength="1000" placeholder="Escriba la observación que desea registrar"></textarea></div>
-                <p id="avisoAnulacionMatricula" class="small text-danger d-none mb-0"><i class="bi bi-exclamation-triangle"></i> La anulación conserva el historial y permite registrar una nueva matrícula para el mismo período. Revise que el estudiante y período sean correctos.</p>
-            </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" id="guardarAccionMatricula" class="btn btn-primary">Guardar</button></div>
-        </form>
-    </div></div>
+@* ---------- Modal: traslado ---------- *@
+<div class="modal fade" id="modalTraslado" tabindex="-1" aria-hidden="true" aria-labelledby="tituloTraslado">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formTraslado">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloTraslado">Trasladar matrícula</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="errorTraslado" class="alert alert-danger d-none"></div>
+                    <input type="hidden" id="tIdMatricula" />
+
+                    <div class="mb-3">
+                        <label class="form-label" for="tIdSeccion">Sección destino *</label>
+                        <select class="form-select" id="tIdSeccion" required></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="tIdGrupo">Grupo destino *</label>
+                        <select class="form-select" id="tIdGrupo" required></select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="tMotivo">Motivo del traslado *</label>
+                        <textarea class="form-control" id="tMotivo" maxlength="500" required></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar traslado</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
 </div>
 
-<input type="hidden" id="puedeCrearMatricula" value="@(puedeCrear ? "true" : "false")" /><input type="hidden" id="puedeEditarMatricula" value="@(puedeEditar ? "true" : "false")" />
-@section Scripts { <script src="~/js/matricula.js" asp-append-version="true"></script> }
+@* ---------- Modal reutilizable: cambiar estado, anular y agregar observaciones ---------- *@
+<div class="modal fade" id="modalAccionMatricula" tabindex="-1" aria-hidden="true" aria-labelledby="tituloAccionMatricula">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="formAccionMatricula">
+
+                <div class="modal-header" id="cabeceraAccionMatricula">
+                    <h5 class="modal-title" id="tituloAccionMatricula">Actualizar matrícula</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div id="errorAccionMatricula" class="alert alert-danger d-none" role="alert"></div>
+                    <input type="hidden" id="accionIdMatricula" />
+                    <input type="hidden" id="tipoAccionMatricula" />
+
+                    <div id="campoEstadoMatricula" class="mb-3 d-none">
+                        <label class="form-label" for="nuevoEstadoMatricula">Nuevo estado *</label>
+                        <select id="nuevoEstadoMatricula" class="form-select">
+                            <option value="Activa">Activa</option>
+                            <option value="Inactiva">Inactiva</option>
+                            <option value="Pendiente">Pendiente</option>
+                        </select>
+                        <div class="form-text">Seleccione el estado de la matrícula.</div>
+                    </div>
+
+                    <div id="campoMotivoMatricula" class="mb-3 d-none">
+                        <label class="form-label" for="motivoAccionMatricula">Motivo *</label>
+                        <textarea id="motivoAccionMatricula" class="form-control" rows="3" maxlength="500"
+                                  placeholder="Explique brevemente el motivo"></textarea>
+                    </div>
+
+                    <div id="campoObservacionMatricula" class="mb-3 d-none">
+                        <label class="form-label" for="textoObservacionMatricula">Observación *</label>
+                        <textarea id="textoObservacionMatricula" class="form-control" rows="4" maxlength="1000"
+                                  placeholder="Escriba la observación que desea registrar"></textarea>
+                    </div>
+
+                    <p id="avisoAnulacionMatricula" class="small text-danger d-none mb-0">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        La anulación conserva el historial y permite registrar una nueva matrícula para el mismo período.
+                        Revise que el estudiante y período sean correctos.
+                    </p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="guardarAccionMatricula" class="btn btn-primary">Guardar</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@* Notificaciones discretas y accesibles (reemplazan las alertas del navegador) *@
+<div class="toast-container position-fixed top-0 end-0 p-3" aria-live="polite" aria-atomic="true">
+    <div id="toastMatricula" class="toast border-0" role="status">
+        <div class="d-flex">
+            <div id="toastMatriculaMensaje" class="toast-body">Operación realizada.</div>
+            <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="puedeCrearMatricula" value="@(puedeCrear ? "true" : "false")" />
+<input type="hidden" id="puedeEditarMatricula" value="@(puedeEditar ? "true" : "false")" />
+
+@section Scripts {
+    <script src="~/js/matricula.js" asp-append-version="true"></script>
+}

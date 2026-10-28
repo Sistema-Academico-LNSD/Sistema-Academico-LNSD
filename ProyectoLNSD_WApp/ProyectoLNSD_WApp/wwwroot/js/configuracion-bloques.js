@@ -1,4 +1,4 @@
-﻿// HU 04: contenido de la página principal (bloques)
+// HU 04: contenido de la página principal (bloques)
 
 $(document).ready(function () {
     cargarBloques();
@@ -112,17 +112,17 @@ function editarBloque(id) {
     });
 }
 
-function guardarBloque(publicar) {
+async function guardarBloque(publicar) {
     // HU 08 escenario 5: publicar cambios de un contenido ya publicado pide confirmación.
     if (publicar && $("#bloqueEstado").val() === "Publicado") {
-        if (!confirm("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?")) {
+        if (!(await confirmar("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?", "Publicar", "success"))) {
             return;
         }
     }
 
     // Guardar como borrador un contenido ya publicado lo oculta del sitio: se pide confirmar.
     if (!publicar && $("#bloqueEstado").val() === "Publicado") {
-        if (!confirm("Este contenido está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?")) {
+        if (!(await confirmar("Este contenido está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?", "Guardar como borrador", "warning"))) {
             return;
         }
     }
@@ -154,8 +154,8 @@ function guardarBloque(publicar) {
     });
 }
 
-function eliminarBloque(id) {
-    if (!confirm("¿Seguro que desea eliminar este contenido? Se quitará también del sitio web.")) {
+async function eliminarBloque(id) {
+    if (!(await confirmar("¿Seguro que desea eliminar este contenido? Se quitará también del sitio web.", "Eliminar"))) {
         return;
     }
 

@@ -46,24 +46,27 @@
         const title = $('tituloAccionMatricula'), save = $('guardarAccionMatricula'), head = $('cabeceraAccionMatricula');
         if (type === 'estado') {
             title.textContent = 'Cambiar estado de matrícula'; save.textContent = 'Actualizar estado';
-            head.className = 'modal-header bg-warning-subtle'; $('campoEstadoMatricula').classList.remove('d-none');
+            head.className = 'modal-header'; $('campoEstadoMatricula').classList.remove('d-none');
             $('campoMotivoMatricula').classList.remove('d-none'); $('motivoAccionMatricula').required = false;
             document.querySelector('label[for="motivoAccionMatricula"]').textContent = 'Motivo o detalle (opcional)'; $('motivoAccionMatricula').placeholder = 'Detalle del cambio de estado, si corresponde';
         } else if (type === 'anular') {
             title.textContent = 'Anular matrícula'; save.textContent = 'Confirmar anulación'; save.className = 'btn btn-danger';
-            head.className = 'modal-header bg-danger text-white'; $('campoMotivoMatricula').classList.remove('d-none');
+            head.className = 'modal-header'; $('campoMotivoMatricula').classList.remove('d-none');
             document.querySelector('label[for="motivoAccionMatricula"]').textContent = 'Motivo de anulación *';
             $('motivoAccionMatricula').required = true; $('motivoAccionMatricula').placeholder = 'Indique por qué se anula esta matrícula';
             $('avisoAnulacionMatricula').classList.remove('d-none');
         } else {
             title.textContent = 'Agregar observación'; save.textContent = 'Guardar observación'; save.className = 'btn btn-primary';
-            head.className = 'modal-header bg-primary text-white'; $('campoObservacionMatricula').classList.remove('d-none'); $('textoObservacionMatricula').required = true;
+            head.className = 'modal-header'; $('campoObservacionMatricula').classList.remove('d-none'); $('textoObservacionMatricula').required = true;
         }
         modalAccion?.show();
     }
 
     async function request(url, options = {}) {
-        const response = await fetch(url, { credentials: 'same-origin', ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(options.headers || {}) } });
+        // El token antiforgery viaja en el encabezado X-CSRF-TOKEN (lo provee el formulario de cierre de sesión del layout).
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        const metodo = (options.method || 'GET').toUpperCase();
+        const response = await fetch(url, { credentials: 'same-origin', ...options, headers: { ...(options.body ? { 'Content-Type': 'application/json' } : {}), ...(metodo !== 'GET' && token ? { 'X-CSRF-TOKEN': token } : {}), ...(options.headers || {}) } });
         let data;
         try { data = await response.json(); } catch { throw new Error(`Respuesta inesperada del servidor (${response.status}).`); }
         if (!response.ok || data?.esCorrecto === false) throw new Error(data?.mensaje || `Error ${response.status}.`);

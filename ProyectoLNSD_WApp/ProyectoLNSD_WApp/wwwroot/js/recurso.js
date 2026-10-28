@@ -1,4 +1,4 @@
-﻿let cursosDocente = [];
+let cursosDocente = [];
 
 $(document).ready(function () {
     $("#recArchivo").attr("accept", RECURSO_CONFIG.extensiones.join(","));
@@ -617,7 +617,7 @@ function guardarEdicion() {
 
 // ---------- Eliminar (HU 01-05) ----------
 
-function eliminarRecurso(idRecurso) {
+async function eliminarRecurso(idRecurso) {
     let recurso = recursosListados.find(r => r.idRecurso === idRecurso);
 
     if (!recurso) {
@@ -625,7 +625,7 @@ function eliminarRecurso(idRecurso) {
     }
 
     // Si cancela, no se llama al servidor y el recurso queda intacto
-    if (!confirm(`¿Desea eliminar el recurso "${recurso.titulo}"? Esta acción no se puede deshacer.`)) {
+    if (!(await confirmar(`¿Desea eliminar el recurso "${recurso.titulo}"? Esta acción no se puede deshacer.`, "Eliminar"))) {
         return;
     }
 

@@ -1,3 +1,5 @@
-﻿@{
-    Layout = "_Layout";
+@{
+    // Con sesión activa y logged in: layout de la aplicación con menú lateral. Sin sesión: layout público.
+    // Las pantallas de Login/Recuperar/Restablecer eligen "_AuthLayout" de forma explicita.
+    Layout = User.Identity?.IsAuthenticated == true ? "_Layout" : "_PublicLayout";
 }

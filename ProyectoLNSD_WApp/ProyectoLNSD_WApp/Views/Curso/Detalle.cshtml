@@ -1,109 +1,70 @@
-﻿@model ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDetalleDTO
-
+@model ProyectoLNSD_WApp.BLL.DTO.Curso.CursoDetalleDTO
 @{
     ViewData["Title"] = "Detalle del curso";
+    ViewData["Icon"] = "bi-book";
 }
 
-<div class="container mt-4">
+@section Acciones {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver
+    </a>
+}
 
-    <div class="card shadow border-0">
+<div class="card">
+    <div class="card-header">
+        <h2>@Model.Curso.Codigo · @Model.Curso.Nombre</h2>
+    </div>
+    <div class="card-body">
 
-        <div class="card-header bg-primary text-white">
-
-            <h3 class="mb-0">
-                <i class="bi bi-book"></i>
-                Detalle del curso
-            </h3>
-
-        </div>
-
-        <div class="card-body">
-
-            <div class="row">
-
-                <div class="col-md-6 mb-3">
-                    <strong>Código:</strong>
-                    <div>@Model.Curso.Codigo</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <strong>Nombre:</strong>
-                    <div>@Model.Curso.Nombre</div>
-                </div>
-
-                <div class="col-md-12 mb-3">
-                    <strong>Descripción:</strong>
-                    <div>@Model.Curso.Descripcion</div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <strong>Área académica:</strong>
-                    <div>
-                        @(Model.Area?.Nombre ?? "Sin área")
-                    </div>
-                </div>
-
-                <div class="col-md-6 mb-3">
-                    <strong>Estado:</strong>
-                    <div>
-                        @if (Model.Curso.Estado)
-                        {
-                            <span class="badge bg-success">
-                                Activo
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="badge bg-secondary">
-                                Inactivo
-                            </span>
-                        }
-                    </div>
-                </div>
-
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="data-label">Código</div>
+                <div>@Model.Curso.Codigo</div>
             </div>
-
-            <hr />
-
-            <h5>
-                <i class="bi bi-mortarboard"></i>
-                Grados asociados
-            </h5>
-
-            @if (Model.Grados != null && Model.Grados.Any())
-            {
-                <div class="list-group">
-
-                    @foreach (ProyectoLNSD_WApp.BLL.DTO.GradoDTO grado in Model.Grados)
+            <div class="col-md-6">
+                <div class="data-label">Nombre</div>
+                <div>@Model.Curso.Nombre</div>
+            </div>
+            <div class="col-12">
+                <div class="data-label">Descripción</div>
+                <div class="pre-line">@Model.Curso.Descripcion</div>
+            </div>
+            <div class="col-md-6">
+                <div class="data-label">Área académica</div>
+                <div>@(Model.Area?.Nombre ?? "Sin área")</div>
+            </div>
+            <div class="col-md-6">
+                <div class="data-label">Estado</div>
+                <div>
+                    @if (Model.Curso.Estado)
                     {
-                        <div class="list-group-item">
-                            <strong>@grado.Codigo</strong>
-                            -
-                            @grado.Nombre
-                        </div>
+                        <span class="badge bg-success">Activo</span>
                     }
-
+                    else
+                    {
+                        <span class="badge bg-secondary">Inactivo</span>
+                    }
                 </div>
-            }
-            else
-            {
-                <p class="text-muted">
-                    No hay grados asociados.
-                </p>
-            }
-
-            <div class="mt-4">
-
-                <a asp-action="Index"
-                   class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i>
-                    Volver
-                </a>
-
             </div>
-
         </div>
+
+        <h3 class="section-heading"><i class="bi bi-mortarboard"></i> Grados asociados</h3>
+
+        @if (Model.Grados != null && Model.Grados.Any())
+        {
+            <div class="list-group">
+                @foreach (ProyectoLNSD_WApp.BLL.DTO.GradoDTO grado in Model.Grados)
+                {
+                    <div class="list-group-item">
+                        <strong>@grado.Codigo</strong> - @grado.Nombre
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <p class="text-muted mb-0">No hay grados asociados.</p>
+        }
 
     </div>
-
 </div>

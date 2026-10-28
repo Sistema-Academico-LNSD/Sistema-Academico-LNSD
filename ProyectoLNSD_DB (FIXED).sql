@@ -1,20 +1,7 @@
 /* ============================================================
-   PROYECTO LNSD - SCRIPT CONSOLIDADO DE BASE DE DATOS
-   Versión actualizada: Matrícula, cursos, observaciones e historial.
+   PROYECTO LNSD - SCRIPT DE BASE DE DATOS
    ============================================================ */
-  
-      --Esto es para borrar la base y volverla a crear, cuidado
-  /*
-USE master;
-GO
 
-IF DB_ID(N'Proyecto_LNSD_DB') IS NOT NULL
-BEGIN
-    ALTER DATABASE Proyecto_LNSD_DB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE Proyecto_LNSD_DB;
-END
-GO
-*/
 CREATE DATABASE Proyecto_LNSD_DB;
 GO
 
@@ -58,6 +45,40 @@ CREATE INDEX IX_Usuario_Rol
     ON Usuario(id_rol);
 GO
 
+CREATE TABLE Modulo
+(
+    id_modulo INT IDENTITY(1,1) NOT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    descripcion NVARCHAR(250) NULL,
+
+    CONSTRAINT PK_Modulo PRIMARY KEY (id_modulo),
+    CONSTRAINT UQ_Modulo_Nombre UNIQUE (nombre)
+);
+GO
+
+CREATE TABLE Rol_Permiso
+(
+    id_rol_permiso INT IDENTITY(1,1) NOT NULL,
+    id_rol INT NOT NULL,
+    id_modulo INT NOT NULL,
+    puede_ver BIT NOT NULL CONSTRAINT DF_RolPermiso_Ver DEFAULT 0,
+    puede_crear BIT NOT NULL CONSTRAINT DF_RolPermiso_Crear DEFAULT 0,
+    puede_editar BIT NOT NULL CONSTRAINT DF_RolPermiso_Editar DEFAULT 0,
+    puede_eliminar BIT NOT NULL CONSTRAINT DF_RolPermiso_Eliminar DEFAULT 0,
+
+    CONSTRAINT PK_Rol_Permiso PRIMARY KEY (id_rol_permiso),
+    CONSTRAINT UQ_Rol_Permiso UNIQUE (id_rol, id_modulo),
+    CONSTRAINT FK_RolPermiso_Rol
+        FOREIGN KEY (id_rol) REFERENCES Rol(id_rol),
+    CONSTRAINT FK_RolPermiso_Modulo
+        FOREIGN KEY (id_modulo) REFERENCES Modulo(id_modulo)
+);
+GO
+
+CREATE INDEX IX_RolPermiso_Rol
+    ON Rol_Permiso(id_rol);
+GO
+
 CREATE TABLE Personal_Admin
 (
     id_perAdm INT IDENTITY(1,1) NOT NULL,
@@ -72,161 +93,9 @@ CREATE TABLE Personal_Admin
 );
 GO
 
--- ESTUDIANTE ESTÁ ALTER *****NUEVA*****
-
-CREATE TABLE Docente
-(
-    id_docente INT IDENTITY(1,1) NOT NULL,
-    id_usuario INT NULL,
-    nombre NVARCHAR(100) NOT NULL,
-    apellidos NVARCHAR(150) NOT NULL,
-    identificacion NVARCHAR(30) NOT NULL,
-    correo NVARCHAR(150) NOT NULL,
-    telefono NVARCHAR(30) NULL,
-    direccion NVARCHAR(300) NULL,
-    estado BIT NOT NULL CONSTRAINT DF_Docente_Estado DEFAULT 1,
-    especialidad NVARCHAR(150) NULL,
-    titulos NVARCHAR(1000) NULL,
-    anios_experiencia INT NULL,
-    id_area INT NULL,
-    fecha_registro DATETIME NOT NULL
-        CONSTRAINT DF_Docente_FechaRegistro DEFAULT GETUTCDATE(),
-
-    CONSTRAINT PK_Docente PRIMARY KEY (id_docente),
-    CONSTRAINT UQ_Docente_Identificacion UNIQUE (identificacion),
-    CONSTRAINT UQ_Docente_Correo UNIQUE (correo),
-    CONSTRAINT FK_Docente_Usuario
-        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
-    CONSTRAINT CK_Docente_Experiencia
-        CHECK (anios_experiencia IS NULL OR
-               (anios_experiencia >= 0 AND anios_experiencia <= 60))
-);
-GO
-
-CREATE UNIQUE INDEX UX_Docente_Usuario
-    ON Docente(id_usuario)
-    WHERE id_usuario IS NOT NULL;
-GO
-
-
--- ESTUDIANTE ESTÁ ALTER *****NUEVA*****
-
-CREATE TABLE Estudiante
-(
-    id_estudiante INT IDENTITY(1,1) NOT NULL,
-    id_usuario INT NOT NULL,
-    identificacion NVARCHAR(30) NOT NULL,
-    carnet NVARCHAR(20) NOT NULL,
-    fecha_ingreso DATE NOT NULL,
-    telefono NVARCHAR(30) NULL,
-    direccion NVARCHAR(300) NULL,
-    estado BIT NOT NULL CONSTRAINT DF_Estudiante_Estado DEFAULT 1,
-
-    CONSTRAINT PK_Estudiante PRIMARY KEY (id_estudiante),
-    CONSTRAINT UQ_Estudiante_Usuario UNIQUE (id_usuario),
-    CONSTRAINT UQ_Estudiante_Identificacion UNIQUE (identificacion),
-    CONSTRAINT UQ_Estudiante_Carnet UNIQUE (carnet),
-
-    CONSTRAINT FK_Estudiante_Usuario
-        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-);
-GO
-
-CREATE TABLE Encargado
-(
-    id_encargado INT IDENTITY(1,1) NOT NULL,
-    id_usuario INT NOT NULL,
-
-    CONSTRAINT PK_Encargado PRIMARY KEY (id_encargado),
-    CONSTRAINT UQ_Encargado_Usuario UNIQUE (id_usuario),
-    CONSTRAINT FK_Encargado_Usuario
-        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-);
-GO
-/* ---------- Estudiante (agregados) ---------- */
-IF COL_LENGTH('Estudiante','fecha_nacimiento') IS NULL
-    ALTER TABLE Estudiante ADD fecha_nacimiento DATE NULL;           
-GO
-IF COL_LENGTH('Estudiante','correo_emergencia') IS NULL
-    ALTER TABLE Estudiante ADD correo_emergencia NVARCHAR(150) NULL; 
-GO
-IF COL_LENGTH('Estudiante','id_grado') IS NULL
-    ALTER TABLE Estudiante ADD id_grado INT NULL;                    
-GO
-IF COL_LENGTH('Estudiante','estado_academico') IS NULL
-    ALTER TABLE Estudiante ADD estado_academico NVARCHAR(30) NOT NULL
-        CONSTRAINT DF_Estudiante_EstadoAcademico DEFAULT N'Regular'; 
-GO
-IF COL_LENGTH('Estudiante','alergias') IS NULL
-    ALTER TABLE Estudiante ADD alergias NVARCHAR(500) NULL;          
-GO
-IF COL_LENGTH('Estudiante','observaciones_medicas') IS NULL
-    ALTER TABLE Estudiante ADD observaciones_medicas NVARCHAR(1000) NULL;
-GO
-IF COL_LENGTH('Estudiante','adecuaciones_educativas') IS NULL
-    ALTER TABLE Estudiante ADD adecuaciones_educativas NVARCHAR(1000) NULL;
-GO
- 
-IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = 'FK_Estudiante_Grado')
-    ALTER TABLE Estudiante ADD CONSTRAINT FK_Estudiante_Grado
-        FOREIGN KEY (id_grado) REFERENCES Grado(id_grado);
-GO
-IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = 'CK_Estudiante_EstadoAcademico')
-    ALTER TABLE Estudiante ADD CONSTRAINT CK_Estudiante_EstadoAcademico
-        CHECK (estado_academico IN (N'Regular', N'Repitente', N'Retirado', N'Egresado'));
-GO
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_Estudiante_Grado')
-    CREATE INDEX IX_Estudiante_Grado ON Estudiante(id_grado);
-GO
- 
-/* ---------- Encargado (agregados) ---------- */
-IF COL_LENGTH('Encargado','telefono') IS NULL
-    ALTER TABLE Encargado ADD telefono NVARCHAR(30) NULL;            
-GO
- 
-/* ---------- Encargado_Estudiante ---------- */
-IF COL_LENGTH('Encargado_Estudiante','es_principal') IS NULL
-    ALTER TABLE Encargado_Estudiante ADD es_principal BIT NOT NULL
-        CONSTRAINT DF_EncEst_EsPrincipal DEFAULT 0;                  
-GO
--- Solo un encargado principal por estudiante
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'UX_Encargado_Estudiante_Principal')
-    CREATE UNIQUE INDEX UX_Encargado_Estudiante_Principal
-        ON Encargado_Estudiante(id_estudiante) WHERE es_principal = 1;
-GO
-
-USE Proyecto_LNSD_DB;
-GO
- 
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Estudiantes')
-    INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'Estudiantes', N'Expedientes estudiantiles: registro, edición, estado, carné y consulta.');
-GO
- 
--- Administrador: todos los permisos sobre Estudiantes
-IF NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
-               JOIN Rol r ON r.id_rol = rp.id_rol
-               JOIN Modulo m ON m.id_modulo = rp.id_modulo
-               WHERE r.nombre = N'Administrador' AND m.nombre = N'Estudiantes')
-    INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-    SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
-    FROM Rol r CROSS JOIN Modulo m
-    WHERE r.nombre = N'Administrador' AND m.nombre = N'Estudiantes';
-GO
- 
--- Director: solo consulta
-IF NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
-               JOIN Rol r ON r.id_rol = rp.id_rol
-               JOIN Modulo m ON m.id_modulo = rp.id_modulo
-               WHERE r.nombre = N'Director' AND m.nombre = N'Estudiantes')
-    INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-    SELECT r.id_rol, m.id_modulo, 1, 0, 0, 0
-    FROM Rol r CROSS JOIN Modulo m
-    WHERE r.nombre = N'Director' AND m.nombre = N'Estudiantes';
-GO
 
 /* ============================================================
-   2. ÁREAS ACADÉMICAS *****NUEVA*****
+   2. ÁREAS ACADÉMICAS
    ============================================================ */
 
 CREATE TABLE Area_Academica
@@ -240,8 +109,9 @@ CREATE TABLE Area_Academica
 );
 GO
 
+
 /* ============================================================
-   3. GRADOS Y SECCIONES
+   3. GRADOS, SECCIONES, GRUPOS Y PERÍODOS
    ============================================================ */
 
 CREATE TABLE Grado
@@ -268,7 +138,8 @@ CREATE TABLE Seccion
 
     CONSTRAINT PK_Seccion PRIMARY KEY (id_seccion),
     CONSTRAINT UQ_Seccion_Grado_Nombre UNIQUE (id_grado, nombre),
-    CONSTRAINT CK_Seccion_Capacidad CHECK (capacidad_maxima > 0),
+    CONSTRAINT CK_Seccion_Capacidad
+        CHECK (capacidad_maxima > 0),
     CONSTRAINT FK_Seccion_Grado
         FOREIGN KEY (id_grado) REFERENCES Grado(id_grado)
 );
@@ -282,11 +153,9 @@ CREATE TABLE Grupo
     anio INT NOT NULL,
 
     CONSTRAINT PK_Grupo PRIMARY KEY (id_grupo),
-    CONSTRAINT UQ_Grupo_Nombre_Anio UNIQUE (nombre, anio)
+    CONSTRAINT UQ_Grupo_Nombre_Nivel_Anio UNIQUE (nombre, nivel, anio)
 );
 GO
-
-/* Períodos lectivos se crea antes de Matrícula para permitir su FK. */
 
 CREATE TABLE Periodo_Lectivo
 (
@@ -298,12 +167,145 @@ CREATE TABLE Periodo_Lectivo
 
     CONSTRAINT PK_Periodo_Lectivo PRIMARY KEY (id_periodo),
     CONSTRAINT UQ_Periodo_Nombre UNIQUE (nombre),
-    CONSTRAINT CK_Periodo_Fechas CHECK (fecha_fin >= fecha_inicio)
+    CONSTRAINT CK_Periodo_Fechas
+        CHECK (fecha_fin >= fecha_inicio)
 );
 GO
 
+/* Solo un período lectivo activo a la vez. */
+CREATE UNIQUE INDEX UQ_Periodo_Activo
+    ON Periodo_Lectivo(activo)
+    WHERE activo = 1;
+GO
+
+
 /* ============================================================
-   4. CURSOS
+   4. DOCENTES, ESTUDIANTES Y ENCARGADOS
+   ============================================================ */
+
+CREATE TABLE Docente
+(
+    id_docente INT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NULL,
+    nombre NVARCHAR(100) NOT NULL,
+    apellidos NVARCHAR(150) NOT NULL,
+    identificacion NVARCHAR(30) NOT NULL,
+    correo NVARCHAR(150) NOT NULL,
+    telefono NVARCHAR(30) NULL,
+    direccion NVARCHAR(300) NULL,
+    estado BIT NOT NULL CONSTRAINT DF_Docente_Estado DEFAULT 1,
+    especialidad NVARCHAR(150) NULL,
+    titulos NVARCHAR(1000) NULL,
+    anios_experiencia INT NULL,
+    id_area INT NULL,
+    fecha_registro DATETIME NOT NULL
+        CONSTRAINT DF_Docente_FechaRegistro DEFAULT GETUTCDATE(),
+
+    CONSTRAINT PK_Docente PRIMARY KEY (id_docente),
+    CONSTRAINT UQ_Docente_Identificacion UNIQUE (identificacion),
+    CONSTRAINT UQ_Docente_Correo UNIQUE (correo),
+    CONSTRAINT CK_Docente_Experiencia
+        CHECK (anios_experiencia IS NULL OR
+               (anios_experiencia >= 0 AND anios_experiencia <= 60)),
+    CONSTRAINT FK_Docente_Usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Docente_Area
+        FOREIGN KEY (id_area) REFERENCES Area_Academica(id_area)
+);
+GO
+
+CREATE UNIQUE INDEX UX_Docente_Usuario
+    ON Docente(id_usuario)
+    WHERE id_usuario IS NOT NULL;
+GO
+
+CREATE TABLE Estudiante
+(
+    id_estudiante INT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NOT NULL,
+    identificacion NVARCHAR(30) NOT NULL,
+    carnet NVARCHAR(20) NOT NULL,
+    fecha_ingreso DATE NOT NULL,
+    fecha_nacimiento DATE NULL,
+    telefono NVARCHAR(30) NULL,
+    direccion NVARCHAR(300) NULL,
+    correo_emergencia NVARCHAR(150) NULL,
+    id_grado INT NULL,
+    estado_academico NVARCHAR(30) NOT NULL
+        CONSTRAINT DF_Estudiante_EstadoAcademico DEFAULT N'Regular',
+    alergias NVARCHAR(500) NULL,
+    observaciones_medicas NVARCHAR(1000) NULL,
+    adecuaciones_educativas NVARCHAR(1000) NULL,
+    estado BIT NOT NULL CONSTRAINT DF_Estudiante_Estado DEFAULT 1,
+
+    CONSTRAINT PK_Estudiante PRIMARY KEY (id_estudiante),
+    CONSTRAINT UQ_Estudiante_Usuario UNIQUE (id_usuario),
+    CONSTRAINT UQ_Estudiante_Identificacion UNIQUE (identificacion),
+    CONSTRAINT UQ_Estudiante_Carnet UNIQUE (carnet),
+    CONSTRAINT CK_Estudiante_EstadoAcademico
+        CHECK (estado_academico IN (N'Regular', N'Repitente', N'Retirado', N'Egresado')),
+    CONSTRAINT FK_Estudiante_Usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Estudiante_Grado
+        FOREIGN KEY (id_grado) REFERENCES Grado(id_grado)
+);
+GO
+
+CREATE INDEX IX_Estudiante_Grado
+    ON Estudiante(id_grado);
+GO
+
+CREATE TABLE Encargado
+(
+    id_encargado INT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NOT NULL,
+    telefono NVARCHAR(30) NULL,
+
+    CONSTRAINT PK_Encargado PRIMARY KEY (id_encargado),
+    CONSTRAINT UQ_Encargado_Usuario UNIQUE (id_usuario),
+    CONSTRAINT FK_Encargado_Usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+);
+GO
+
+CREATE TABLE Encargado_Estudiante
+(
+    id_encargado INT NOT NULL,
+    id_estudiante INT NOT NULL,
+    parentesco NVARCHAR(50) NOT NULL,
+    es_principal BIT NOT NULL CONSTRAINT DF_EncEst_EsPrincipal DEFAULT 0,
+
+    CONSTRAINT PK_Encargado_Estudiante
+        PRIMARY KEY (id_encargado, id_estudiante),
+    CONSTRAINT FK_Encargado_Estudiante_Encargado
+        FOREIGN KEY (id_encargado) REFERENCES Encargado(id_encargado),
+    CONSTRAINT FK_Encargado_Estudiante_Estudiante
+        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante)
+);
+GO
+
+CREATE UNIQUE INDEX UX_Encargado_Estudiante_Principal
+    ON Encargado_Estudiante(id_estudiante)
+    WHERE es_principal = 1;
+GO
+
+CREATE TABLE Estudiante_Docente
+(
+    id_estudiante INT NOT NULL,
+    id_docente INT NOT NULL,
+
+    CONSTRAINT PK_Estudiante_Docente
+        PRIMARY KEY (id_estudiante, id_docente),
+    CONSTRAINT FK_Estudiante_Docente_Estudiante
+        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
+    CONSTRAINT FK_Estudiante_Docente_Docente
+        FOREIGN KEY (id_docente) REFERENCES Docente(id_docente)
+);
+GO
+
+
+/* ============================================================
+   5. CURSOS
    ============================================================ */
 
 CREATE TABLE Curso
@@ -323,8 +325,6 @@ CREATE TABLE Curso
 );
 GO
 
--- INTERMADIA CURSO_GRADO *****NUEVA*****
-
 CREATE TABLE Curso_Grado
 (
     id_curso INT NOT NULL,
@@ -338,8 +338,36 @@ CREATE TABLE Curso_Grado
 );
 GO
 
+CREATE TABLE Docente_Curso
+(
+    id_docente_curso INT IDENTITY(1,1) NOT NULL,
+    id_docente INT NOT NULL,
+    id_curso INT NOT NULL,
+    id_periodo INT NOT NULL,
+    fecha_asignacion DATETIME NOT NULL
+        CONSTRAINT DF_DocenteCurso_Fecha DEFAULT GETUTCDATE(),
+
+    CONSTRAINT PK_Docente_Curso PRIMARY KEY (id_docente_curso),
+    CONSTRAINT UQ_Docente_Curso_Periodo UNIQUE (id_docente, id_curso, id_periodo),
+    CONSTRAINT FK_DocenteCurso_Docente
+        FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
+    CONSTRAINT FK_DocenteCurso_Curso
+        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
+    CONSTRAINT FK_DocenteCurso_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo)
+);
+GO
+
+CREATE INDEX IX_DocenteCurso_Curso
+    ON Docente_Curso(id_curso);
+
+CREATE INDEX IX_DocenteCurso_Periodo
+    ON Docente_Curso(id_periodo);
+GO
+
+
 /* ============================================================
-   5. MATRÍCULA Y HORARIOS
+   6. MATRÍCULA
    ============================================================ */
 
 CREATE TABLE Matricula
@@ -356,8 +384,6 @@ CREATE TABLE Matricula
     observaciones NVARCHAR(500) NULL,
 
     CONSTRAINT PK_Matricula PRIMARY KEY (id_matricula),
-    CONSTRAINT UQ_Matricula_Estudiante_Periodo
-        UNIQUE (id_estudiante, id_periodo),
     CONSTRAINT CK_Matricula_Estado
         CHECK (estado IN (N'Activa', N'Pendiente', N'Anulada', N'Inactiva')),
     CONSTRAINT FK_Matricula_Estudiante
@@ -371,9 +397,18 @@ CREATE TABLE Matricula
 );
 GO
 
-CREATE INDEX IX_Matricula_Periodo ON Matricula(id_periodo);
-CREATE INDEX IX_Matricula_Seccion ON Matricula(id_seccion);
-CREATE INDEX IX_Matricula_Estado_Periodo ON Matricula(estado, id_periodo);
+CREATE UNIQUE INDEX UQ_Matricula_Estudiante_Periodo
+    ON Matricula(id_estudiante, id_periodo)
+    WHERE estado <> N'Anulada';
+
+CREATE INDEX IX_Matricula_Periodo
+    ON Matricula(id_periodo);
+
+CREATE INDEX IX_Matricula_Seccion
+    ON Matricula(id_seccion);
+
+CREATE INDEX IX_Matricula_Estado_Periodo
+    ON Matricula(estado, id_periodo);
 GO
 
 CREATE TABLE Matricula_Curso
@@ -389,7 +424,6 @@ CREATE TABLE Matricula_Curso
 );
 GO
 
-/* Observaciones múltiples asociadas a una matrícula (MMTF-01-12). */
 CREATE TABLE Matricula_Observacion
 (
     id_observacion INT IDENTITY(1,1) NOT NULL,
@@ -410,8 +444,6 @@ CREATE INDEX IX_Matricula_Observacion_Matricula_Fecha
     ON Matricula_Observacion(id_matricula, fecha_registro DESC);
 GO
 
-/* Historial de cambios de matrícula: traslados y cambios de estado.
-   La aplicación registrará aquí los cambios cuando se implemente esa función. */
 CREATE TABLE Matricula_Historial
 (
     id_historial INT IDENTITY(1,1) NOT NULL,
@@ -450,6 +482,11 @@ CREATE INDEX IX_Matricula_Historial_Matricula_Fecha
     ON Matricula_Historial(id_matricula, fecha_cambio DESC);
 GO
 
+
+/* ============================================================
+   7. HORARIOS, ASISTENCIA Y NOTAS
+   ============================================================ */
+
 CREATE TABLE Horario
 (
     id_horario INT IDENTITY(1,1) NOT NULL,
@@ -460,22 +497,21 @@ CREATE TABLE Horario
     hora_fin TIME NOT NULL,
 
     CONSTRAINT PK_Horario PRIMARY KEY (id_horario),
+    CONSTRAINT UQ_Horario_Docente_Dia_Hora
+        UNIQUE (id_docente, dia, hora_inicio, hora_fin),
     CONSTRAINT FK_Horario_Docente
         FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
     CONSTRAINT FK_Horario_Curso
-        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
-    CONSTRAINT UQ_Horario_Docente_Dia_Hora
-        UNIQUE (id_docente, dia, hora_inicio, hora_fin)
+        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso)
 );
 GO
 
-CREATE INDEX IX_Horario_Docente ON Horario(id_docente);
-CREATE INDEX IX_Horario_Curso ON Horario(id_curso);
-GO
+CREATE INDEX IX_Horario_Docente
+    ON Horario(id_docente);
 
-/* ============================================================
-   6. ASISTENCIA Y NOTAS
-   ============================================================ */
+CREATE INDEX IX_Horario_Curso
+    ON Horario(id_curso);
+GO
 
 CREATE TABLE Asistencia
 (
@@ -517,8 +553,9 @@ CREATE TABLE Nota
 );
 GO
 
+
 /* ============================================================
-   7. BECAS Y RECURSOS ACADÉMICOS
+   8. BECAS Y RECURSOS ACADÉMICOS
    ============================================================ */
 
 CREATE TABLE Beca
@@ -536,126 +573,57 @@ CREATE TABLE Beca
 );
 GO
 
-
-/* ---- Recursos Académicos ---- */
-
--- 1) La tabla original estaba ligada a Horario y no sirve para este módulo.
---    Solo se reemplaza si tiene la estructura antigua y está vacía.
-IF COL_LENGTH(N'dbo.Recursos_Academicos', N'id_horario') IS NOT NULL
-BEGIN
-    IF EXISTS (SELECT 1 FROM Recursos_Academicos)
-        THROW 50001, N'Recursos_Academicos tiene datos con la estructura antigua. Revisar antes de reemplazarla.', 1;
-
-    DROP TABLE Recursos_Academicos;
-END
-GO
-
--- 2) Tabla nueva
-IF OBJECT_ID(N'dbo.Recursos_Academicos', N'U') IS NULL
-BEGIN
-    CREATE TABLE Recursos_Academicos
-    (
-        id_recurso INT IDENTITY(1,1) NOT NULL,
-        id_docente INT NOT NULL,
-        id_curso INT NOT NULL,
-        id_grado INT NOT NULL,
-        titulo NVARCHAR(200) NOT NULL,
-        descripcion NVARCHAR(500) NULL,
-        tipo_recurso NVARCHAR(30) NOT NULL,
-        modalidad NVARCHAR(10) NOT NULL,
-        nombre_archivo_original NVARCHAR(260) NULL,
-        ruta_archivo NVARCHAR(300) NULL,
-        extension NVARCHAR(10) NULL,
-        tamano_bytes BIGINT NULL,
-        hash_archivo CHAR(64) NULL,
-        url_enlace NVARCHAR(500) NULL,
-        fecha_publicacion DATETIME NOT NULL
-            CONSTRAINT DF_Recurso_FechaPublicacion DEFAULT GETUTCDATE(),
-        fecha_modificacion DATETIME NULL,
-
-        CONSTRAINT PK_Recursos_Academicos PRIMARY KEY (id_recurso),
-        CONSTRAINT FK_Recurso_Docente FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
-        CONSTRAINT FK_Recurso_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
-        CONSTRAINT FK_Recurso_Grado FOREIGN KEY (id_grado) REFERENCES Grado(id_grado),
-        CONSTRAINT CK_Recurso_Modalidad CHECK (modalidad IN (N'Archivo', N'Enlace')),
-        CONSTRAINT CK_Recurso_Contenido CHECK
-        (
-            (modalidad = N'Archivo' AND ruta_archivo IS NOT NULL
-                                    AND hash_archivo IS NOT NULL
-                                    AND url_enlace IS NULL)
-            OR
-            (modalidad = N'Enlace'  AND url_enlace IS NOT NULL
-                                    AND ruta_archivo IS NULL
-                                    AND hash_archivo IS NULL)
-        )
-    );
-
-    -- Un mismo archivo o enlace no se puede registrar dos veces en el mismo curso
-    CREATE UNIQUE INDEX UX_Recurso_Curso_Hash
-        ON Recursos_Academicos(id_curso, hash_archivo) WHERE hash_archivo IS NOT NULL;
-
-    CREATE UNIQUE INDEX UX_Recurso_Curso_Url
-        ON Recursos_Academicos(id_curso, url_enlace) WHERE url_enlace IS NOT NULL;
-END
-GO
-
--- 3) Módulo y permisos
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Recursos')
-    INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'Recursos', N'Publicación, consulta y supervisión de recursos académicos.');
-GO
-
-INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
-FROM (VALUES
-        (N'Administrador', 1, 0, 0, 0),
-        (N'Director',      1, 0, 0, 0),
-        (N'Docente',       1, 1, 1, 1),
-        (N'Estudiante',    1, 0, 0, 0)
-     ) AS p(rol, ver, crear, editar, eliminar)
-JOIN Rol r ON r.nombre = p.rol
-JOIN Modulo m ON m.nombre = N'Recursos'
-WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
-                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
-GO
-
-     
-
-/* ============================================================
-   8. RELACIONES ESTUDIANTE / DOCENTE / ENCARGADO
-   ============================================================ */
-
-CREATE TABLE Estudiante_Docente
+CREATE TABLE Recursos_Academicos
 (
-    id_estudiante INT NOT NULL,
+    id_recurso INT IDENTITY(1,1) NOT NULL,
     id_docente INT NOT NULL,
+    id_curso INT NOT NULL,
+    id_grado INT NOT NULL,
+    titulo NVARCHAR(200) NOT NULL,
+    descripcion NVARCHAR(500) NULL,
+    tipo_recurso NVARCHAR(30) NOT NULL,
+    modalidad NVARCHAR(10) NOT NULL,
+    nombre_archivo_original NVARCHAR(260) NULL,
+    ruta_archivo NVARCHAR(300) NULL,
+    extension NVARCHAR(10) NULL,
+    tamano_bytes BIGINT NULL,
+    hash_archivo CHAR(64) NULL,
+    url_enlace NVARCHAR(500) NULL,
+    fecha_publicacion DATETIME NOT NULL
+        CONSTRAINT DF_Recurso_FechaPublicacion DEFAULT GETUTCDATE(),
+    fecha_modificacion DATETIME NULL,
 
-    CONSTRAINT PK_Estudiante_Docente
-        PRIMARY KEY (id_estudiante, id_docente),
-    CONSTRAINT FK_Estudiante_Docente_Estudiante
-        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
-    CONSTRAINT FK_Estudiante_Docente_Docente
-        FOREIGN KEY (id_docente) REFERENCES Docente(id_docente)
+    CONSTRAINT PK_Recursos_Academicos PRIMARY KEY (id_recurso),
+    CONSTRAINT CK_Recurso_Modalidad
+        CHECK (modalidad IN (N'Archivo', N'Enlace')),
+    CONSTRAINT CK_Recurso_Contenido
+        CHECK ((modalidad = N'Archivo' AND ruta_archivo IS NOT NULL
+                                       AND hash_archivo IS NOT NULL
+                                       AND url_enlace IS NULL)
+            OR (modalidad = N'Enlace'  AND url_enlace IS NOT NULL
+                                       AND ruta_archivo IS NULL
+                                       AND hash_archivo IS NULL)),
+    CONSTRAINT FK_Recurso_Docente
+        FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
+    CONSTRAINT FK_Recurso_Curso
+        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
+    CONSTRAINT FK_Recurso_Grado
+        FOREIGN KEY (id_grado) REFERENCES Grado(id_grado)
 );
 GO
 
-CREATE TABLE Encargado_Estudiante
-(
-    id_encargado INT NOT NULL,
-    id_estudiante INT NOT NULL,
-    parentesco NVARCHAR(50) NOT NULL,
+CREATE UNIQUE INDEX UX_Recurso_Curso_Hash
+    ON Recursos_Academicos(id_curso, hash_archivo)
+    WHERE hash_archivo IS NOT NULL;
 
-    CONSTRAINT PK_Encargado_Estudiante
-        PRIMARY KEY (id_encargado, id_estudiante),
-    CONSTRAINT FK_Encargado_Estudiante_Encargado
-        FOREIGN KEY (id_encargado) REFERENCES Encargado(id_encargado),
-    CONSTRAINT FK_Encargado_Estudiante_Estudiante
-        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante)
-);
+CREATE UNIQUE INDEX UX_Recurso_Curso_Url
+    ON Recursos_Academicos(id_curso, url_enlace)
+    WHERE url_enlace IS NOT NULL;
 GO
+
 
 /* ============================================================
-   9. COMUNICACIÓN
+   9. COMUNICACIÓN Y REPORTES
    ============================================================ */
 
 CREATE TABLE Notificacion
@@ -680,10 +648,6 @@ CREATE TABLE Anuncio
 );
 GO
 
-/* ============================================================
-   10. REPORTES
-   ============================================================ */
-
 CREATE TABLE Reporte_Anonimo
 (
     id_reporte INT IDENTITY(1,1) NOT NULL,
@@ -696,8 +660,9 @@ CREATE TABLE Reporte_Anonimo
 );
 GO
 
+
 /* ============================================================
-   11. INVENTARIO
+   10. INVENTARIO
    ============================================================ */
 
 CREATE TABLE Categoria_Inv
@@ -721,7 +686,8 @@ CREATE TABLE Inventario
     estado NVARCHAR(50) NOT NULL,
 
     CONSTRAINT PK_Inventario PRIMARY KEY (id_inventario),
-    CONSTRAINT CK_Inventario_Cantidad CHECK (cantidad >= 0),
+    CONSTRAINT CK_Inventario_Cantidad
+        CHECK (cantidad >= 0),
     CONSTRAINT FK_Inventario_Categoria
         FOREIGN KEY (id_categoria) REFERENCES Categoria_Inv(id_categoria),
     CONSTRAINT FK_Inventario_Personal_Admin
@@ -729,8 +695,9 @@ CREATE TABLE Inventario
 );
 GO
 
+
 /* ============================================================
-   12. RECUPERACIÓN DE CONTRASEÑA
+   11. RECUPERACIÓN DE CONTRASEÑA
    ============================================================ */
 
 CREATE TABLE Usuario_Token_Reset
@@ -741,8 +708,7 @@ CREATE TABLE Usuario_Token_Reset
     fecha_creacion DATETIME NOT NULL
         CONSTRAINT DF_TokenReset_FechaCreacion DEFAULT GETUTCDATE(),
     fecha_expiracion DATETIME NOT NULL,
-    usado BIT NOT NULL
-        CONSTRAINT DF_TokenReset_Usado DEFAULT 0,
+    usado BIT NOT NULL CONSTRAINT DF_TokenReset_Usado DEFAULT 0,
 
     CONSTRAINT PK_Usuario_Token_Reset PRIMARY KEY (id_token),
     CONSTRAINT FK_TokenReset_Usuario
@@ -757,45 +723,9 @@ CREATE INDEX IX_TokenReset_Usuario
     ON Usuario_Token_Reset(id_usuario);
 GO
 
-/* ============================================================
-   13. ROLES, MÓDULOS Y PERMISOS
-   ============================================================ */
-
-CREATE TABLE Modulo
-(
-    id_modulo INT IDENTITY(1,1) NOT NULL,
-    nombre NVARCHAR(100) NOT NULL,
-    descripcion NVARCHAR(250) NULL,
-
-    CONSTRAINT PK_Modulo PRIMARY KEY (id_modulo),
-    CONSTRAINT UQ_Modulo_Nombre UNIQUE (nombre)
-);
-GO
-
-CREATE TABLE Rol_Permiso
-(
-    id_rol_permiso INT IDENTITY(1,1) NOT NULL,
-    id_rol INT NOT NULL,
-    id_modulo INT NOT NULL,
-    puede_ver BIT NOT NULL CONSTRAINT DF_RolPermiso_Ver DEFAULT 0,
-    puede_crear BIT NOT NULL CONSTRAINT DF_RolPermiso_Crear DEFAULT 0,
-    puede_editar BIT NOT NULL CONSTRAINT DF_RolPermiso_Editar DEFAULT 0,
-    puede_eliminar BIT NOT NULL CONSTRAINT DF_RolPermiso_Eliminar DEFAULT 0,
-
-    CONSTRAINT PK_Rol_Permiso PRIMARY KEY (id_rol_permiso),
-    CONSTRAINT UQ_Rol_Permiso UNIQUE (id_rol, id_modulo),
-    CONSTRAINT FK_RolPermiso_Rol
-        FOREIGN KEY (id_rol) REFERENCES Rol(id_rol),
-    CONSTRAINT FK_RolPermiso_Modulo
-        FOREIGN KEY (id_modulo) REFERENCES Modulo(id_modulo)
-);
-GO
-
-CREATE INDEX IX_RolPermiso_Rol ON Rol_Permiso(id_rol);
-GO
 
 /* ============================================================
-   14. AUDITORÍA
+   12. AUDITORÍA
    ============================================================ */
 
 CREATE TABLE Log_Acceso
@@ -817,12 +747,16 @@ CREATE TABLE Log_Acceso
 );
 GO
 
-CREATE INDEX IX_LogAcceso_Usuario ON Log_Acceso(id_usuario);
-CREATE INDEX IX_LogAcceso_Fecha ON Log_Acceso(fecha);
+CREATE INDEX IX_LogAcceso_Usuario
+    ON Log_Acceso(id_usuario);
+
+CREATE INDEX IX_LogAcceso_Fecha
+    ON Log_Acceso(fecha);
 GO
 
+
 /* ============================================================
-   15. CONFIGURACIÓN DEL SITIO
+   13. CONFIGURACIÓN DEL SITIO
    ============================================================ */
 
 CREATE TABLE Institucion
@@ -839,34 +773,6 @@ CREATE TABLE Institucion
 
     CONSTRAINT PK_Institucion PRIMARY KEY (id_institucion)
 );
-GO
-
-
--- TABLA INTERMEDIA DOCENTE_CURSO *****NUEVA*****
-
-CREATE TABLE Docente_Curso
-(
-    id_docente_curso INT IDENTITY(1,1) NOT NULL,
-    id_docente INT NOT NULL,
-    id_curso INT NOT NULL,
-    id_periodo INT NOT NULL,
-    fecha_asignacion DATETIME NOT NULL
-        CONSTRAINT DF_DocenteCurso_Fecha DEFAULT GETUTCDATE(),
-    CONSTRAINT PK_Docente_Curso PRIMARY KEY (id_docente_curso),
-    CONSTRAINT UQ_Docente_Curso_Periodo UNIQUE (id_docente, id_curso, id_periodo),
-    CONSTRAINT FK_DocenteCurso_Docente FOREIGN KEY (id_docente) REFERENCES Docente(id_docente),
-    CONSTRAINT FK_DocenteCurso_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
-    CONSTRAINT FK_DocenteCurso_Periodo FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo)
-);
-
-
-CREATE INDEX IX_DocenteCurso_Curso ON Docente_Curso(id_curso);
-CREATE INDEX IX_DocenteCurso_Periodo ON Docente_Curso(id_periodo);
-
-
-CREATE UNIQUE INDEX UQ_Periodo_Activo
-    ON Periodo_Lectivo(activo)
-    WHERE activo = 1;
 GO
 
 CREATE TABLE Contenido_Sitio
@@ -930,8 +836,9 @@ CREATE TABLE Acceso_Rapido_Rol
 );
 GO
 
+
 /* ============================================================
-   16. BOLETERÍA
+   14. BOLETERÍA
    ============================================================ */
 
 CREATE TABLE Tiquete
@@ -957,13 +864,15 @@ CREATE TABLE Tiquete
 );
 GO
 
+/* Un solo tiquete disponible por usuario. */
 CREATE UNIQUE INDEX UX_Tiquete_Usuario_Disponible
     ON Tiquete(id_usuario)
     WHERE estado = N'Disponible';
 GO
 
+
 /* ============================================================
-   17. DATOS INICIALES DE PRUEBA (TESTING DUMMY DATA)
+   XX. DATOS INICIALES DE PRUEBA
    ============================================================ */
 
 INSERT INTO Rol (nombre, descripcion)
@@ -985,32 +894,6 @@ VALUES
     (N'Arte', 1);
 GO
 
-INSERT INTO Usuario
-(
-    id_rol,
-    nombre,
-    apellido,
-    correo,
-    password_hash,
-    estado
-)
-VALUES
-(
-    (SELECT id_rol FROM Rol WHERE nombre = N'Administrador'),
-    N'Admin',
-    N'Sistema',
-    N'admin@lnsd.local',
-    0x0100000001000186A000000010AABE60C9F6BC5529223DBB4951C347B70856A178469303277C4D854B9F0B2E79183FA7B4B3BD2A4C1CE30BE8D34122C5,
-    1
-);
-GO
-
--- User: admin@lnsd.local 
--- Pass: Admin123!
--- TEST
--- User: FMendez@ejemplo.com 
--- Pass: aaaaaaaa
-
 INSERT INTO Modulo (nombre, descripcion)
 VALUES
     (N'Usuarios', N'Alta, edición y activación/desactivación de usuarios.'),
@@ -1021,9 +904,15 @@ VALUES
     (N'Boleteria', N'Generación, validación y control de tiquetes del comedor.'),
     (N'Grados', N'Gestión de grados académicos, grupos y secciones.'),
     (N'Cursos', N'Gestión de cursos y oferta académica de la institución.'),
-    (N'Docentes', N'Expedientes del personal docente: registro, edición, estado y consulta.');
+    (N'Docentes', N'Expedientes del personal docente: registro, edición, estado y consulta.'),
+    (N'Estudiantes', N'Expedientes estudiantiles: registro, edición, estado, carné y consulta.'),
+    (N'Recursos', N'Publicación, consulta y supervisión de recursos académicos.'),
+    (N'AsignacionCursos', N'Asignación de cursos a docentes por período lectivo, consulta e historial.'),
+    (N'Matriculas', N'Registro, consulta, modificación, traslados, historial y reportes de matrícula.'),
+    (N'Matricula', N'Registro, consulta, edición, traslados e informes de matrícula.');
 GO
 
+/* Permisos por rol y módulo: ver, crear, editar, eliminar. */
 INSERT INTO Rol_Permiso
 (
     id_rol,
@@ -1036,35 +925,48 @@ INSERT INTO Rol_Permiso
 SELECT
     r.id_rol,
     m.id_modulo,
-    1,
-    CASE WHEN m.nombre IN (N'Grados', N'Docentes') THEN 1 ELSE 1 END,
-    CASE WHEN m.nombre IN (N'Grados', N'Docentes') THEN 1 ELSE 1 END,
-    CASE WHEN m.nombre = N'Grados' THEN 0 ELSE 1 END
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre = N'Administrador';
-GO
-
-INSERT INTO Rol_Permiso
+    p.ver,
+    p.crear,
+    p.editar,
+    p.eliminar
+FROM
 (
-    id_rol,
-    id_modulo,
-    puede_ver,
-    puede_crear,
-    puede_editar,
-    puede_eliminar
-)
-SELECT
-    r.id_rol,
-    m.id_modulo,
-    1,
-    0,
-    0,
-    0
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre = N'Director'
-  AND m.nombre = N'Docentes';
+    VALUES
+        -- Administrador
+        (N'Administrador',           N'Usuarios',         1, 1, 1, 1),
+        (N'Administrador',           N'Roles',            1, 1, 1, 1),
+        (N'Administrador',           N'Permisos',         1, 1, 1, 1),
+        (N'Administrador',           N'Auditoria',        1, 1, 1, 1),
+        (N'Administrador',           N'Configuracion',    1, 1, 1, 1),
+        (N'Administrador',           N'Boleteria',        1, 1, 1, 1),
+        (N'Administrador',           N'Grados',           1, 1, 1, 0),
+        (N'Administrador',           N'Cursos',           1, 1, 1, 1),
+        (N'Administrador',           N'Docentes',         1, 1, 1, 1),
+        (N'Administrador',           N'Estudiantes',      1, 1, 1, 1),
+        (N'Administrador',           N'Recursos',         1, 0, 0, 0),
+        (N'Administrador',           N'AsignacionCursos', 1, 1, 1, 1),
+        (N'Administrador',           N'Matriculas',       1, 1, 1, 1),
+        (N'Administrador',           N'Matricula',        1, 1, 1, 0),
+
+        -- Director
+        (N'Director',                N'Docentes',         1, 0, 0, 0),
+        (N'Director',                N'Estudiantes',      1, 0, 0, 0),
+        (N'Director',                N'Recursos',         1, 0, 0, 0),
+        (N'Director',                N'AsignacionCursos', 1, 1, 0, 1),
+        (N'Director',                N'Matricula',        1, 1, 1, 0),
+
+        -- Docente
+        (N'Docente',                 N'Recursos',         1, 1, 1, 1),
+
+        -- Estudiante
+        (N'Estudiante',              N'Recursos',         1, 0, 0, 0),
+
+        -- Personal administrativo
+        (N'Personal administrativo', N'Matriculas',       1, 1, 1, 1),
+        (N'Personal administrativo', N'Matricula',        1, 1, 1, 0)
+) AS p (rol, modulo, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = p.modulo;
 GO
 
 INSERT INTO Acceso_Rapido
@@ -1093,188 +995,119 @@ CROSS JOIN Rol r
 WHERE r.nombre = N'Administrador';
 GO
 
+
 /* ============================================================
-   MÓDULO ESTUDIANTES - DATOS DE PRUEBA
-   Ejecutar DESPUÉS de 01_ALTER_Modulo_Estudiantes.sql (no duplica).
- 
+   16. DATOS DE PRUEBA
+
    Usuarios de prueba:
-     estudiante.prueba@lnsd.local  /  Estudiante123*   (rol Estudiante)
-     encargado.prueba@lnsd.local   /  Encargado123*    (rol Encargado)
+     admin@lnsd.local              /  Admin123!         (rol Administrador)
+     estudiante.prueba@lnsd.local  /  Estudiante123*    (rol Estudiante)
+     encargado.prueba@lnsd.local   /  Encargado123*     (rol Encargado)
+     FMendez@ejemplo.com           /  aaaaaaaa
    ============================================================ */
-USE Proyecto_LNSD_DB;
-GO
- 
-/* ---------- Usuario estudiante ---------- */
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'estudiante.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Estudiante'),
-            N'Estudiante', N'Prueba', N'estudiante.prueba@lnsd.local',
-            0x0100000001000186A0000000108760C60D5E72121B52832E5B76E8C2D38B7594203BFD27E0345D59EB4C449C76A4166C59C2F2C683396299ABE595520A, 1);
-GO
- 
-IF NOT EXISTS (SELECT 1 FROM Estudiante e JOIN Usuario u ON u.id_usuario = e.id_usuario
-               WHERE u.correo = N'estudiante.prueba@lnsd.local')
-    INSERT INTO Estudiante
-        (id_usuario, identificacion, carnet, fecha_ingreso, fecha_nacimiento,
-         telefono, direccion, correo_emergencia, id_grado, estado_academico,
-         alergias, observaciones_medicas, adecuaciones_educativas, estado)
-    VALUES
-        ((SELECT id_usuario FROM Usuario WHERE correo = N'estudiante.prueba@lnsd.local'),
-         N'1-1111-1111', N'PRUEBA-0001', '2026-02-01', '2012-05-10',
-         N'8888-0001', N'San José, Costa Rica', N'emergencia.prueba@lnsd.local',
-         (SELECT TOP 1 id_grado FROM Grado ORDER BY id_grado),
-         N'Regular',
-         N'Alergia al maní', N'Usa lentes', N'Tiempo adicional en exámenes', 1);
-GO
- 
-/* ---------- Usuario encargado ---------- */
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'encargado.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Encargado'),
-            N'Encargado', N'Prueba', N'encargado.prueba@lnsd.local',
-            0x0100000001000186A000000010979CBF60A620784CF213010E9F5B14A1FEE56743FBC1CFEFFF35E2CCEA915B377F1FC3CBF9DABB4591A82D8BC0E60B2F, 1);
-GO
- 
-IF NOT EXISTS (SELECT 1 FROM Encargado e JOIN Usuario u ON u.id_usuario = e.id_usuario
-               WHERE u.correo = N'encargado.prueba@lnsd.local')
-    INSERT INTO Encargado (id_usuario, telefono)
-    VALUES ((SELECT id_usuario FROM Usuario WHERE correo = N'encargado.prueba@lnsd.local'),
-            N'8888-0002');
-GO
- 
-/* ---------- Vínculo encargado principal ---------- */
-IF NOT EXISTS (
-    SELECT 1
-    FROM Encargado_Estudiante ee
-    JOIN Encargado en ON en.id_encargado = ee.id_encargado
-    JOIN Usuario ue ON ue.id_usuario = en.id_usuario
-    WHERE ue.correo = N'encargado.prueba@lnsd.local')
-    INSERT INTO Encargado_Estudiante (id_encargado, id_estudiante, parentesco, es_principal)
-    VALUES (
-        (SELECT en.id_encargado FROM Encargado en JOIN Usuario u ON u.id_usuario = en.id_usuario
-          WHERE u.correo = N'encargado.prueba@lnsd.local'),
-        (SELECT es.id_estudiante FROM Estudiante es JOIN Usuario u ON u.id_usuario = es.id_usuario
-          WHERE u.correo = N'estudiante.prueba@lnsd.local'),
-        N'Madre', 1);
 
-/* 2. Módulo de permisos para testing de docentes* *****NUEVO*****/
-
-
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'AsignacionCursos')
-    INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'AsignacionCursos', N'Asignación de cursos a docentes por período lectivo, consulta e historial.');
-GO
-
--- Administrador: todo
-INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre = N'Administrador'
-  AND m.nombre = N'AsignacionCursos'
-  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
-GO
-
--- Director: consultar, asignar y quitar (MDOF-01-04 / 01-05 dicen "administrador o director")
-INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-SELECT r.id_rol, m.id_modulo, 1, 1, 0, 1
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre = N'Director'
-  AND m.nombre = N'AsignacionCursos'
-  AND NOT EXISTS (SELECT 1 FROM Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
-GO
-
-
-/* ============================================================
-   19. PERMISOS DEL MÓDULO MATRÍCULAS 
-   Esto es ejecutable más de una vez sin duplicar módulo ni permisos.
-   ============================================================ */
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Matriculas')
-    INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'Matriculas', N'Registro, consulta, modificación, traslados, historial y reportes de matrícula.');
-GO
-
-INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-SELECT r.id_rol, m.id_modulo, 1, 1, 1, 1
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre IN (N'Administrador', N'Personal administrativo')
-  AND m.nombre = N'Matriculas'
-  AND NOT EXISTS (
-      SELECT 1 FROM Rol_Permiso rp
-      WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo
-  );
-GO
-
-/* Permisos mínimos para los endpoints del módulo Matrícula.
-   puede ejecutarse más de una vez. */
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Matricula')
-    INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'Matricula', N'Registro, consulta, edición, traslados e informes de matrícula.');
-GO
-
-/* Administrador, Director y Personal administrativo pueden gestionar matrículas. */
-INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
-SELECT r.id_rol, m.id_modulo, 1, 1, 1, 0
-FROM Rol r
-CROSS JOIN Modulo m
-WHERE r.nombre IN (N'Administrador', N'Director', N'Personal administrativo')
-  AND m.nombre = N'Matricula'
-  AND NOT EXISTS (
-      SELECT 1 FROM Rol_Permiso rp
-      WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo
-  );
-GO
-
-/* Actualiza permisos de la matrícula si ya existía el vínculo rol-módulo. */
-UPDATE rp
-SET puede_ver = 1, puede_crear = 1, puede_editar = 1, puede_eliminar = 0
-FROM Rol_Permiso rp
-JOIN Rol r ON r.id_rol = rp.id_rol
-JOIN Modulo m ON m.id_modulo = rp.id_modulo
-WHERE r.nombre IN (N'Administrador', N'Director', N'Personal administrativo')
-  AND m.nombre = N'Matricula';
-GO
-
-/* Ejecutar una sola vez sobre la base de datos de desarrollo antes de crear grupos.
-   Permite tener Grupo A/B para distintos niveles en el mismo año lectivo,
-   manteniendo la unicidad de nombre + nivel + año. */
-IF EXISTS (
-    SELECT 1
-    FROM sys.key_constraints
-    WHERE name = N'UQ_Grupo_Nombre_Anio'
-      AND parent_object_id = OBJECT_ID(N'dbo.Grupo')
+INSERT INTO Usuario
+(
+    id_rol,
+    nombre,
+    apellido,
+    correo,
+    password_hash,
+    estado
 )
-BEGIN
-    ALTER TABLE dbo.Grupo DROP CONSTRAINT UQ_Grupo_Nombre_Anio;
-END;
+VALUES
+(
+    (SELECT id_rol FROM Rol WHERE nombre = N'Administrador'),
+    N'Admin',
+    N'Sistema',
+    N'admin@lnsd.local',
+    0x0100000001000186A000000010AABE60C9F6BC5529223DBB4951C347B70856A178469303277C4D854B9F0B2E79183FA7B4B3BD2A4C1CE30BE8D34122C5,
+    1
+),
+(
+    (SELECT id_rol FROM Rol WHERE nombre = N'Estudiante'),
+    N'Estudiante',
+    N'Prueba',
+    N'estudiante.prueba@lnsd.local',
+    0x0100000001000186A0000000108760C60D5E72121B52832E5B76E8C2D38B7594203BFD27E0345D59EB4C449C76A4166C59C2F2C683396299ABE595520A,
+    1
+),
+(
+    (SELECT id_rol FROM Rol WHERE nombre = N'Encargado'),
+    N'Encargado',
+    N'Prueba',
+    N'encargado.prueba@lnsd.local',
+    0x0100000001000186A000000010979CBF60A620784CF213010E9F5B14A1FEE56743FBC1CFEFFF35E2CCEA915B377F1FC3CBF9DABB4591A82D8BC0E60B2F,
+    1
+);
 GO
 
-IF NOT EXISTS (
-    SELECT 1
-    FROM sys.key_constraints
-    WHERE name = N'UQ_Grupo_Nombre_Nivel_Anio'
-      AND parent_object_id = OBJECT_ID(N'dbo.Grupo')
+INSERT INTO Estudiante
+(
+    id_usuario,
+    identificacion,
+    carnet,
+    fecha_ingreso,
+    fecha_nacimiento,
+    telefono,
+    direccion,
+    correo_emergencia,
+    id_grado,
+    estado_academico,
+    alergias,
+    observaciones_medicas,
+    adecuaciones_educativas,
+    estado
 )
-BEGIN
-    ALTER TABLE dbo.Grupo
-    ADD CONSTRAINT UQ_Grupo_Nombre_Nivel_Anio UNIQUE (nombre, nivel, anio);
-END;
+VALUES
+(
+    (SELECT id_usuario FROM Usuario WHERE correo = N'estudiante.prueba@lnsd.local'),
+    N'1-1111-1111',
+    N'PRUEBA-0001',
+    '2026-02-01',
+    '2012-05-10',
+    N'8888-0001',
+    N'San José, Costa Rica',
+    N'emergencia.prueba@lnsd.local',
+    (SELECT TOP 1 id_grado FROM Grado ORDER BY id_grado),
+    N'Regular',
+    N'Alergia al maní',
+    N'Usa lentes',
+    N'Tiempo adicional en exámenes',
+    1
+);
 GO
 
-/* Ajuste de unicidad para permitir una nueva matrícula si la anterior fue anulada por error.
-   Ejecutar una sola vez en la base de datos del Sistema Académico LNSD.
-   Las matrículas activas, inactivas o pendientes siguen siendo únicas por estudiante/período. */
-IF EXISTS (SELECT 1 FROM sys.key_constraints WHERE name = N'UQ_Matricula_Estudiante_Periodo' AND parent_object_id = OBJECT_ID(N'dbo.Matricula'))
-    ALTER TABLE dbo.Matricula DROP CONSTRAINT UQ_Matricula_Estudiante_Periodo;
-GO
-IF EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UQ_Matricula_Estudiante_Periodo' AND object_id = OBJECT_ID(N'dbo.Matricula'))
-    DROP INDEX UQ_Matricula_Estudiante_Periodo ON dbo.Matricula;
-GO
-CREATE UNIQUE NONCLUSTERED INDEX UQ_Matricula_Estudiante_Periodo
-ON dbo.Matricula (id_estudiante, id_periodo)
-WHERE estado <> N'Anulada';
+INSERT INTO Encargado
+(
+    id_usuario,
+    telefono
+)
+VALUES
+(
+    (SELECT id_usuario FROM Usuario WHERE correo = N'encargado.prueba@lnsd.local'),
+    N'8888-0002'
+);
 GO
 
---aqui termina el sprint 2
+INSERT INTO Encargado_Estudiante
+(
+    id_encargado,
+    id_estudiante,
+    parentesco,
+    es_principal
+)
+VALUES
+(
+    (SELECT en.id_encargado
+     FROM Encargado en
+     JOIN Usuario u ON u.id_usuario = en.id_usuario
+     WHERE u.correo = N'encargado.prueba@lnsd.local'),
+    (SELECT es.id_estudiante
+     FROM Estudiante es
+     JOIN Usuario u ON u.id_usuario = es.id_usuario
+     WHERE u.correo = N'estudiante.prueba@lnsd.local'),
+    N'Madre',
+    1
+);
+GO

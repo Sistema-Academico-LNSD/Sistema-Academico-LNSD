@@ -1,0 +1,59 @@
+@using ProyectoLNSD_WApp.Navegacion
+@*
+    Side Bar estándar. Filtrados por los permisos del usuario. Flex: pantallas grandes queda fijo, pantallas pequeñas se abre como panel deslizable 
+    con el botón de la barra superior.
+*@
+@{
+    string controladorActual = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    string accionActual = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    bool EsActivo(MenuItem item) =>
+        string.Equals(item.Controlador, controladorActual, StringComparison.OrdinalIgnoreCase) &&
+        (!item.CoincidirAccion || string.Equals(item.Accion, accionActual, StringComparison.OrdinalIgnoreCase));
+}
+
+<aside class="app-sidebar offcanvas-lg offcanvas-start" tabindex="-1" id="appSidebar" aria-label="Menú principal">
+
+    <div class="offcanvas-header">
+        <button type="button" class="btn-close btn-close-white ms-auto"
+                data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Cerrar menú"></button>
+    </div>
+
+    <div class="offcanvas-body">
+
+        <a class="sidebar-brand" asp-controller="Home" asp-action="Index">
+            <img src="~/img/logo-lnsd.jpeg" alt="" width="40" height="40" />
+            <span>
+                Sistema Académico
+                <small>Liceo Nuevo de Santo Domingo</small>
+            </span>
+        </a>
+
+        <nav class="sidebar-nav">
+            @foreach (var grupo in MenuNavegacion.Para(User))
+            {
+                <div class="sidebar-section">
+                    @if (!string.IsNullOrEmpty(grupo.Titulo))
+                    {
+                        <div class="sidebar-heading">@grupo.Titulo</div>
+                    }
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var item in grupo.Items)
+                        {
+                            bool activo = EsActivo(item);
+                            <li>
+                                <a class="sidebar-link @(activo ? "active" : null)"
+                                   aria-current="@(activo ? "page" : null)"
+                                   asp-controller="@item.Controlador" asp-action="@item.Accion">
+                                    <i class="bi @item.Icono" aria-hidden="true"></i>
+                                    <span>@item.Texto</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+        </nav>
+
+    </div>
+</aside>

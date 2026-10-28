@@ -1,33 +1,20 @@
-﻿@{
+@{
     ViewData["Title"] = "Cursos";
+    ViewData["Subtitle"] = "Administración de la oferta académica";
+    ViewData["Icon"] = "bi-book";
 }
 
-<div class="container-fluid mt-4">
-    <div class="card shadow border-0">
+@section Acciones {
+    @if (User.TienePermiso("Cursos", "Crear"))
+    {
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearCurso">
+            <i class="bi bi-plus-circle"></i> Nuevo curso
+        </button>
+    }
+}
 
-        <div class="card-header bg-primary text-white">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-
-                <div>
-                    <h3 class="mb-0">
-                        <i class="bi bi-book"></i>
-                        Cursos
-                    </h3>
-                    <small>Administración de la oferta académica</small>
-                </div>
-
-                <button type="button"
-                        class="btn btn-light"
-                        data-bs-toggle="modal"
-                        data-bs-target="#modalCrearCurso">
-                    <i class="bi bi-plus-circle"></i>
-                    Nuevo curso
-                </button>
-
-            </div>
-        </div>
-
-        <div class="card-body">
+<div class="card">
+    <div class="card-body">
 
             <div class="row g-2 mb-3">
 
@@ -86,7 +73,7 @@
                 <table id="tblCursos"
                        class="table table-striped table-hover align-middle">
 
-                    <thead class="table-dark">
+                    <thead>
                         <tr>
                             <th>Código</th>
                             <th>Curso</th>
@@ -106,7 +93,7 @@
         </div>
 
     </div>
-</div>
+
 
 @await Html.PartialAsync(
     "_CreateCurso",
@@ -120,5 +107,5 @@
 
     <partial name="_ValidationScriptsPartial" />
 
-    <script src="~/js/curso.js"></script>
+    <script src="~/js/curso.js" asp-append-version="true"></script>
 }
