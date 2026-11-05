@@ -43,7 +43,14 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Material de estudio", "bi-journal-bookmark", "Recurso", "Material",
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
                 new("Mis recursos", "bi-folder2-open", "Recurso", "Index",
-                    u => u.TienePermiso("Recursos", "Crear"), CoincidirAccion: true)
+                    u => u.TienePermiso("Recursos", "Crear"), CoincidirAccion: true),
+                new("Mi horario", "bi-calendar-week", "Horario", "MiHorario",
+                    u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                new("Mi horario", "bi-calendar-week", "Horario", "PorMatricula",
+                    u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                new("Horario de mis estudiantes", "bi-calendar-week", "Horario", "PorMatricula",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
+                         && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true)
             ]),
 
             new("Gestión académica", [
@@ -59,6 +66,12 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Grados", "Ver")),
                 new("Cursos", "bi-book", "Curso", "Index",
                     u => u.TienePermiso("Cursos", "Ver")),
+                new("Horarios", "bi-calendar-week", "Horario", "Index",
+                    u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
+                new("Horarios por docente", "bi-person-lines-fill", "Horario", "PorDocente",
+                    u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
+                new("Horarios por grupo", "bi-grid-3x3-gap", "Horario", "PorGrupo",
+                    u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
                          && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true)

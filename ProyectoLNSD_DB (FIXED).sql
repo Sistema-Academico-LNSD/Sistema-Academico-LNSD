@@ -1111,3 +1111,104 @@ VALUES
     1
 );
 GO
+
+
+
+/* ---- Horarios (MHOF-01) ---- */
+
+-- 1) Si Horario ya tiene datos con la estructura antigua, hay que revisarlos antes
+IF COL_LENGTH(N'dbo.Horario', N'id_periodo') IS NULL
+   AND EXISTS (SELECT 1 FROM Horario)
+    THROW 50002, N'Horario tiene datos con la estructura antigua. Revisar antes de modificarla.', 1;
+GO
+
+-- 2) Columnas nuevas (con ALTER, para no romper la FK de Asistencia)
+IF COL_LENGTH(N'dbo.Horario', N'id_periodo') IS NULL
+    ALTER TABLE Horario ADD id_periodo INT NULL;
+GO
+IF COL_LENGTH(N'dbo.Horario', N'id_seccion') IS NULL
+    ALTER TABLE Horario ADD id_seccion INT NULL;
+GO
+IF COL_LENGTH(N'dbo.Horario', N'id_grupo') IS NULL
+    ALTER TABLE Horario ADD id_grupo INT NULL;
+GO
+IF COL_LENGTH(N'dbo.Horario', N'aula') IS NULL
+    ALTER TABLE Horario ADD aula NVARCHAR(50) NULL;
+GO
+IF COL_LENGTH(N'dbo.Horario', N'estado') IS NULL
+    ALTER TABLE Horario ADD estado BIT NOT NULL
+        CONSTRAINT DF_Horario_Estado DEFAULT 1;
+GO
+
+-- 3) Con la tabla vacía, las columnas nuevas pasan a ser obligatorias
+IF NOT EXISTS (SELECT 1 FROM Horario)
+BEGIN
+    ALTER TABLE Horario ALTER COLUMN id_periodo INT NOT NULL;
+    ALTER TABLE Horario ALTER COLUMN id_seccion INT NOT NULL;
+    ALTER TABLE Horario ALTER COLUMN id_grupo INT NOT NULL;
+    ALTER TABLE Horario ALTER COLUMN aula NVARCHAR(50) NOT NULL;
+END
+GO
+
+-- 4) Relaciones y regla de horas
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Horario_Periodo')
+    ALTER TABLE Horario ADD CONSTRAINT FK_Horario_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Horario_Seccion')
+    ALTER TABLE Horario ADD CONSTRAINT FK_Horario_Seccion
+        FOREIGN KEY (id_seccion) REFERENCES Seccion(id_seccion);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Horario_Grupo')
+    ALTER TABLE Horario ADD CONSTRAINT FK_Horario_Grupo
+        FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_Horario_Horas')
+    ALTER TABLE Horario ADD CONSTRAINT CK_Horario_Horas
+        CHECK (hora_fin > hora_inicio);
+GO
+
+-- 5) La restricción única anterior no distinguía período ni sección
+IF EXISTS (SELECT 1 FROM sys.key_constraints
+           WHERE name = N'UQ_Horario_Docente_Dia_Hora'
+             AND parent_object_id = OBJECT_ID(N'dbo.Horario'))
+    ALTER TABLE Horario DROP CONSTRAINT UQ_Horario_Docente_Dia_Hora;
+GO
+
+-- 6) Protección contra el mismo bloque duplicado (los traslapes parciales los valida el servicio)
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Horario_Docente_Bloque')
+    CREATE UNIQUE INDEX UX_Horario_Docente_Bloque
+        ON Horario(id_periodo, id_docente, dia, hora_inicio)
+        WHERE estado = 1;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Horario_Seccion_Bloque')
+    CREATE UNIQUE INDEX UX_Horario_Seccion_Bloque
+        ON Horario(id_periodo, id_seccion, id_grupo, dia, hora_inicio)
+        WHERE estado = 1;
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Horario_Periodo_Seccion')
+    CREATE INDEX IX_Horario_Periodo_Seccion
+        ON Horario(id_periodo, id_seccion, id_grupo);
+GO
+
+-- 7) Módulo y permisos
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Horarios')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Horarios', N'Registro, consulta y administración de horarios de clases por período lectivo.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM (VALUES
+        (N'Administrador', 1, 1, 1, 0),
+        (N'Director',      1, 1, 1, 0),
+        (N'Docente',       1, 0, 0, 0),
+        (N'Estudiante',    1, 0, 0, 0),
+        (N'Encargado',     1, 0, 0, 0)
+     ) AS p(rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Horarios'
+WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
+

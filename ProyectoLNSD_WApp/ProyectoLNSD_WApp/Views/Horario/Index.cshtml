@@ -1,0 +1,338 @@
+﻿@{
+    ViewData["Title"] = "Horarios";
+    ViewData["Subtitle"] = "Programación de clases por período lectivo";
+    ViewData["Icon"] = "bi-calendar-week";
+}
+
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-plus-circle"></i> Registrar horario</h2>
+        <span id="hrPeriodo" class="badge bg-secondary"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div id="avisoHorario"></div>
+
+        <form id="formHorario" novalidate>
+            <fieldset id="fsHorario">
+
+                <div class="row g-3">
+
+                    <div class="col-md-6">
+                        <label for="hrSeccion" class="form-label">Sección</label>
+                        <select id="hrSeccion" name="IdSeccion" class="form-select">
+                            <option value="">Cargando...</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="hrGrupo" class="form-label">Grupo</label>
+                        <select id="hrGrupo" name="IdGrupo" class="form-select">
+                            <option value="">Seleccione primero una sección</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="hrCurso" class="form-label">Curso</label>
+                        <select id="hrCurso" name="IdCurso" class="form-select">
+                            <option value="">Seleccione primero una sección</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="hrDocente" class="form-label">Docente</label>
+                        <select id="hrDocente" name="IdDocente" class="form-select">
+                            <option value="">Seleccione primero un curso</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="hrDia" class="form-label">Día</label>
+                        <select id="hrDia" name="Dia" class="form-select">
+                            <option value="">Seleccione el día</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="hrInicio" class="form-label">Hora de inicio</label>
+                        <input type="time" id="hrInicio" name="HoraInicio" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="hrFin" class="form-label">Hora de finalización</label>
+                        <input type="time" id="hrFin" name="HoraFin" class="form-control" />
+                    </div>
+
+                    <div class="col-md-3">
+                        <label for="hrAula" class="form-label">Aula</label>
+                        <input type="text" id="hrAula" name="Aula" class="form-control"
+                               maxlength="50" autocomplete="off" placeholder="Ej. Aula 101" />
+                    </div>
+
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" id="btnGuardarHorario" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i>
+                        Guardar horario
+                    </button>
+
+                    <button type="button" id="btnLimpiarHorario" class="btn btn-outline-secondary">
+                        Limpiar
+                    </button>
+                </div>
+
+            </fieldset>
+        </form>
+
+    </div>
+
+</div>
+
+<div class="card">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-table"></i> Programación</h2>
+        <span id="contadorHorarios" class="badge bg-secondary"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+
+            <div class="col-md-3">
+                <label for="fltPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="fltPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="fltCurso" class="form-label small mb-1">Curso</label>
+                <select id="fltCurso" class="form-select form-select-sm">
+                    <option value="">Todos los cursos</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="fltDocente" class="form-label small mb-1">Docente</label>
+                <select id="fltDocente" class="form-select form-select-sm">
+                    <option value="">Todos los docentes</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="fltSeccion" class="form-label small mb-1">Sección</label>
+                <select id="fltSeccion" class="form-select form-select-sm">
+                    <option value="">Todas las secciones</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="fltGrupo" class="form-label small mb-1">Grupo</label>
+                <select id="fltGrupo" class="form-select form-select-sm">
+                    <option value="">Todos los grupos</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="fltAula" class="form-label small mb-1">Aula</label>
+                <input type="text" id="fltAula" class="form-control form-control-sm"
+                       placeholder="Buscar por aula" autocomplete="off" />
+            </div>
+
+            <div class="col-md-2">
+                <label for="fltEstado" class="form-label small mb-1">Estado</label>
+                <select id="fltEstado" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="true">Activos</option>
+                    <option value="false">Inactivos</option>
+                </select>
+            </div>
+
+            <div class="col-md-4 d-flex align-items-end gap-2">
+                <button type="button" id="btnBuscarHorarios" class="btn btn-sm btn-primary">
+                    <i class="bi bi-search"></i> Buscar
+                </button>
+                <button type="button" id="btnLimpiarBusqueda" class="btn btn-sm btn-outline-secondary">
+                    Limpiar filtros
+                </button>
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table id="tblHorarios" class="table table-striped table-hover align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Día</th>
+                        <th>Horario</th>
+                        <th>Grado y sección</th>
+                        <th>Grupo</th>
+                        <th>Curso</th>
+                        <th>Docente</th>
+                        <th>Aula</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td colspan="9" class="text-center text-muted">Cargando...</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="modalEditarHorario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <form id="formEditarHorario" novalidate>
+
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-pencil-square"></i>
+                        Editar horario
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="edIdHorario" name="IdHorario" />
+
+                    <p class="text-muted small mb-3">
+                        Período lectivo: <strong id="edPeriodo"></strong>
+                    </p>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label for="edSeccion" class="form-label">Sección</label>
+                            <select id="edSeccion" name="IdSeccion" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="edGrupo" class="form-label">Grupo</label>
+                            <select id="edGrupo" name="IdGrupo" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="edCurso" class="form-label">Curso</label>
+                            <select id="edCurso" name="IdCurso" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="edDocente" class="form-label">Docente</label>
+                            <select id="edDocente" name="IdDocente" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="edDia" class="form-label">Día</label>
+                            <select id="edDia" name="Dia" class="form-select"></select>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="edInicio" class="form-label">Hora de inicio</label>
+                            <input type="time" id="edInicio" name="HoraInicio" class="form-control" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="edFin" class="form-label">Hora de finalización</label>
+                            <input type="time" id="edFin" name="HoraFin" class="form-control" />
+                        </div>
+
+                        <div class="col-md-3">
+                            <label for="edAula" class="form-label">Aula</label>
+                            <input type="text" id="edAula" name="Aula" class="form-control"
+                                   maxlength="50" autocomplete="off" />
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="btnGuardarEdicion" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar cambios
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalleHorario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-info-circle"></i>
+                    Detalle del horario
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <dl class="row mb-0">
+                    <dt class="col-sm-4">Período lectivo</dt>
+                    <dd class="col-sm-8" id="dtPeriodo"></dd>
+
+                    <dt class="col-sm-4">Grado</dt>
+                    <dd class="col-sm-8" id="dtGrado"></dd>
+
+                    <dt class="col-sm-4">Sección</dt>
+                    <dd class="col-sm-8" id="dtSeccion"></dd>
+
+                    <dt class="col-sm-4">Grupo</dt>
+                    <dd class="col-sm-8" id="dtGrupo"></dd>
+
+                    <dt class="col-sm-4">Curso</dt>
+                    <dd class="col-sm-8" id="dtCurso"></dd>
+
+                    <dt class="col-sm-4">Docente</dt>
+                    <dd class="col-sm-8" id="dtDocente"></dd>
+
+                    <dt class="col-sm-4">Día</dt>
+                    <dd class="col-sm-8" id="dtDia"></dd>
+
+                    <dt class="col-sm-4">Horario</dt>
+                    <dd class="col-sm-8" id="dtHorario"></dd>
+
+                    <dt class="col-sm-4">Aula</dt>
+                    <dd class="col-sm-8" id="dtAula"></dd>
+
+                    <dt class="col-sm-4">Estado</dt>
+                    <dd class="col-sm-8" id="dtEstado"></dd>
+                </dl>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/horario.js" asp-append-version="true"></script>
+
+}

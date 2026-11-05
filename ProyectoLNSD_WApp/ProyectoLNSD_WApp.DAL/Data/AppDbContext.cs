@@ -41,6 +41,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<MatriculaCurso> MatriculasCursos { get; set; }
         public virtual DbSet<MatriculaObservacion> MatriculasObservaciones { get; set; }
         public virtual DbSet<MatriculaHistorial> MatriculasHistorial { get; set; }
+        public virtual DbSet<Horario> Horarios { get; set; }
 
 
         //Tables override mode builder
@@ -1204,6 +1205,83 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.HasOne(e => e.GrupoNuevoNavigation).WithMany().HasForeignKey(e => e.GrupoNuevo).HasConstraintName("FK_Matricula_Historial_GrupoNuevo");
                 entity.HasOne(e => e.SeccionAnteriorNavigation).WithMany().HasForeignKey(e => e.SeccionAnterior).HasConstraintName("FK_Matricula_Historial_SeccionAnterior");
                 entity.HasOne(e => e.SeccionNuevaNavigation).WithMany().HasForeignKey(e => e.SeccionNueva).HasConstraintName("FK_Matricula_Historial_SeccionNueva");
+            });
+
+            modelBuilder.Entity<Horario>(entity =>
+            {
+                entity.ToTable("Horario");
+
+                entity.HasKey(e => e.IdHorario)
+                      .HasName("PK_Horario");
+
+                entity.Property(e => e.IdHorario)
+                      .HasColumnName("id_horario");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.IdSeccion)
+                      .HasColumnName("id_seccion");
+
+                entity.Property(e => e.IdGrupo)
+                      .HasColumnName("id_grupo");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.IdDocente)
+                      .HasColumnName("id_docente");
+
+                entity.Property(e => e.Dia)
+                      .HasColumnName("dia")
+                      .HasMaxLength(15)
+                      .IsRequired();
+
+                entity.Property(e => e.HoraInicio)
+                      .HasColumnName("hora_inicio")
+                      .HasColumnType("time");
+
+                entity.Property(e => e.HoraFin)
+                      .HasColumnName("hora_fin")
+                      .HasColumnType("time");
+
+                entity.Property(e => e.Aula)
+                      .HasColumnName("aula")
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Periodo");
+
+                entity.HasOne(d => d.Seccion)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdSeccion)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Seccion");
+
+                entity.HasOne(d => d.Grupo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdGrupo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Grupo");
+
+                entity.HasOne(d => d.Curso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdCurso)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Curso");
+
+                entity.HasOne(d => d.Docente)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdDocente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Docente");
             });
 
             OnModelCreatingPartial(modelBuilder);
