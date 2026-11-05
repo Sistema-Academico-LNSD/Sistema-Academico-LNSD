@@ -1,0 +1,18 @@
+﻿@{
+    bool esEstudiante = User.IsInRole(RolesSistema.Estudiante);
+
+    ViewData["Title"] = esEstudiante ? "Mi horario" : "Horario de mis estudiantes";
+    ViewData["Subtitle"] = esEstudiante ? "Tus clases de la semana" : "Clases de los estudiantes a tu cargo";
+    ViewData["Icon"] = "bi-calendar-week";
+}
+
+<div id="pmContenido">
+    <p class="text-center text-muted">Cargando...</p>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/horario-semana.js" asp-append-version="true"></script>
+    <script src="~/js/por-matricula.js" asp-append-version="true"></script>
+
+}
