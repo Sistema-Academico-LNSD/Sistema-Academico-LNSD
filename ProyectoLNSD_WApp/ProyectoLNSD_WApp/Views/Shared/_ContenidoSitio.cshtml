@@ -1,17 +1,16 @@
-﻿@model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
+@model ProyectoLNSD_WApp.BLL.DTO.LandingDTO
 @{
-    // En la vista previa (HU 07) se muestran también los borradores, marcados con una etiqueta.
     bool esPrevia = ViewData["EsVistaPrevia"] as bool? == true;
 }
 
 @if (Model.Bloques.Count > 0)
 {
-    <section class="mt-5">
+    <section class="mt-4">
         <div class="row g-3">
             @foreach (var bloque in Model.Bloques)
             {
                 <div class="col-md-6 col-lg-4">
-                    <div class="card h-100 shadow-sm border-0">
+                    <div class="card h-100">
                         <div class="card-body">
                             <h3 class="h5">
                                 @bloque.Titulo
@@ -20,7 +19,7 @@
                                     <span class="badge bg-warning text-dark ms-2">Borrador</span>
                                 }
                             </h3>
-                            <p class="mb-0" style="white-space: pre-line;">@bloque.Descripcion</p>
+                            <p class="mb-0 pre-line">@bloque.Descripcion</p>
                         </div>
                     </div>
                 </div>
@@ -31,7 +30,7 @@
 
 @if (Model.Mision != null || Model.Vision != null || Model.Historia != null)
 {
-    <section class="mt-5">
+    <section class="mt-4">
         <h2 class="section-title">
             <i class="bi bi-info-circle"></i>
             Quiénes somos
@@ -43,7 +42,7 @@
                 if (bloque == null) { continue; }
 
                 <div class="@(bloque.Tipo == "Historia" ? "col-12" : "col-md-6")">
-                    <div class="card h-100 shadow-sm border-0">
+                    <div class="card h-100">
                         <div class="card-body">
                             <h3 class="h5">
                                 @bloque.Titulo
@@ -52,7 +51,7 @@
                                     <span class="badge bg-warning text-dark ms-2">Borrador</span>
                                 }
                             </h3>
-                            <p class="mb-0" style="white-space: pre-line;">@bloque.Descripcion</p>
+                            <p class="mb-0 pre-line">@bloque.Descripcion</p>
                         </div>
                     </div>
                 </div>
@@ -63,13 +62,13 @@
 
 @if (Model.Institucion != null)
 {
-    <section class="mt-5 mb-4">
+    <section class="mt-4 mb-2">
         <h2 class="section-title">
             <i class="bi bi-telephone"></i>
             Contacto
         </h2>
 
-        <div class="card shadow-sm border-0">
+        <div class="card">
             <div class="card-body">
                 <h3 class="h5">@Model.Institucion.Nombre</h3>
                 <ul class="list-unstyled mb-0">

@@ -1,4 +1,4 @@
-﻿const puedeEditarDocentes = $("#hdnPuedeEditar").val() === "true";
+const puedeEditarDocentes = $("#hdnPuedeEditar").val() === "true";
 const puedeVerCursosDocente = $("#hdnPuedeVerCursos").val() === "true";
 
 $(document).ready(function ()
@@ -106,11 +106,11 @@ function renderizarDocentes(docentes)
             acciones = `
                 <td class="text-nowrap">
                     ${botonExpediente}
-                    <button class="btn btn-warning btn-sm me-1" title="Editar"
+                    <button class="btn btn-outline-primary btn-sm me-1" title="Editar"
                             onclick="abrirModalEditar(${d.idDocente})">
                         <i class="bi bi-pencil-square"></i>
                     </button>
-                    <button class="btn btn-info btn-sm me-1" title="Cuenta de usuario"
+                    <button class="btn btn-outline-secondary btn-sm me-1" title="Cuenta de usuario"
                             onclick="abrirModalCuenta(${d.idDocente})">
                         <i class="bi bi-person-gear"></i>
                     </button>

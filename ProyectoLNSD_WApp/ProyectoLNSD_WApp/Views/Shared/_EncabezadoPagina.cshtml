@@ -1,0 +1,40 @@
+@model object?
+@*
+    Encabezado estándarizado para cada pantalla. Usado en layout con lo que la vista declara:
+
+        ViewData["Title"]    = "Docentes";                          (obligatorio)
+        ViewData["Subtitle"] = "Expedientes del personal docente";  (opcional)
+        ViewData["Icon"]     = "bi-person-workspace";               (opcional)
+        @section Acciones { <button class="btn btn-primary">...</button> }   (opcional)
+
+    Todas las pantallas comparten la misma estructura.
+*@
+@{
+    string? titulo = ViewData["Title"] as string;
+    string? subtitulo = ViewData["Subtitle"] as string;
+    string? icono = ViewData["Icon"] as string;
+    var acciones = Model as Microsoft.AspNetCore.Html.IHtmlContent;
+}
+
+<div class="page-header">
+    <div class="page-header-text">
+        <h1 class="page-title">
+            @if (!string.IsNullOrWhiteSpace(icono))
+            {
+                <i class="bi @icono" aria-hidden="true"></i>
+            }
+            @titulo
+        </h1>
+        @if (!string.IsNullOrWhiteSpace(subtitulo))
+        {
+            <p class="page-subtitle">@subtitulo</p>
+        }
+    </div>
+
+    @if (acciones != null)
+    {
+        <div class="page-actions no-print">
+            @acciones
+        </div>
+    }
+</div>

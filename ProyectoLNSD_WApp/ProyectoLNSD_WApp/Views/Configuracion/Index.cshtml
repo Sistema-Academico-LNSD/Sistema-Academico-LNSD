@@ -1,21 +1,18 @@
-﻿@model ProyectoLNSD_WApp.BLL.DTO.InstitucionDTO
+@model ProyectoLNSD_WApp.BLL.DTO.InstitucionDTO
 @{
     ViewData["Title"] = "Configuración";
+    ViewData["Subtitle"] = "Datos institucionales, períodos lectivos y contenido del sitio";
+    ViewData["Icon"] = "bi-gear";
 }
 
-<div class="container-fluid mt-4">
-    <div class="card shadow border-0">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="mb-0"><i class="bi bi-gear"></i> Configuración del sistema</h3>
-                <small>Datos institucionales, períodos lectivos y contenido del sitio</small>
-            </div>
-            <a asp-action="VistaPrevia" class="btn btn-light">
-                <i class="bi bi-eye"></i> Vista previa del sitio
-            </a>
-        </div>
+@section Acciones {
+    <a asp-action="VistaPrevia" class="btn btn-outline-primary">
+        <i class="bi bi-eye"></i> Vista previa del sitio
+    </a>
+}
 
-        <div class="card-body">
+<div class="card">
+    <div class="card-body">
 
             @* Cada HU agrega aquí su pestaña (y su panel más abajo) *@
             <ul class="nav nav-tabs mb-3" role="tablist">
@@ -254,7 +251,7 @@
             </div>
         </div>
     </div>
-</div>
+
 
 <!-- Modal: crear / editar contenido de la página principal -->
 <div class="modal fade" id="modalBloque" tabindex="-1" aria-hidden="true">

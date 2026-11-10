@@ -1,4 +1,4 @@
-﻿$(document).ready(function () {
+$(document).ready(function () {
     cargarUsuarios();
     cargarRoles();
 
@@ -47,7 +47,7 @@ function renderizarUsuarios(response) {
 
                     <td>
 
-                        <button class="btn btn-warning btn-sm me-1"
+                        <button class="btn btn-outline-primary btn-sm me-1"
                                 title="Editar"
                                 onclick="obtenerUsuario(${usuario.idUsuario})">
                             <i class="bi bi-pencil-square"></i>

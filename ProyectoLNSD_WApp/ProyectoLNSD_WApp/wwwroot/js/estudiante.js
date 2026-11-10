@@ -85,11 +85,11 @@ function renderizarEstudiantes(estudiantes)
                    </button>`;
 
             botones += `
-                <button class="btn btn-warning btn-sm me-1" title="Editar"
+                <button class="btn btn-outline-primary btn-sm me-1" title="Editar"
                         onclick="abrirModalEditar(${e.idEstudiante})">
                     <i class="bi bi-pencil-square"></i>
                 </button>
-                <button class="btn btn-info btn-sm me-1" title="Encargados"
+                <button class="btn btn-outline-secondary btn-sm me-1" title="Encargados"
                         onclick="abrirModalEncargados(${e.idEstudiante})">
                     <i class="bi bi-people"></i>
                 </button>

@@ -41,6 +41,12 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<MatriculaCurso> MatriculasCursos { get; set; }
         public virtual DbSet<MatriculaObservacion> MatriculasObservaciones { get; set; }
         public virtual DbSet<MatriculaHistorial> MatriculasHistorial { get; set; }
+        public virtual DbSet<Horario> Horarios { get; set; }
+        public virtual DbSet<Asistencia> Asistencias { get; set; }
+        public virtual DbSet<AsistenciaCierre> AsistenciasCierres { get; set; }
+        public virtual DbSet<Beca> Becas { get; set; }
+        public virtual DbSet<BecaRequisito> BecasRequisitos { get; set; }
+        public virtual DbSet<BecaRequisitoCumplido> BecasRequisitosCumplidos { get; set; }
 
 
         //Tables override mode builder
@@ -1204,6 +1210,328 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.HasOne(e => e.GrupoNuevoNavigation).WithMany().HasForeignKey(e => e.GrupoNuevo).HasConstraintName("FK_Matricula_Historial_GrupoNuevo");
                 entity.HasOne(e => e.SeccionAnteriorNavigation).WithMany().HasForeignKey(e => e.SeccionAnterior).HasConstraintName("FK_Matricula_Historial_SeccionAnterior");
                 entity.HasOne(e => e.SeccionNuevaNavigation).WithMany().HasForeignKey(e => e.SeccionNueva).HasConstraintName("FK_Matricula_Historial_SeccionNueva");
+            });
+
+            modelBuilder.Entity<Horario>(entity =>
+            {
+                entity.ToTable("Horario");
+
+                entity.HasKey(e => e.IdHorario)
+                      .HasName("PK_Horario");
+
+                entity.Property(e => e.IdHorario)
+                      .HasColumnName("id_horario");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.IdSeccion)
+                      .HasColumnName("id_seccion");
+
+                entity.Property(e => e.IdGrupo)
+                      .HasColumnName("id_grupo");
+
+                entity.Property(e => e.IdCurso)
+                      .HasColumnName("id_curso");
+
+                entity.Property(e => e.IdDocente)
+                      .HasColumnName("id_docente");
+
+                entity.Property(e => e.Dia)
+                      .HasColumnName("dia")
+                      .HasMaxLength(15)
+                      .IsRequired();
+
+                entity.Property(e => e.HoraInicio)
+                      .HasColumnName("hora_inicio")
+                      .HasColumnType("time");
+
+                entity.Property(e => e.HoraFin)
+                      .HasColumnName("hora_fin")
+                      .HasColumnType("time");
+
+                entity.Property(e => e.Aula)
+                      .HasColumnName("aula")
+                      .HasMaxLength(50)
+                      .IsRequired();
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Periodo");
+
+                entity.HasOne(d => d.Seccion)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdSeccion)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Seccion");
+
+                entity.HasOne(d => d.Grupo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdGrupo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Grupo");
+
+                entity.HasOne(d => d.Curso)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdCurso)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Curso");
+
+                entity.HasOne(d => d.Docente)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdDocente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Horario_Docente");
+            });
+
+            modelBuilder.Entity<Asistencia>(entity =>
+            {
+                entity.ToTable("Asistencia");
+
+                entity.HasKey(e => e.IdAsistencia)
+                      .HasName("PK_Asistencia");
+
+                entity.Property(e => e.IdAsistencia)
+                      .HasColumnName("id_asistencia");
+
+                entity.Property(e => e.IdHorario)
+                      .HasColumnName("id_horario");
+
+                entity.Property(e => e.IdMatricula)
+                      .HasColumnName("id_matricula");
+
+                entity.Property(e => e.Fecha)
+                      .HasColumnName("fecha")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Observacion)
+                      .HasColumnName("observacion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.IdUsuarioRegistra)
+                      .HasColumnName("id_usuario_registra");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasColumnType("datetime2(0)")
+                      .HasDefaultValueSql("SYSDATETIME()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdHorario, e.IdMatricula, e.Fecha })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Asistencia_Horario_Matricula_Fecha");
+
+                entity.HasOne(d => d.Horario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdHorario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Horario");
+
+                entity.HasOne(d => d.Matricula)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdMatricula)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Matricula");
+            });
+
+            modelBuilder.Entity<AsistenciaCierre>(entity =>
+            {
+                entity.ToTable("Asistencia_Cierre");
+
+                entity.HasKey(e => e.IdPeriodo)
+                      .HasName("PK_Asistencia_Cierre");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo")
+                      .ValueGeneratedNever();
+
+                entity.Property(e => e.FechaCierre)
+                      .HasColumnName("fecha_cierre")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Periodo");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Usuario");
+            });
+
+            modelBuilder.Entity<BecaRequisito>(entity =>
+            {
+                entity.ToTable("Beca_Requisito");
+
+                entity.HasKey(e => e.IdRequisito)
+                      .HasName("PK_Beca_Requisito");
+
+                entity.Property(e => e.IdRequisito)
+                      .HasColumnName("id_requisito");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.Obligatorio)
+                      .HasColumnName("obligatorio");
+
+                entity.Property(e => e.Verificacion)
+                      .HasColumnName("verificacion")
+                      .HasMaxLength(30);
+
+                entity.Property(e => e.Activo)
+                      .HasColumnName("activo");
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_BecaRequisito_Nombre");
+            });
+
+            modelBuilder.Entity<Beca>(entity =>
+            {
+                entity.ToTable("Beca");
+
+                entity.HasKey(e => e.IdBeca)
+                      .HasName("PK_Beca");
+
+                entity.Property(e => e.IdBeca)
+                      .HasColumnName("id_beca");
+
+                entity.Property(e => e.IdEstudiante)
+                      .HasColumnName("id_estudiante");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.Monto)
+                      .HasColumnName("monto")
+                      .HasColumnType("decimal(12,2)");
+
+                entity.Property(e => e.FechaInicio)
+                      .HasColumnName("fecha_inicio")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.FechaFin)
+                      .HasColumnName("fecha_fin")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Observacion)
+                      .HasColumnName("observacion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.MotivoDesactivacion)
+                      .HasColumnName("motivo_desactivacion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FechaActivacion)
+                      .HasColumnName("fecha_activacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.FechaDesactivacion)
+                      .HasColumnName("fecha_desactivacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.IdUsuarioRegistra)
+                      .HasColumnName("id_usuario_registra");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasColumnType("datetime2(0)")
+                      .HasDefaultValueSql("SYSDATETIME()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdEstudiante, e.IdPeriodo })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Beca_Estudiante_Periodo");
+
+                entity.HasOne(d => d.Estudiante)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdEstudiante)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_Estudiante");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_Periodo");
+
+                entity.HasOne(d => d.UsuarioRegistra)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioRegistra)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_UsuarioRegistra");
+
+                entity.HasOne(d => d.UsuarioModifica)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioModifica)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_UsuarioModifica");
+            });
+
+            modelBuilder.Entity<BecaRequisitoCumplido>(entity =>
+            {
+                entity.ToTable("Beca_Requisito_Cumplido");
+
+                entity.HasKey(e => new { e.IdBeca, e.IdRequisito })
+                      .HasName("PK_Beca_Requisito_Cumplido");
+
+                entity.Property(e => e.IdBeca)
+                      .HasColumnName("id_beca");
+
+                entity.Property(e => e.IdRequisito)
+                      .HasColumnName("id_requisito");
+
+                entity.HasOne(d => d.Beca)
+                      .WithMany(b => b.RequisitosCumplidos)
+                      .HasForeignKey(d => d.IdBeca)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_BecaCumplido_Beca");
+
+                entity.HasOne(d => d.Requisito)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdRequisito)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_BecaCumplido_Requisito");
             });
 
             OnModelCreatingPartial(modelBuilder);

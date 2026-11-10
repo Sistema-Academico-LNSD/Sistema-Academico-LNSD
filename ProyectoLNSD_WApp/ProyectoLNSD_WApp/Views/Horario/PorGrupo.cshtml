@@ -1,0 +1,63 @@
+﻿@{
+    ViewData["Title"] = "Horarios por grupo";
+    ViewData["Subtitle"] = "Distribución semanal de clases por grado, sección o grupo";
+    ViewData["Icon"] = "bi-grid-3x3-gap";
+}
+
+<div class="card mb-4">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-funnel"></i> Criterios</h2>
+        <span id="pgContador" class="badge bg-secondary"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2">
+
+            <div class="col-md-3">
+                <label for="pgPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="pgPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="pgGrado" class="form-label small mb-1">Grado</label>
+                <select id="pgGrado" class="form-select form-select-sm">
+                    <option value="">Todos los grados</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="pgSeccion" class="form-label small mb-1">Sección</label>
+                <select id="pgSeccion" class="form-select form-select-sm">
+                    <option value="">Todas las secciones</option>
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="pgGrupo" class="form-label small mb-1">Grupo</label>
+                <select id="pgGrupo" class="form-select form-select-sm">
+                    <option value="">Todos los grupos</option>
+                </select>
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" id="btnLimpiarPg" class="btn btn-sm btn-outline-secondary">
+                    Limpiar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="pgResultado"></div>
+
+@section Scripts {
+
+    <script src="~/js/horario-semana.js" asp-append-version="true"></script>
+    <script src="~/js/por-grupo.js" asp-append-version="true"></script>
+
+}

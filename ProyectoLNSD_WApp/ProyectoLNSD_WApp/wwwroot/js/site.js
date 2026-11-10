@@ -1,6 +1,7 @@
-﻿// -------------------------------------------------------------
-// Utilidades globales del sitio (Carga en _Layout antes que los scripts de cada página).
-// Inyecta en todas las peticiones POST de una vez los hearders automaticamente , para evitar tener que hacerlo en cada llamada ajax.
+// -------------------------------------------------------------
+// Utilidades globales del sitio (se cargan en _Scripts antes que los scripts de cada página).
+// - ajaxSetup: agrega el token antiforgery a toda petición jQuery que no sea GET.
+// - escapeHtml / mostrarMensaje / confirmar: helpers compartidos por todas las pantallas.
 // -------------------------------------------------------------
 
 
@@ -22,6 +23,30 @@ $.ajaxSetup({
 
 function escapeHtml(texto) {
     return $('<div>').text(texto ?? '').html();
+}
+
+// escapeHtml no escapa comillas: para valores dentro de atributos se usa esta
+function escapeAttr(texto) {
+    return escapeHtml(texto).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// "2026-11-09" -> "09/11/2026" sin pasar por Date (evita el desfase de zona horaria)
+function fechaCorta(iso) {
+    if (!iso) return '';
+    const [anio, mes, dia] = String(iso).substring(0, 10).split('-');
+    return `${dia}/${mes}/${anio}`;
+}
+
+// Fecha local en formato yyyy-MM-dd (para los <input type="date">)
+function fechaIso(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Monto en colones: 125000 -> "₡125 000,00"
+const formatoColones = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' });
+
+function formatoMonto(monto) {
+    return formatoColones.format(Number(monto) || 0);
 }
 
 // -------------------------------------------------------------
@@ -114,8 +139,8 @@ function confirmar(mensaje, textoBoton = 'Confirmar', tipoBoton = 'danger') {
         $modal.appendTo('body');
         modal.show();
     });
+}
 
-    
 // ============================================================
 // Fechas UTC renderizadas en servidor
 // El navegador convierte la fecha UTC a la hora local del usuario.
@@ -138,5 +163,3 @@ $(function ()
         $(this).text(fecha.toLocaleString('es-CR', opciones));
     });
 });
-
-}

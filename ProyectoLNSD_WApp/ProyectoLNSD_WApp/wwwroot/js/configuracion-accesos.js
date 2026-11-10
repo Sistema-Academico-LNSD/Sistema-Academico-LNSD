@@ -1,4 +1,4 @@
-﻿// HU 06: accesos rápidos (asignados por rol)
+// HU 06: accesos rápidos (asignados por rol)
 
 $(document).ready(function () {
     cargarAccesos();
@@ -164,8 +164,8 @@ function guardarAcceso() {
     });
 }
 
-function eliminarAcceso(id) {
-    if (!confirm("¿Seguro que desea eliminar este acceso rápido?")) {
+async function eliminarAcceso(id) {
+    if (!(await confirmar("¿Seguro que desea eliminar este acceso rápido?", "Eliminar"))) {
         return;
     }
 

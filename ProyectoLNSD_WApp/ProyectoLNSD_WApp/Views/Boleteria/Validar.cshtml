@@ -1,23 +1,11 @@
-﻿@{
-    ViewData["Title"] = "Validar Tiquetes";
+@{
+    ViewData["Title"] = "Validar tiquetes";
+    ViewData["Subtitle"] = "Verificación de tiquetes digitales del comedor";
+    ViewData["Icon"] = "bi-qr-code-scan";
 }
 
-<div class="container-fluid mt-4">
-
-    <div class="card shadow border-0">
-
-        <div class="card-header bg-primary text-white">
-            <h3 class="mb-0">
-                <i class="bi bi-qr-code-scan"></i>
-                Validar Tiquetes
-            </h3>
-
-            <small>
-                Verificación de tiquetes digitales del comedor
-            </small>
-        </div>
-
-        <div class="card-body">
+<div class="card">
+    <div class="card-body">
 
             <div class="row g-3 align-items-end">
 
@@ -48,10 +36,10 @@
 
     </div>
 
-</div>
+
 
 @section Scripts {
 
-    <script src="~/js/boleteria-validar.js"></script>
+    <script src="~/js/boleteria-validar.js" asp-append-version="true"></script>
 
 }

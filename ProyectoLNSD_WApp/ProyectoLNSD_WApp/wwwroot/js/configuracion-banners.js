@@ -1,4 +1,4 @@
-﻿// HU 03: imágenes y banners
+// HU 03: imágenes y banners
 
 $(document).ready(function () {
     cargarBanners();
@@ -128,17 +128,17 @@ function editarBanner(id) {
     });
 }
 
-function guardarBanner(publicar) {
+async function guardarBanner(publicar) {
     // HU 08 escenario 5: publicar cambios de un banner ya publicado pide confirmación.
     if (publicar && $("#bannerEstado").val() === "Publicado") {
-        if (!confirm("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?")) {
+        if (!(await confirmar("Se actualizará el contenido visible en el sitio web. ¿Confirmar la publicación?", "Publicar", "success"))) {
             return;
         }
     }
 
     // Guardar como borrador un banner ya publicado lo oculta del sitio: se pide confirmar.
     if (!publicar && $("#bannerEstado").val() === "Publicado") {
-        if (!confirm("Este banner está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?")) {
+        if (!(await confirmar("Este banner está publicado. Si lo guarda como borrador dejará de mostrarse en el sitio. ¿Desea continuar?", "Guardar como borrador", "warning"))) {
             return;
         }
     }
@@ -171,8 +171,8 @@ function guardarBanner(publicar) {
     });
 }
 
-function eliminarBanner(id) {
-    if (!confirm("¿Seguro que desea eliminar este banner? Se quitará también del sitio web.")) {
+async function eliminarBanner(id) {
+    if (!(await confirmar("¿Seguro que desea eliminar este banner? Se quitará también del sitio web.", "Eliminar"))) {
         return;
     }
 

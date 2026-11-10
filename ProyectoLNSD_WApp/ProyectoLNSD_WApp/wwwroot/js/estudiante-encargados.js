@@ -110,7 +110,7 @@ function renderizarEncargados(encargados)
 
         let botonPrincipal = e.esPrincipal
             ? ''
-            : `<button class="btn btn-warning btn-sm me-1" title="Definir como principal"
+            : `<button class="btn btn-outline-primary btn-sm me-1" title="Definir como principal"
                        onclick="definirPrincipal(${e.idEncargado})">
                    <i class="bi bi-star"></i>
                </button>`;
