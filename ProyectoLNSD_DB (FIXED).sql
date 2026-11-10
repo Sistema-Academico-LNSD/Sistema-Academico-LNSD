@@ -1333,3 +1333,156 @@ FROM
 JOIN Rol r ON r.nombre = p.rol
 JOIN Modulo m ON m.nombre = N'Asistencia';
 GO
+
+/* ============================================================
+   PROYECTO LNSD - MÓDULO DE BECAS SOCIOECONÓMICAS (MBEF-01)
+   Ejecutar sobre Proyecto_LNSD_DB DESPUÉS del script base.
+
+   La tabla Beca del script base (porcentaje, sin estado ni
+   período) no la usa ningún código, así que se reemplaza sin
+   migrar datos.
+   ============================================================ */
+
+USE Proyecto_LNSD_DB;
+GO
+
+DROP TABLE IF EXISTS Beca_Requisito_Cumplido;
+DROP TABLE IF EXISTS Beca;
+DROP TABLE IF EXISTS Beca_Requisito;
+GO
+
+/* ------------------------------------------------------------
+   1. Requisitos de elegibilidad (MBEF-01-01).
+      - obligatorio = 1: se exige para activar la beca.
+      - verificacion: NULL = lo marca el administrador;
+        'MatriculaActiva' = lo comprueba el sistema con la matrícula
+        del estudiante en el período de la beca.
+      - No se borran: se desactivan, para no perder el historial
+        de lo que cumplió cada beca.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca_Requisito
+(
+    id_requisito INT IDENTITY(1,1) NOT NULL,
+    nombre       NVARCHAR(150) NOT NULL,
+    descripcion  NVARCHAR(500) NULL,
+    obligatorio  BIT NOT NULL CONSTRAINT DF_BecaRequisito_Obligatorio DEFAULT 1,
+    verificacion NVARCHAR(30) NULL,
+    activo       BIT NOT NULL CONSTRAINT DF_BecaRequisito_Activo DEFAULT 1,
+
+    CONSTRAINT PK_Beca_Requisito PRIMARY KEY (id_requisito),
+    CONSTRAINT UQ_BecaRequisito_Nombre UNIQUE (nombre),
+    CONSTRAINT CK_BecaRequisito_Verificacion
+        CHECK (verificacion IS NULL OR verificacion IN (N'MatriculaActiva'))
+);
+GO
+
+INSERT INTO Beca_Requisito (nombre, descripcion, obligatorio, verificacion)
+VALUES
+    (N'Condición de vulnerabilidad según SINIRUBE',
+     N'El hogar del estudiante está clasificado en pobreza extrema, pobreza o vulnerabilidad en el SINIRUBE.',
+     1, NULL),
+    (N'Matrícula activa',
+     N'El estudiante tiene matrícula activa en el período lectivo de la beca. La verifica el sistema.',
+     1, N'MatriculaActiva'),
+    (N'Aprobación del grado anterior',
+     N'El estudiante aprobó el grado cursado en el período lectivo anterior.',
+     1, NULL);
+GO
+
+/* ------------------------------------------------------------
+   2. Beca de un estudiante en un período lectivo (MBEF-01-02 a 01-06).
+      - Una sola beca por estudiante y período.
+      - Vigencia (MBEF-01-06): la aplicación exige que inicio y fin
+        estén dentro del período lectivo (máximo un año lectivo).
+      - Estados: Pendiente (registrada, sin activar), Activa, Inactiva.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca
+(
+    id_beca              INT IDENTITY(1,1) NOT NULL,
+    id_estudiante        INT NOT NULL,
+    id_periodo           INT NOT NULL,
+    monto                DECIMAL(12,2) NOT NULL,
+    fecha_inicio         DATE NOT NULL,
+    fecha_fin            DATE NOT NULL,
+    estado               NVARCHAR(20) NOT NULL
+        CONSTRAINT DF_Beca_Estado DEFAULT N'Pendiente',
+    observacion          NVARCHAR(500) NULL,
+    motivo_desactivacion NVARCHAR(500) NULL,
+    fecha_activacion     DATETIME2(0) NULL,
+    fecha_desactivacion  DATETIME2(0) NULL,
+    id_usuario_registra  INT NOT NULL,
+    fecha_registro       DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Beca_FechaRegistro DEFAULT SYSDATETIME(),
+    id_usuario_modifica  INT NULL,
+    fecha_modificacion   DATETIME2(0) NULL,
+
+    CONSTRAINT PK_Beca PRIMARY KEY (id_beca),
+    CONSTRAINT UQ_Beca_Estudiante_Periodo UNIQUE (id_estudiante, id_periodo),
+    CONSTRAINT CK_Beca_Monto CHECK (monto > 0),
+    CONSTRAINT CK_Beca_Fechas CHECK (fecha_fin >= fecha_inicio),
+    CONSTRAINT CK_Beca_Estado
+        CHECK (estado IN (N'Pendiente', N'Activa', N'Inactiva')),
+
+    CONSTRAINT FK_Beca_Estudiante
+        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
+    CONSTRAINT FK_Beca_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
+    CONSTRAINT FK_Beca_UsuarioRegistra
+        FOREIGN KEY (id_usuario_registra) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Beca_UsuarioModifica
+        FOREIGN KEY (id_usuario_modifica) REFERENCES Usuario(id_usuario)
+);
+GO
+
+CREATE INDEX IX_Beca_Periodo_Estado
+    ON Beca(id_periodo, estado);
+GO
+
+/* ------------------------------------------------------------
+   3. Requisitos que el administrador marcó como cumplidos
+      en cada beca (MBEF-01-03). Los automáticos no se guardan:
+      se calculan en el momento.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca_Requisito_Cumplido
+(
+    id_beca      INT NOT NULL,
+    id_requisito INT NOT NULL,
+
+    CONSTRAINT PK_Beca_Requisito_Cumplido PRIMARY KEY (id_beca, id_requisito),
+    CONSTRAINT FK_BecaCumplido_Beca
+        FOREIGN KEY (id_beca) REFERENCES Beca(id_beca),
+    CONSTRAINT FK_BecaCumplido_Requisito
+        FOREIGN KEY (id_requisito) REFERENCES Beca_Requisito(id_requisito)
+);
+GO
+
+/* ------------------------------------------------------------
+   4. Módulo y permisos.
+      - Administrador: Ver, Crear (registrar), Editar (actualizar,
+        activar, desactivar y administrar requisitos).
+      - Director: Ver (lista, búsqueda e historial).
+      - Estudiante y Encargado entran por su rol a "Mi beca" y solo
+        ven lo propio; no necesitan permiso sobre el módulo.
+   ------------------------------------------------------------ */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Becas')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Becas', N'Becas socioeconómicas: requisitos, registro, activación, consulta e historial.');
+GO
+
+DELETE rp
+FROM Rol_Permiso rp
+JOIN Modulo m ON m.id_modulo = rp.id_modulo
+WHERE m.nombre = N'Becas';
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM
+(
+    VALUES
+        (N'Administrador', 1, 1, 1, 0),
+        (N'Director',      1, 0, 0, 0)
+) AS p (rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Becas';
+GO
