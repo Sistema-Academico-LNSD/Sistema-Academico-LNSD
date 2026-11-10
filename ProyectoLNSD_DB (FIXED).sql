@@ -1486,3 +1486,52 @@ FROM
 JOIN Rol r ON r.nombre = p.rol
 JOIN Modulo m ON m.nombre = N'Becas';
 GO
+
+/* Módulo Informativo: ejecutar una sola vez en la base de datos del proyecto. */
+IF OBJECT_ID(N'dbo.Informativo_Registro', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Informativo_Registro
+    (
+        id_informativo INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Informativo_Registro PRIMARY KEY,
+        tipo NVARCHAR(20) NOT NULL,
+        titulo NVARCHAR(180) NOT NULL,
+        descripcion NVARCHAR(4000) NOT NULL,
+        fecha_publicacion DATETIME2 NOT NULL,
+        fecha_vigencia DATETIME2 NULL,
+        fecha_inicio DATETIME2 NOT NULL,
+        fecha_fin DATETIME2 NULL,
+        hora_inicio TIME NULL,
+        hora_fin TIME NULL,
+        ubicacion NVARCHAR(250) NULL,
+        categoria NVARCHAR(60) NULL,
+        estado NVARCHAR(20) NOT NULL CONSTRAINT DF_Informativo_Estado DEFAULT N'Borrador',
+        eliminado BIT NOT NULL CONSTRAINT DF_Informativo_Eliminado DEFAULT 0,
+        id_usuario_crea INT NULL,
+        fecha_creacion DATETIME2 NOT NULL CONSTRAINT DF_Informativo_Fecha DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT CK_Informativo_Tipo CHECK (tipo IN (N'Anuncio',N'Actividad',N'Evento')),
+        CONSTRAINT CK_Informativo_Estado CHECK (estado IN (N'Borrador',N'Programado',N'Publicado')),
+        CONSTRAINT FK_Informativo_Usuario FOREIGN KEY (id_usuario_crea) REFERENCES dbo.Usuario(id_usuario)
+    );
+    CREATE INDEX IX_Informativo_Tipo_Fecha_Estado ON dbo.Informativo_Registro(tipo, fecha_inicio, estado) INCLUDE (fecha_publicacion, fecha_vigencia, eliminado);
+END;
+GO
+
+/* Registra el módulo y sus permisos. Los nombres de roles deben existir previamente. */
+IF NOT EXISTS (SELECT 1 FROM dbo.Modulo WHERE nombre = N'Informativo')
+    INSERT INTO dbo.Modulo(nombre, descripcion) VALUES (N'Informativo', N'Anuncios institucionales, calendario académico y eventos');
+GO
+
+DECLARE @ModuloId INT = (SELECT id_modulo FROM dbo.Modulo WHERE nombre = N'Informativo');
+IF @ModuloId IS NOT NULL
+BEGIN
+    INSERT INTO dbo.Rol_Permiso(id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+    SELECT r.id_rol, @ModuloId,
+           1,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END
+    FROM dbo.Rol r
+    WHERE r.nombre IN (N'Administrador',N'Director',N'Docente',N'Estudiante',N'Encargado')
+      AND NOT EXISTS (SELECT 1 FROM dbo.Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = @ModuloId);
+END;
+GO

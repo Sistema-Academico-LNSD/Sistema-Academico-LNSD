@@ -26,6 +26,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Institucion> Instituciones { get; set; }
         public virtual DbSet<PeriodoLectivo> PeriodosLectivos { get; set; }
         public virtual DbSet<ContenidoSitio> ContenidosSitio { get; set; }
+        public virtual DbSet<InformativoRegistro> InformativoRegistros { get; set; }
         public virtual DbSet<AccesoRapido> AccesosRapidos { get; set; }
         public virtual DbSet<AccesoRapidoRol> AccesosRapidosRoles { get; set; }
         public virtual DbSet<Tiquete> Tiquetes { get; set; }
@@ -586,6 +587,29 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdUsuario)
                       .HasConstraintName("FK_LogAcceso_Usuario");
             });
+            modelBuilder.Entity<InformativoRegistro>(entity =>
+            {
+                entity.ToTable("Informativo_Registro");
+                entity.HasKey(e => e.IdInformativo).HasName("PK_Informativo_Registro");
+                entity.Property(e => e.IdInformativo).HasColumnName("id_informativo");
+                entity.Property(e => e.Tipo).HasColumnName("tipo").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Titulo).HasColumnName("titulo").HasMaxLength(180).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(4000).IsRequired();
+                entity.Property(e => e.FechaPublicacion).HasColumnName("fecha_publicacion").HasColumnType("datetime2");
+                entity.Property(e => e.FechaVigencia).HasColumnName("fecha_vigencia").HasColumnType("datetime2");
+                entity.Property(e => e.FechaInicio).HasColumnName("fecha_inicio").HasColumnType("datetime2");
+                entity.Property(e => e.FechaFin).HasColumnName("fecha_fin").HasColumnType("datetime2");
+                entity.Property(e => e.HoraInicio).HasColumnName("hora_inicio");
+                entity.Property(e => e.HoraFin).HasColumnName("hora_fin");
+                entity.Property(e => e.Ubicacion).HasColumnName("ubicacion").HasMaxLength(250);
+                entity.Property(e => e.Categoria).HasColumnName("categoria").HasMaxLength(60);
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue("Borrador");
+                entity.Property(e => e.Eliminado).HasColumnName("eliminado").HasDefaultValue(false);
+                entity.Property(e => e.IdUsuarioCrea).HasColumnName("id_usuario_crea");
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.HasIndex(e => new { e.Tipo, e.FechaInicio, e.Estado }).HasDatabaseName("IX_Informativo_Tipo_Fecha_Estado");
+            });
+
             modelBuilder.Entity<Institucion>(entity =>
             {
                 entity.ToTable("Institucion");

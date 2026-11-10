@@ -40,6 +40,8 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.IsInRole(RolesSistema.Docente), CoincidirAccion: true),
                 new("Mi tiquete", "bi-ticket-perforated", "Boleteria", "Index",
                     _ => true, CoincidirAccion: true),
+                new("Información institucional", "bi-megaphone", "Informativo", "Index",
+                    _ => true, CoincidirAccion: true),
                 new("Material de estudio", "bi-journal-bookmark", "Recurso", "Material",
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
                 new("Mis recursos", "bi-folder2-open", "Recurso", "Index",
