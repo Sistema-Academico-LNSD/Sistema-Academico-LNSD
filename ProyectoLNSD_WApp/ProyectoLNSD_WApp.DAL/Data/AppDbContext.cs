@@ -42,6 +42,8 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<MatriculaObservacion> MatriculasObservaciones { get; set; }
         public virtual DbSet<MatriculaHistorial> MatriculasHistorial { get; set; }
         public virtual DbSet<Horario> Horarios { get; set; }
+        public virtual DbSet<Asistencia> Asistencias { get; set; }
+        public virtual DbSet<AsistenciaCierre> AsistenciasCierres { get; set; }
 
 
         //Tables override mode builder
@@ -1282,6 +1284,98 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdDocente)
                       .OnDelete(DeleteBehavior.Restrict)
                       .HasConstraintName("FK_Horario_Docente");
+            });
+
+            modelBuilder.Entity<Asistencia>(entity =>
+            {
+                entity.ToTable("Asistencia");
+
+                entity.HasKey(e => e.IdAsistencia)
+                      .HasName("PK_Asistencia");
+
+                entity.Property(e => e.IdAsistencia)
+                      .HasColumnName("id_asistencia");
+
+                entity.Property(e => e.IdHorario)
+                      .HasColumnName("id_horario");
+
+                entity.Property(e => e.IdMatricula)
+                      .HasColumnName("id_matricula");
+
+                entity.Property(e => e.Fecha)
+                      .HasColumnName("fecha")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Observacion)
+                      .HasColumnName("observacion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.IdUsuarioRegistra)
+                      .HasColumnName("id_usuario_registra");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasColumnType("datetime2(0)")
+                      .HasDefaultValueSql("SYSDATETIME()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdHorario, e.IdMatricula, e.Fecha })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Asistencia_Horario_Matricula_Fecha");
+
+                entity.HasOne(d => d.Horario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdHorario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Horario");
+
+                entity.HasOne(d => d.Matricula)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdMatricula)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Matricula");
+            });
+
+            modelBuilder.Entity<AsistenciaCierre>(entity =>
+            {
+                entity.ToTable("Asistencia_Cierre");
+
+                entity.HasKey(e => e.IdPeriodo)
+                      .HasName("PK_Asistencia_Cierre");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo")
+                      .ValueGeneratedNever();
+
+                entity.Property(e => e.FechaCierre)
+                      .HasColumnName("fecha_cierre")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Periodo");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Usuario");
             });
 
             OnModelCreatingPartial(modelBuilder);

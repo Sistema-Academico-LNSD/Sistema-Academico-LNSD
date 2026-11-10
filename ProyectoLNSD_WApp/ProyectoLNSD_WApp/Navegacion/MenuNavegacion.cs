@@ -50,7 +50,14 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
                 new("Horario de mis estudiantes", "bi-calendar-week", "Horario", "PorMatricula",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
-                         && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true)
+                         && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                // Asistencia (MCAF-01)
+                new("Pasar asistencia", "bi-check2-square", "Asistencia", "Registrar",
+                    u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Asistencia", "Crear"), CoincidirAccion: true),
+                new("Mi asistencia", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
+                    u => u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                new("Asistencia de mis estudiantes", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true)
             ]),
 
             new("Gestión académica", [
@@ -72,6 +79,8 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
                 new("Horarios por grupo", "bi-grid-3x3-gap", "Horario", "PorGrupo",
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
+                new("Asistencia", "bi-clipboard-data", "Asistencia", "Consulta",
+                    u => u.TienePermiso("Asistencia", "Ver"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
                          && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true)

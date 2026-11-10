@@ -638,7 +638,8 @@ namespace ProyectoLNSD_WApp.BLL.Service.Horario
             !string.IsNullOrWhiteSpace(f.Aula) ||
             f.Estado.HasValue;
 
-        private static HorarioDTO ToDTO(DAL.Entities.Horario h) => new()
+        // internal: también lo usa AsistenciaService para mostrar las clases igual que Horarios
+        internal static HorarioDTO ToDTO(DAL.Entities.Horario h) => new()
         {
             IdHorario = h.IdHorario,
             IdPeriodo = h.IdPeriodo,

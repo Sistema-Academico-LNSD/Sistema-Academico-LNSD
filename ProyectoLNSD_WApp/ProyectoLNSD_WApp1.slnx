@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="ProyectoLNSD_WApp.BLL/ProyectoLNSD_WApp.BLL.csproj" />
+  <Project Path="ProyectoLNSD_WApp.DAL/ProyectoLNSD_WApp.DAL.csproj" />
+  <Project Path="ProyectoLNSD_WApp/ProyectoLNSD_WApp.csproj" />
+</Solution>

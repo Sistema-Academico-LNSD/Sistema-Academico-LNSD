@@ -1,0 +1,27 @@
+﻿@{
+    bool esEncargado = User.IsInRole(RolesSistema.Encargado) && !User.IsInRole(RolesSistema.Estudiante);
+
+    ViewData["Title"] = esEncargado ? "Asistencia de mis estudiantes" : "Mi asistencia";
+    ViewData["Subtitle"] = "Porcentaje por curso, ausencias, tardías y justificaciones registradas";
+    ViewData["Icon"] = "bi-clipboard2-check";
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <label for="maPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="maPeriodo" class="form-select"></select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="maContenido">
+    <p class="text-center text-muted">Cargando...</p>
+</div>
+
+@section Scripts {
+    <script src="~/js/asistencia-comun.js" asp-append-version="true"></script>
+    <script src="~/js/mi-asistencia.js" asp-append-version="true"></script>
+}
