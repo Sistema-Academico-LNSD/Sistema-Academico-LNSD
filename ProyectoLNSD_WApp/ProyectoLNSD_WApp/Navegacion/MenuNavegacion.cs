@@ -50,7 +50,9 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
                 new("Horario de mis estudiantes", "bi-calendar-week", "Horario", "PorMatricula",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
-                         && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true)
+                         && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                new("Registrar notas", "bi-journal-check", "Calificacion", "Index",
+                    u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Calificaciones", "Crear"), CoincidirAccion: true),
             ]),
 
             new("Gestión académica", [

@@ -1,0 +1,102 @@
+@{
+    ViewData["Title"] = "Registro de calificaciones";
+    ViewData["Subtitle"] = "Cree sus actividades y registre las notas de sus estudiantes";
+    ViewData["Icon"] = "bi-journal-check";
+}
+
+<style>
+    /* Estudiante fijo al desplazar horizontalmente cuando hay muchas actividades */
+    .cal-tabla .cal-fijo {
+        position: sticky;
+        left: 0;
+        background: var(--bs-body-bg);
+        z-index: 1;
+        min-width: 200px;
+    }
+
+    .cal-tabla .cal-nota {
+        min-width: 110px;
+    }
+</style>
+
+<div class="card">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-journal-check"></i> Planilla de calificaciones</h2>
+        <span id="calContador" class="badge bg-secondary"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <label for="calPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="calPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-8">
+                <label for="calClase" class="form-label small mb-1">Curso, grado, sección y grupo</label>
+                <select id="calClase" class="form-select form-select-sm"></select>
+            </div>
+        </div>
+
+        <div id="calAviso" class="alert alert-info py-2 small d-none"></div>
+
+        <div id="calPlanilla">
+            <p class="text-center text-muted mb-0">Cargando...</p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Nueva actividad -->
+<div class="modal fade" id="modalActividad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva actividad — <span id="actRubroNombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="actIdRubro" />
+
+                <div class="mb-3">
+                    <label for="actNombre" class="form-label">Nombre</label>
+                    <input type="text" id="actNombre" class="form-control" maxlength="100" placeholder="Ej: Práctica 1, Examen I, Investigación" />
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label for="actPuntos" class="form-label">Valor (puntos)</label>
+                        <input type="number" id="actPuntos" class="form-control" min="0.01" max="100" step="0.01" />
+                        <div id="actAyudaPuntos" class="form-text"></div>
+                    </div>
+
+                    <div class="col-6">
+                        <label for="actFecha" class="form-label">Fecha <span class="text-muted">(opcional)</span></label>
+                        <input type="date" id="actFecha" class="form-control" />
+                    </div>
+                </div>
+
+                <div id="actError" class="text-danger small mt-2 d-none"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarActividad" class="btn btn-primary">Agregar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/calificacion.js" asp-append-version="true"></script>
+
+}

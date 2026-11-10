@@ -42,6 +42,10 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<MatriculaObservacion> MatriculasObservaciones { get; set; }
         public virtual DbSet<MatriculaHistorial> MatriculasHistorial { get; set; }
         public virtual DbSet<Horario> Horarios { get; set; }
+        public virtual DbSet<RubroEvaluacion> RubrosEvaluacion { get; set; }
+        public virtual DbSet<ActividadEvaluacion> ActividadesEvaluacion { get; set; }
+        public virtual DbSet<Nota> Notas { get; set; }
+        public virtual DbSet<NotaHistorial> NotasHistorial { get; set; }
 
 
         //Tables override mode builder
@@ -1282,6 +1286,78 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdDocente)
                       .OnDelete(DeleteBehavior.Restrict)
                       .HasConstraintName("FK_Horario_Docente");
+            });
+
+            modelBuilder.Entity<RubroEvaluacion>(entity =>
+            {
+                entity.ToTable("Rubro_Evaluacion");
+                entity.HasKey(e => e.IdRubro).HasName("PK_Rubro_Evaluacion");
+                entity.Property(e => e.IdRubro).HasColumnName("id_rubro");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Porcentaje).HasColumnName("porcentaje").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Orden).HasColumnName("orden");
+                entity.Property(e => e.PuntosMinimo).HasColumnName("puntos_minimo").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.PuntosMaximo).HasColumnName("puntos_maximo").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Estado).HasColumnName("estado");
+            });
+
+            modelBuilder.Entity<ActividadEvaluacion>(entity =>
+            {
+                entity.ToTable("Actividad_Evaluacion");
+                entity.HasKey(e => e.IdActividad).HasName("PK_Actividad_Evaluacion");
+                entity.Property(e => e.IdActividad).HasColumnName("id_actividad");
+                entity.Property(e => e.IdRubro).HasColumnName("id_rubro");
+                entity.Property(e => e.IdPeriodo).HasColumnName("id_periodo");
+                entity.Property(e => e.IdCurso).HasColumnName("id_curso");
+                entity.Property(e => e.IdSeccion).HasColumnName("id_seccion");
+                entity.Property(e => e.IdGrupo).HasColumnName("id_grupo");
+                entity.Property(e => e.IdDocente).HasColumnName("id_docente");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Puntos).HasColumnName("puntos").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("date");
+                entity.Property(e => e.Estado).HasColumnName("estado");
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2(0)");
+
+                entity.HasOne(e => e.Rubro).WithMany().HasForeignKey(e => e.IdRubro)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_Actividad_Rubro");
+                entity.HasOne(e => e.Curso).WithMany().HasForeignKey(e => e.IdCurso)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_Actividad_Curso");
+            });
+
+            modelBuilder.Entity<Nota>(entity =>
+            {
+                entity.ToTable("Nota");
+                entity.HasKey(e => e.IdNota).HasName("PK_Nota");
+                entity.Property(e => e.IdNota).HasColumnName("id_nota");
+                entity.Property(e => e.IdMatricula).HasColumnName("id_matricula");
+                entity.Property(e => e.IdActividad).HasColumnName("id_actividad");
+                entity.Property(e => e.PuntosObtenidos).HasColumnName("puntos_obtenidos").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Observacion).HasColumnName("observacion").HasMaxLength(500);
+                entity.Property(e => e.IdUsuarioRegistro).HasColumnName("id_usuario_registro");
+                entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaModificacion).HasColumnName("fecha_modificacion").HasColumnType("datetime2(0)");
+
+                entity.HasOne(e => e.Matricula).WithMany().HasForeignKey(e => e.IdMatricula)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_Nota_Matricula");
+                entity.HasOne(e => e.Actividad).WithMany().HasForeignKey(e => e.IdActividad)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_Nota_Actividad");
+            });
+
+            modelBuilder.Entity<NotaHistorial>(entity =>
+            {
+                entity.ToTable("Nota_Historial");
+                entity.HasKey(e => e.IdHistorial).HasName("PK_Nota_Historial");
+                entity.Property(e => e.IdHistorial).HasColumnName("id_historial");
+                entity.Property(e => e.IdNota).HasColumnName("id_nota");
+                entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+                entity.Property(e => e.TipoCambio).HasColumnName("tipo_cambio").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.ValorAnterior).HasColumnName("valor_anterior").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.ValorNuevo).HasColumnName("valor_nuevo").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Observacion).HasColumnName("observacion").HasMaxLength(500);
+                entity.Property(e => e.FechaCambio).HasColumnName("fecha_cambio").HasColumnType("datetime2(0)");
+
+                entity.HasOne(e => e.Nota).WithMany().HasForeignKey(e => e.IdNota)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_NotaHistorial_Nota");
             });
 
             OnModelCreatingPartial(modelBuilder);
