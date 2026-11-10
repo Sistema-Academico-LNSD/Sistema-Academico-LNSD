@@ -1,7 +1,6 @@
 /* ============================================================
    PROYECTO LNSD - SCRIPT DE BASE DE DATOS
    ============================================================ */
-
 CREATE DATABASE Proyecto_LNSD_DB;
 GO
 
@@ -512,6 +511,8 @@ CREATE INDEX IX_Horario_Curso
     ON Horario(id_curso);
 GO
 
+-- "estado": solo 'Ausente' resta a la nota de asistencia (5% de la nota anual); cualquier otro estado
+-- (Presente, Tarde, Justificada...) cuenta como asistencia. El porcentaje se calcula con los registros del período.
 CREATE TABLE Asistencia
 (
     id_asistencia INT IDENTITY(1,1) NOT NULL,

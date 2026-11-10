@@ -78,6 +78,66 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public decimal Evaluado { get; set; }
     }
 
+    /// Asistencia del estudiante en el período: Porcentaje = clases sin ausencia / clases registradas.
+    /// Acumulado y Evaluado van en puntos de la nota anual (la asistencia vale 5%, 2.5% por semestre).
+    public class AsistenciaResumenDTO
+    {
+        public int Registros { get; set; }
+        public int Ausencias { get; set; }
+        public decimal? Porcentaje { get; set; }
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+    }
+
+    public class ConfiguracionCalificacionDTO
+    {
+        public decimal NotaMinima { get; set; }
+        public bool ConsideraAsistencia { get; set; }
+        public decimal PorcentajeAsistencia { get; set; }
+    }
+
+    /// Lo que lleva el estudiante en un curso durante UN período (semestre).
+    public class ResultadoPeriodoDTO
+    {
+        public int IdPeriodo { get; set; }
+        public string Periodo { get; set; } = string.Empty;
+        public bool Activo { get; set; }
+        public List<RubroResumenDTO> Rubros { get; set; } = new();
+        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+        public decimal? Promedio { get; set; }
+    }
+
+    /// Resultado del estudiante en un curso durante el año (suma de sus semestres).
+    /// Estado: Sin notas, Aprobando, Reprobando (año en curso), Aprobado o Reprobado (año completo y cerrado).
+    public class ResultadoCursoDTO
+    {
+        public int IdCurso { get; set; }
+        public string Curso { get; set; } = string.Empty;
+        public decimal NotaMinima { get; set; }
+        public List<ResultadoPeriodoDTO> Periodos { get; set; } = new();
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+        public decimal? NotaAnual { get; set; }
+        public string Estado { get; set; } = string.Empty;
+        public bool Definitivo { get; set; }
+    }
+
+    /// Promoción del año: aprueba el año el estudiante que aprueba todos sus cursos.
+    /// Estado: Promovido, No promovido, En curso o Sin cursos.
+    public class PromocionDTO
+    {
+        public int IdEstudiante { get; set; }
+        public int Anio { get; set; }
+        public decimal NotaMinima { get; set; }
+        public List<ResultadoCursoDTO> Cursos { get; set; } = new();
+        public int Aprobados { get; set; }
+        public int Reprobados { get; set; }
+        public int EnCurso { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
     public class PlanillaEstudianteDTO
     {
         public int IdMatricula { get; set; }
@@ -89,8 +149,15 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public decimal Acumulado { get; set; }
         public decimal Evaluado { get; set; }
 
-        /// Promedio del semestre sobre lo ya calificado (0-100); null si aún no hay notas.
+        /// Promedio del semestre sobre lo ya calificado, con la asistencia (0-100); null si aún no hay notas.
         public decimal? Promedio { get; set; }
+
+        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+
+        /// Nota del año (suma de los semestres) y resultado del curso según la nota mínima.
+        public decimal? NotaAnual { get; set; }
+        public string Resultado { get; set; } = string.Empty;
+        public bool ResultadoDefinitivo { get; set; }
     }
 
     public class PlanillaDTO
@@ -102,6 +169,10 @@ namespace ProyectoLNSD_WApp.BLL.DTO
 
         // Con el período cerrado la planilla es solo de consulta
         public bool PeriodoActivo { get; set; }
+
+        public decimal NotaMinima { get; set; }
+        public bool ConsideraAsistencia { get; set; }
+        public decimal PorcentajeAsistencia { get; set; }
 
         public List<RubroPlanillaDTO> Rubros { get; set; } = new();
         public List<PlanillaEstudianteDTO> Estudiantes { get; set; } = new();

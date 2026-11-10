@@ -53,5 +53,18 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Calificacion
 
         // Horarios del período cuya clase (curso, sección y grupo) ya tiene actividades
         Task<List<Entities.Horario>> GetClasesConActividades(int idPeriodo);
+
+        // ---- Promedio final, asistencia y resultado (MCNF-01-04, 01-05 y 01-14) ----
+        Task<Entities.ConfiguracionCalificacion?> GetConfiguracion();
+
+        // Asistencia de la clase dentro de las fechas del período
+        Task<List<Entities.Asistencia>> GetAsistenciasDeClase(
+            int idPeriodo, int idCurso, int idSeccion, int idGrupo, DateOnly desde, DateOnly hasta);
+
+        // Matrícula activa del estudiante en el período que incluye el curso (con el nombre del curso)
+        Task<Entities.Matricula?> GetMatriculaDeEstudiante(int idEstudiante, int idPeriodo, int idCurso);
+
+        // Matrículas activas del estudiante en esos períodos, con sus cursos
+        Task<List<Entities.Matricula>> GetMatriculasDeEstudiante(int idEstudiante, List<int> idsPeriodo);
     }
 }

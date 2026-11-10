@@ -11,10 +11,14 @@ namespace ProyectoLNSD_WApp.Controllers
     public class CalificacionController : BaseController
     {
         private readonly ICalificacionService _calificacionService;
+        private readonly IResultadoCalificacionService _resultadoService;
 
-        public CalificacionController(ICalificacionService calificacionService)
+        public CalificacionController(
+            ICalificacionService calificacionService,
+            IResultadoCalificacionService resultadoService)
         {
             _calificacionService = calificacionService;
+            _resultadoService = resultadoService;
         }
 
         // ---- Docente: registro de calificaciones (MCNF-01-01, 01-02, 01-03 y 01-12) ----
@@ -180,6 +184,17 @@ namespace ProyectoLNSD_WApp.Controllers
                 return RespuestaSesionInvalida();
 
             return Json(await _calificacionService.AutorizarCorreccion(idUsuario, dto));
+        }
+
+        // ---- Administrador y director: nota del año y promoción de un estudiante (MCNF-01-05 y 01-14) ----
+        // Las pantallas de consulta (parte 5) se apoyan en esta ruta.
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetPromocion(int idEstudiante, int idPeriodo)
+        {
+            return Json(await _resultadoService.GetPromocion(idEstudiante, idPeriodo));
         }
 
         // ---- Auxiliares ----

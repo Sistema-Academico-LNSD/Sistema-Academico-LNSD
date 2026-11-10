@@ -285,9 +285,11 @@ function pintarPlanillaCalificacion() {
     actualizarPendientes();
 }
 
-// Promedio del semestre: solo cuenta lo ya calificado (la asistencia se suma en la siguiente parte)
+// Promedio del semestre (rubros y asistencia), nota del año y resultado frente a la nota mínima (MCNF-01-04, 01-05 y 01-14).
+// Todo se calcula en el servidor y solo cuenta lo ya evaluado.
 function pintarResumenCalificacion() {
     let rubros = calPlanilla.rubros;
+    let colores = { 'Aprobado': 'success', 'Reprobado': 'danger', 'Aprobando': 'success', 'Reprobando': 'warning', 'Sin notas': 'secondary' };
 
     let html = '<div class="table-responsive"><table class="table table-sm align-middle mb-0 cal-tabla"><thead><tr>';
     html += '<th class="cal-fijo">Estudiante</th>';
@@ -299,8 +301,17 @@ function pintarResumenCalificacion() {
                  </th>`;
     });
 
+    if (calPlanilla.consideraAsistencia) {
+        html += `<th class="text-center cal-nota"><div class="fw-semibold">Asistencia</div>
+                     <div class="small text-muted fw-normal">${fmtNota(calPlanilla.porcentajeAsistencia)}% de la nota del año</div></th>`;
+    }
+
     html += `<th class="text-center cal-nota"><div class="fw-semibold">Promedio del semestre</div>
-                 <div class="small text-muted fw-normal">sobre lo calificado</div></th>`;
+                 <div class="small text-muted fw-normal">sobre lo evaluado</div></th>`;
+    html += `<th class="text-center cal-nota"><div class="fw-semibold">Nota del año</div>
+                 <div class="small text-muted fw-normal">suma de los semestres</div></th>`;
+    html += `<th class="text-center cal-nota"><div class="fw-semibold">Resultado</div>
+                 <div class="small text-muted fw-normal">mínimo ${fmtNota(calPlanilla.notaMinima)}</div></th>`;
     html += '</tr></thead><tbody>';
 
     calPlanilla.estudiantes.forEach(function (e) {
@@ -320,16 +331,37 @@ function pintarResumenCalificacion() {
                      </td>`;
         });
 
+        if (calPlanilla.consideraAsistencia) {
+            let asi = e.asistencia;
+
+            html += (!asi || asi.registros === 0)
+                ? '<td class="text-center text-muted">—</td>'
+                : `<td class="text-center">
+                        <div class="fw-semibold">${fmtNota(asi.porcentaje)}%</div>
+                        <div class="small text-muted">${asi.registros - asi.ausencias} de ${asi.registros} clases</div>
+                   </td>`;
+        }
+
         html += e.promedio == null
             ? '<td class="text-center text-muted">—</td>'
             : `<td class="text-center fw-bold fs-6">${fmtNota(e.promedio)}%</td>`;
+
+        html += e.notaAnual == null
+            ? '<td class="text-center text-muted">—</td>'
+            : `<td class="text-center">
+                    <div class="fw-bold fs-6">${fmtNota(e.notaAnual)}%</div>
+                    ${e.resultadoDefinitivo ? '' : '<div class="small text-muted">parcial</div>'}
+               </td>`;
+
+        html += `<td class="text-center"><span class="badge text-bg-${colores[e.resultado] || 'secondary'}">${escapeHtml(e.resultado)}</span></td>`;
 
         html += '</tr>';
     });
 
     html += '</tbody></table></div>';
-    html += `<div class="form-text mt-2">Los valores "X de Y" son puntos de la nota final: lo ganado de lo ya calificado.
-             El promedio del semestre es lo ganado entre lo calificado, por 100.</div>`;
+    html += `<div class="form-text mt-2">Los valores "X de Y" son puntos de la nota del año: lo ganado de lo ya evaluado.
+             La asistencia es el porcentaje de clases sin ausencia, según los registros del período; solo cuenta cuando ya hay registros.
+             "Aprobando" o "Reprobando" es el resultado parcial: pasa a "Aprobado" o "Reprobado" cuando el estudiante completa los dos semestres y ambos están cerrados.</div>`;
 
     return html;
 }

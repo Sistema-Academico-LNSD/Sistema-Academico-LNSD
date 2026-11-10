@@ -47,6 +47,8 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Nota> Notas { get; set; }
         public virtual DbSet<NotaHistorial> NotasHistorial { get; set; }
         public virtual DbSet<CorreccionAutorizada> CorreccionesAutorizadas { get; set; }
+        public virtual DbSet<Asistencia> Asistencias { get; set; }
+        public virtual DbSet<ConfiguracionCalificacion> ConfiguracionesCalificacion { get; set; }
 
 
         //Tables override mode builder
@@ -1378,6 +1380,28 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.HasOne(e => e.Nota).WithMany().HasForeignKey(e => e.IdNota)
                       .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_CorrAut_Nota");
+            });
+
+            modelBuilder.Entity<Asistencia>(entity =>
+            {
+                entity.ToTable("Asistencia");
+                entity.HasKey(e => e.IdAsistencia).HasName("PK_Asistencia");
+                entity.Property(e => e.IdAsistencia).HasColumnName("id_asistencia");
+                entity.Property(e => e.IdEstudiante).HasColumnName("id_estudiante");
+                entity.Property(e => e.IdHorario).HasColumnName("id_horario");
+                entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("date");
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Observacion).HasColumnName("observacion").HasMaxLength(250);
+            });
+
+            modelBuilder.Entity<ConfiguracionCalificacion>(entity =>
+            {
+                entity.ToTable("Configuracion_Calificacion");
+                entity.HasKey(e => e.IdConfig).HasName("PK_Configuracion_Calificacion");
+                entity.Property(e => e.IdConfig).HasColumnName("id_config").ValueGeneratedNever();
+                entity.Property(e => e.NotaMinima).HasColumnName("nota_minima").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.ConsiderarAsistencia).HasColumnName("considerar_asistencia");
+                entity.Property(e => e.PorcentajeAsistencia).HasColumnName("porcentaje_asistencia").HasColumnType("decimal(5,2)");
             });
 
             OnModelCreatingPartial(modelBuilder);

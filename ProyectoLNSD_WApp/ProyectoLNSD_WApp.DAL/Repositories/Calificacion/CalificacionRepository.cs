@@ -230,5 +230,53 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Calificacion
                                                                  && a.IdGrupo == h.IdGrupo))
                 .ToListAsync();
         }
+
+        // ---------- Promedio final, asistencia y resultado ----------
+
+        public async Task<Entities.ConfiguracionCalificacion?> GetConfiguracion()
+        {
+            return await _context.ConfiguracionesCalificacion
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.IdConfig == 1);
+        }
+
+        public async Task<List<Entities.Asistencia>> GetAsistenciasDeClase(
+            int idPeriodo, int idCurso, int idSeccion, int idGrupo, DateOnly desde, DateOnly hasta)
+        {
+            var horarios = _context.Horarios
+                .Where(h => h.IdPeriodo == idPeriodo
+                         && h.IdCurso == idCurso
+                         && h.IdSeccion == idSeccion
+                         && h.IdGrupo == idGrupo)
+                .Select(h => h.IdHorario);
+
+            return await _context.Asistencias
+                .AsNoTracking()
+                .Where(a => horarios.Contains(a.IdHorario) && a.Fecha >= desde && a.Fecha <= hasta)
+                .ToListAsync();
+        }
+
+        public async Task<Entities.Matricula?> GetMatriculaDeEstudiante(int idEstudiante, int idPeriodo, int idCurso)
+        {
+            return await _context.Matriculas
+                .AsNoTracking()
+                .Include(m => m.MatriculasCursos).ThenInclude(mc => mc.Curso)
+                .Where(m => m.IdEstudiante == idEstudiante
+                         && m.IdPeriodo == idPeriodo
+                         && m.Estado == "Activa"
+                         && m.MatriculasCursos.Any(mc => mc.IdCurso == idCurso))
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Entities.Matricula>> GetMatriculasDeEstudiante(int idEstudiante, List<int> idsPeriodo)
+        {
+            return await _context.Matriculas
+                .AsNoTracking()
+                .Include(m => m.MatriculasCursos).ThenInclude(mc => mc.Curso)
+                .Where(m => m.IdEstudiante == idEstudiante
+                         && m.Estado == "Activa"
+                         && idsPeriodo.Contains(m.IdPeriodo))
+                .ToListAsync();
+        }
     }
 }

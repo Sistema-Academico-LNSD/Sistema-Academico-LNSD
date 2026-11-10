@@ -17,20 +17,23 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
         private const decimal PuntosMaximosActividad = 100m;
 
         // El año lectivo tiene dos períodos (semestres) y los porcentajes de los rubros son de la nota anual
-        private const int PeriodosPorAnio = 2;
+        private const int PeriodosPorAnio = ReglasCalificacion.PeriodosPorAnio;
 
         private readonly ICalificacionRepository _calificacionRepository;
         private readonly IDocenteRepository _docenteRepository;
         private readonly IPeriodoLectivoRepository _periodoRepository;
+        private readonly IResultadoCalificacionService _resultados;
 
         public CalificacionService(
             ICalificacionRepository calificacionRepository,
             IDocenteRepository docenteRepository,
-            IPeriodoLectivoRepository periodoRepository)
+            IPeriodoLectivoRepository periodoRepository,
+            IResultadoCalificacionService resultados)
         {
             _calificacionRepository = calificacionRepository;
             _docenteRepository = docenteRepository;
             _periodoRepository = periodoRepository;
+            _resultados = resultados;
         }
 
         // ---------- Períodos ----------
@@ -136,31 +139,47 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                 var notas = await _calificacionRepository.GetNotasDeActividades(
                     actividades.Select(a => a.IdActividad).ToList());
 
-                var actividadPorId = actividades.ToDictionary(a => a.IdActividad);
-
-                // Los porcentajes de los rubros son de la NOTA ANUAL (dos semestres). El peso de cada actividad
-                // (en % de la nota anual) es:
-                //  - rubro de peso manual (pruebas): el que definió el docente
-                //  - los demás: la parte que aporta el semestre entre las actividades del semestre, en partes iguales
-                var pesoPorActividad = new Dictionary<int, decimal>();
-
-                foreach (var r in rubros)
-                {
-                    var delRubro = actividades.Where(a => a.IdRubro == r.IdRubro).ToList();
-                    int partes = r.CantidadActividades ?? delRubro.Count;
-                    decimal cuotaPeriodo = r.Porcentaje / PeriodosPorAnio;
-
-                    foreach (var a in delRubro)
-                        pesoPorActividad[a.IdActividad] = r.PesoManual
-                            ? a.Porcentaje ?? 0m
-                            : (partes > 0 ? cuotaPeriodo / partes : 0m);
-                }
+                // Peso de cada actividad en la nota anual (mismas reglas que usa el cálculo de resultados)
+                var pesoPorActividad = ReglasCalificacion.CalcularPesos(rubros, actividades);
 
                 var actividadesAnio = await GetActividadesDelAnio(periodo, idCurso, idSeccion, idGrupo);
                 var idsMatricula = matriculas.Select(m => m.IdMatricula).ToHashSet();
                 var notasPorMatricula = notas
                     .Where(n => idsMatricula.Contains(n.IdMatricula))
                     .ToLookup(n => n.IdMatricula);
+
+                var config = await _resultados.GetConfiguracion();
+                var estudiantes = new List<PlanillaEstudianteDTO>();
+
+                // El promedio, la nota anual y el resultado los calcula el servicio de resultados (una sola fuente)
+                foreach (var m in matriculas)
+                {
+                    var usuario = m.Estudiante?.Usuario;
+                    var resultado = await _resultados.GetResultadoCurso(m.IdEstudiante, idCurso, idPeriodo);
+                    var delPeriodo = resultado.Periodos.FirstOrDefault(p => p.IdPeriodo == idPeriodo);
+
+                    estudiantes.Add(new PlanillaEstudianteDTO
+                    {
+                        IdMatricula = m.IdMatricula,
+                        Carnet = m.Estudiante?.Carnet ?? string.Empty,
+                        Nombre = usuario == null ? string.Empty : $"{usuario.Apellido} {usuario.Nombre}",
+                        Notas = notasPorMatricula[m.IdMatricula].Select(n => new NotaCeldaDTO
+                        {
+                            IdActividad = n.IdActividad,
+                            IdNota = n.IdNota,
+                            Puntos = n.PuntosObtenidos,
+                            Observacion = n.Observacion
+                        }).ToList(),
+                        Resumen = delPeriodo?.Rubros ?? new List<RubroResumenDTO>(),
+                        Asistencia = delPeriodo?.Asistencia ?? new AsistenciaResumenDTO(),
+                        Acumulado = delPeriodo?.Acumulado ?? 0m,
+                        Evaluado = delPeriodo?.Evaluado ?? 0m,
+                        Promedio = delPeriodo?.Promedio,
+                        NotaAnual = resultado.NotaAnual,
+                        Resultado = resultado.Estado,
+                        ResultadoDefinitivo = resultado.Definitivo
+                    });
+                }
 
                 var planilla = new PlanillaDTO
                 {
@@ -169,6 +188,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                     IdSeccion = idSeccion,
                     IdGrupo = idGrupo,
                     PeriodoActivo = periodo.Activo,
+                    NotaMinima = config.NotaMinima,
+                    ConsideraAsistencia = config.ConsideraAsistencia,
+                    PorcentajeAsistencia = config.PorcentajeAsistencia,
                     Rubros = rubros.Select(r => new RubroPlanillaDTO
                     {
                         IdRubro = r.IdRubro,
@@ -196,59 +218,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                                 Fecha = a.Fecha
                             }).ToList()
                     }).ToList(),
-                    Estudiantes = matriculas.Select(m =>
-                    {
-                        var usuario = m.Estudiante?.Usuario;
-                        var notasEstudiante = notasPorMatricula[m.IdMatricula].ToList();
-
-                        // Cada nota vale (puntos obtenidos / puntos de la actividad) x porcentaje de la actividad
-                        var resumen = rubros.Select(r =>
-                        {
-                            decimal acumulado = 0, evaluado = 0;
-
-                            foreach (var n in notasEstudiante)
-                            {
-                                if (!actividadPorId.TryGetValue(n.IdActividad, out var act)
-                                    || act.IdRubro != r.IdRubro || act.Puntos <= 0)
-                                    continue;
-
-                                decimal peso = pesoPorActividad[act.IdActividad];
-
-                                acumulado += n.PuntosObtenidos / act.Puntos * peso;
-                                evaluado += peso;
-                            }
-
-                            return new RubroResumenDTO
-                            {
-                                IdRubro = r.IdRubro,
-                                Acumulado = Math.Round(acumulado, 2),
-                                Evaluado = Math.Round(evaluado, 2)
-                            };
-                        }).ToList();
-
-                        decimal totalAcumulado = resumen.Sum(x => x.Acumulado);
-                        decimal totalEvaluado = resumen.Sum(x => x.Evaluado);
-
-                        return new PlanillaEstudianteDTO
-                        {
-                            IdMatricula = m.IdMatricula,
-                            Carnet = m.Estudiante?.Carnet ?? string.Empty,
-                            Nombre = usuario == null ? string.Empty : $"{usuario.Apellido} {usuario.Nombre}",
-                            Notas = notasEstudiante.Select(n => new NotaCeldaDTO
-                            {
-                                IdActividad = n.IdActividad,
-                                IdNota = n.IdNota,
-                                Puntos = n.PuntosObtenidos,
-                                Observacion = n.Observacion
-                            }).ToList(),
-                            Resumen = resumen,
-                            Acumulado = totalAcumulado,
-                            Evaluado = totalEvaluado,
-                            Promedio = totalEvaluado > 0
-                                ? Math.Round(totalAcumulado / totalEvaluado * 100m, 2)
-                                : null
-                        };
-                    }).ToList()
+                    Estudiantes = estudiantes
                 };
 
                 return RespuestaDTO<PlanillaDTO>.Exito(
