@@ -1298,6 +1298,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.Orden).HasColumnName("orden");
                 entity.Property(e => e.PuntosMinimo).HasColumnName("puntos_minimo").HasColumnType("decimal(5,2)");
                 entity.Property(e => e.PuntosMaximo).HasColumnName("puntos_maximo").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.CantidadActividades).HasColumnName("cantidad_actividades");
                 entity.Property(e => e.Estado).HasColumnName("estado");
             });
 

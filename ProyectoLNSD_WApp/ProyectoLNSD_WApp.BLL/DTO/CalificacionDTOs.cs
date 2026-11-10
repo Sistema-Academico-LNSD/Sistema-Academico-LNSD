@@ -29,6 +29,10 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public int IdActividad { get; set; }
         public string Nombre { get; set; } = string.Empty;
         public decimal Puntos { get; set; }
+
+        /// Lo que pesa en la nota final del semestre; se calcula solo (porcentaje del rubro / cantidad de actividades).
+        public decimal Porcentaje { get; set; }
+
         public DateTime? Fecha { get; set; }
     }
 
@@ -40,6 +44,10 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public decimal Porcentaje { get; set; }
         public decimal? PuntosMinimo { get; set; }
         public decimal? PuntosMaximo { get; set; }
+
+        /// Cantidad fija de actividades (pruebas: 4); null = la define el docente.
+        public int? CantidadFija { get; set; }
+
         public List<ActividadDTO> Actividades { get; set; } = new();
     }
 
@@ -52,12 +60,28 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public string? Observacion { get; set; }
     }
 
+    /// Lo que lleva un estudiante en un rubro: Acumulado = puntos de la nota final ganados;
+    /// Evaluado = puntos de la nota final que ya se han calificado.
+    public class RubroResumenDTO
+    {
+        public int IdRubro { get; set; }
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+    }
+
     public class PlanillaEstudianteDTO
     {
         public int IdMatricula { get; set; }
         public string Carnet { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public List<NotaCeldaDTO> Notas { get; set; } = new();
+        public List<RubroResumenDTO> Resumen { get; set; } = new();
+
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+
+        /// Promedio del semestre sobre lo ya calificado (0-100); null si aún no hay notas.
+        public decimal? Promedio { get; set; }
     }
 
     public class PlanillaDTO
@@ -114,5 +138,15 @@ namespace ProyectoLNSD_WApp.BLL.DTO
 
         [StringLength(500, ErrorMessage = "La observación no puede superar 500 caracteres")]
         public string? Observacion { get; set; }
+    }
+
+    /// Resultado de cada nota enviada en un guardado en lote.
+    public class NotaLoteResultadoDTO
+    {
+        public int IdMatricula { get; set; }
+        public int IdActividad { get; set; }
+        public bool Exito { get; set; }
+        public string? Mensaje { get; set; }
+        public NotaCeldaDTO? Nota { get; set; }
     }
 }

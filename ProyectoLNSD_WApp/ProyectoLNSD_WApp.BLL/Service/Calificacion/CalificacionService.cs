@@ -133,6 +133,20 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                 var notas = await _calificacionRepository.GetNotasDeActividades(
                     actividades.Select(a => a.IdActividad).ToList());
 
+                var actividadPorId = actividades.ToDictionary(a => a.IdActividad);
+
+                // El peso de cada actividad es automático: el % del rubro entre sus actividades
+                // (pruebas: siempre entre 4; cotidiano y tareas: entre las que el docente haya creado)
+                var pesoPorActividad = new Dictionary<int, decimal>();
+
+                foreach (var r in rubros)
+                {
+                    var delRubro = actividades.Where(a => a.IdRubro == r.IdRubro).ToList();
+                    int partes = r.CantidadActividades ?? delRubro.Count;
+
+                    foreach (var a in delRubro)
+                        pesoPorActividad[a.IdActividad] = partes > 0 ? r.Porcentaje / partes : 0m;
+                }
                 var idsMatricula = matriculas.Select(m => m.IdMatricula).ToHashSet();
                 var notasPorMatricula = notas
                     .Where(n => idsMatricula.Contains(n.IdMatricula))
@@ -152,6 +166,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                         Porcentaje = r.Porcentaje,
                         PuntosMinimo = r.PuntosMinimo,
                         PuntosMaximo = r.PuntosMaximo,
+                        CantidadFija = r.CantidadActividades,
                         Actividades = actividades
                             .Where(a => a.IdRubro == r.IdRubro)
                             .Select(a => new ActividadDTO
@@ -159,25 +174,61 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                                 IdActividad = a.IdActividad,
                                 Nombre = a.Nombre,
                                 Puntos = a.Puntos,
+                                Porcentaje = Math.Round(pesoPorActividad[a.IdActividad], 2),
                                 Fecha = a.Fecha
                             }).ToList()
                     }).ToList(),
                     Estudiantes = matriculas.Select(m =>
                     {
                         var usuario = m.Estudiante?.Usuario;
+                        var notasEstudiante = notasPorMatricula[m.IdMatricula].ToList();
+
+                        // Cada nota vale (puntos obtenidos / puntos de la actividad) x porcentaje de la actividad
+                        var resumen = rubros.Select(r =>
+                        {
+                            decimal acumulado = 0, evaluado = 0;
+
+                            foreach (var n in notasEstudiante)
+                            {
+                                if (!actividadPorId.TryGetValue(n.IdActividad, out var act)
+                                    || act.IdRubro != r.IdRubro || act.Puntos <= 0)
+                                    continue;
+
+                                decimal peso = pesoPorActividad[act.IdActividad];
+
+                                acumulado += n.PuntosObtenidos / act.Puntos * peso;
+                                evaluado += peso;
+                            }
+
+                            return new RubroResumenDTO
+                            {
+                                IdRubro = r.IdRubro,
+                                Acumulado = Math.Round(acumulado, 2),
+                                Evaluado = Math.Round(evaluado, 2)
+                            };
+                        }).ToList();
+
+                        decimal totalAcumulado = resumen.Sum(x => x.Acumulado);
+                        decimal totalEvaluado = resumen.Sum(x => x.Evaluado);
 
                         return new PlanillaEstudianteDTO
                         {
                             IdMatricula = m.IdMatricula,
                             Carnet = m.Estudiante?.Carnet ?? string.Empty,
                             Nombre = usuario == null ? string.Empty : $"{usuario.Apellido} {usuario.Nombre}",
-                            Notas = notasPorMatricula[m.IdMatricula].Select(n => new NotaCeldaDTO
+                            Notas = notasEstudiante.Select(n => new NotaCeldaDTO
                             {
                                 IdActividad = n.IdActividad,
                                 IdNota = n.IdNota,
                                 Puntos = n.PuntosObtenidos,
                                 Observacion = n.Observacion
-                            }).ToList()
+                            }).ToList(),
+                            Resumen = resumen,
+                            Acumulado = totalAcumulado,
+                            Evaluado = totalEvaluado,
+                            Promedio = totalEvaluado > 0
+                                ? Math.Round(totalAcumulado / totalEvaluado * 100m, 2)
+                                : null
                         };
                     }).ToList()
                 };
@@ -235,6 +286,18 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                     return RespuestaDTO<ActividadDTO>.Error(
                         $"En {rubro.Nombre} el valor de cada actividad debe estar entre {Formato(rubro.PuntosMinimo ?? 0.01m)} y {Formato(rubro.PuntosMaximo ?? PuntosMaximosActividad)} puntos",
                         1414);
+                }
+
+                // Rubros con cantidad fija (pruebas: siempre 4, según el MEP) no admiten más actividades
+                if (rubro.CantidadActividades.HasValue)
+                {
+                    var existentes = await _calificacionRepository.GetActividadesDeClase(
+                        dto.IdPeriodo, dto.IdCurso, dto.IdSeccion, dto.IdGrupo);
+
+                    if (existentes.Count(x => x.IdRubro == dto.IdRubro) >= rubro.CantidadActividades.Value)
+                        return RespuestaDTO<ActividadDTO>.Error(
+                            $"{rubro.Nombre} ya tiene sus {rubro.CantidadActividades.Value} actividades",
+                            1419);
                 }
 
                 if (await _calificacionRepository.ExisteActividadConNombre(
@@ -364,6 +427,42 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
             {
                 return RespuestaDTO<NotaCeldaDTO>.Error("No fue posible registrar la nota", 1409);
             }
+        }
+
+        // ---------- Guardar varias notas a la vez (el docente revisa y luego guarda) ----------
+
+        public async Task<RespuestaDTO<List<NotaLoteResultadoDTO>>> GuardarNotas(int idUsuario, List<NotaGuardarDTO> notas)
+        {
+            if (notas == null || notas.Count == 0)
+                return RespuestaDTO<List<NotaLoteResultadoDTO>>.Error("No hay notas para guardar", 1418);
+
+            if (notas.Count > 500)
+                return RespuestaDTO<List<NotaLoteResultadoDTO>>.Error("Se pueden guardar hasta 500 notas a la vez", 1418);
+
+            var resultados = new List<NotaLoteResultadoDTO>();
+
+            // Cada nota pasa por las mismas validaciones de GuardarNota; las que fallen no frenan al resto
+            foreach (var dto in notas)
+            {
+                var r = await GuardarNota(idUsuario, dto);
+
+                resultados.Add(new NotaLoteResultadoDTO
+                {
+                    IdMatricula = dto.IdMatricula,
+                    IdActividad = dto.IdActividad,
+                    Exito = r.EsCorrecto,
+                    Mensaje = r.EsCorrecto ? null : r.Mensaje,
+                    Nota = r.Dato
+                });
+            }
+
+            int guardadas = resultados.Count(x => x.Exito);
+
+            return RespuestaDTO<List<NotaLoteResultadoDTO>>.Exito(
+                resultados,
+                guardadas == resultados.Count
+                    ? $"{guardadas} {(guardadas == 1 ? "nota guardada" : "notas guardadas")} correctamente"
+                    : $"Se guardaron {guardadas} de {resultados.Count} notas");
         }
 
         // ---------- Auxiliares ----------

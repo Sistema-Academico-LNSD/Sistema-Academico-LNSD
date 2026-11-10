@@ -8,7 +8,6 @@ GO
 USE Proyecto_LNSD_DB;
 GO
 
-
 /* ============================================================
    1. SEGURIDAD Y USUARIOS
    ============================================================ */
@@ -534,6 +533,11 @@ GO
 
 -- Rubros de evaluación: catálogo FIJO según el MEP.
 -- Trabajo cotidiano 50% + Pruebas 35% + Tarea 10% = 95%.
+-- Los porcentajes son de la NOTA ANUAL (suma de los dos semestres): cada semestre aporta la mitad de cada rubro.
+-- "cantidad_actividades": cuántas actividades por período (semestre) tiene el rubro cuando es fija
+--   (pruebas: 2 por semestre, 4 al año según el MEP); NULL = el docente decide cuántas crea.
+-- "peso_manual": 1 = el docente reparte el porcentaje anual del rubro entre sus actividades como quiera (pruebas);
+--   0 = el peso de cada actividad se calcula en partes iguales dentro del semestre.
 -- La asistencia (5%) se calcula aparte (ver Configuracion_Calificacion).
 
 CREATE TABLE Rubro_Evaluacion
@@ -544,24 +548,29 @@ CREATE TABLE Rubro_Evaluacion
     orden INT NOT NULL,
     puntos_minimo DECIMAL(5,2) NULL,
     puntos_maximo DECIMAL(5,2) NULL,
+    cantidad_actividades INT NULL,
+    peso_manual BIT NOT NULL CONSTRAINT DF_Rubro_PesoManual DEFAULT 0,
     estado BIT NOT NULL CONSTRAINT DF_Rubro_Estado DEFAULT 1,
 
     CONSTRAINT PK_Rubro_Evaluacion PRIMARY KEY (id_rubro),
     CONSTRAINT UQ_Rubro_Nombre UNIQUE (nombre),
     CONSTRAINT CK_Rubro_Porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
-    CONSTRAINT CK_Rubro_Puntos CHECK (puntos_minimo IS NULL OR puntos_maximo IS NULL OR puntos_minimo <= puntos_maximo)
+    CONSTRAINT CK_Rubro_Puntos CHECK (puntos_minimo IS NULL OR puntos_maximo IS NULL OR puntos_minimo <= puntos_maximo),
+    CONSTRAINT CK_Rubro_Cantidad CHECK (cantidad_actividades IS NULL OR cantidad_actividades > 0)
 );
 GO
 
-INSERT INTO Rubro_Evaluacion (nombre, porcentaje, orden, puntos_minimo, puntos_maximo)
-VALUES (N'Trabajo cotidiano',  50, 1, NULL, NULL),
-       (N'Pruebas / Exámenes', 35, 2, 15,   30),
-       (N'Tareas',             10, 3, NULL, NULL);
+INSERT INTO Rubro_Evaluacion (nombre, porcentaje, orden, puntos_minimo, puntos_maximo, cantidad_actividades, peso_manual)
+VALUES (N'Trabajo cotidiano',  50, 1, NULL, NULL, NULL, 0),
+       (N'Pruebas / Exámenes', 35, 2, 15,   30,   2,    1),
+       (N'Tareas',             10, 3, NULL, NULL, NULL, 0);
 GO
 
 -- Actividades de evaluación: cada práctica, examen o tarea que el docente crea en su curso, sección y grupo.
 -- "puntos" es lo que vale la actividad (la nota del estudiante va de 0 a ese valor).
--- El docente decide cuántas actividades tiene cada rubro. 
+-- "porcentaje": lo que pesa la actividad en la nota ANUAL; solo se guarda en los rubros de peso manual (pruebas).
+-- En los demás es NULL y el peso se calcula: (porcentaje del rubro / 2 semestres) / actividades del semestre.
+-- El docente decide cuántas actividades tiene cada rubro, salvo en los que tienen cantidad fija (ver Rubro_Evaluacion).
 
 CREATE TABLE Actividad_Evaluacion
 (
@@ -574,12 +583,14 @@ CREATE TABLE Actividad_Evaluacion
     id_docente INT NOT NULL,
     nombre NVARCHAR(100) NOT NULL,
     puntos DECIMAL(5,2) NOT NULL,
+    porcentaje DECIMAL(5,2) NULL,
     fecha DATE NULL,
     estado BIT NOT NULL CONSTRAINT DF_Actividad_Estado DEFAULT 1,
     fecha_creacion DATETIME2(0) NOT NULL CONSTRAINT DF_Actividad_FechaCreacion DEFAULT SYSDATETIME(),
 
     CONSTRAINT PK_Actividad_Evaluacion PRIMARY KEY (id_actividad),
     CONSTRAINT CK_Actividad_Puntos CHECK (puntos > 0 AND puntos <= 100),
+    CONSTRAINT CK_Actividad_Porcentaje CHECK (porcentaje IS NULL OR (porcentaje > 0 AND porcentaje <= 100)),
     CONSTRAINT FK_Actividad_Rubro FOREIGN KEY (id_rubro) REFERENCES Rubro_Evaluacion(id_rubro),
     CONSTRAINT FK_Actividad_Periodo FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
     CONSTRAINT FK_Actividad_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),

@@ -17,6 +17,11 @@
     .cal-tabla .cal-nota {
         min-width: 110px;
     }
+
+    /* Nota digitada que todavía no se ha guardado */
+    .cal-tabla .nota-input.nota-pendiente {
+        background-color: var(--bs-warning-bg-subtle);
+    }
 </style>
 
 <div class="card">
@@ -71,12 +76,18 @@
 
                 <div class="row g-2">
                     <div class="col-6">
-                        <label for="actPuntos" class="form-label">Valor (puntos)</label>
+                        <label for="actPuntos" class="form-label">Valor (puntos totales)</label>
                         <input type="number" id="actPuntos" class="form-control" min="0.01" max="100" step="0.01" />
                         <div id="actAyudaPuntos" class="form-text"></div>
                     </div>
 
                     <div class="col-6">
+                        <label class="form-label">Peso en la nota final</label>
+                        <div id="actPeso" class="form-control-plaintext fw-semibold py-1"></div>
+                        <div class="form-text">Se calcula automáticamente</div>
+                    </div>
+
+                    <div class="col-12">
                         <label for="actFecha" class="form-label">Fecha <span class="text-muted">(opcional)</span></label>
                         <input type="date" id="actFecha" class="form-control" />
                     </div>

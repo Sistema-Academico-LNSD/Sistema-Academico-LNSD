@@ -89,6 +89,21 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(await _calificacionService.GuardarNota(idUsuario, dto));
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Docente")]
+        [RequierePermiso("Calificaciones", "Crear")]
+        public async Task<IActionResult> GuardarNotas([FromBody] List<NotaGuardarDTO> notas)
+        {
+            if (!ModelState.IsValid)
+                return RespuestaModeloInvalido();
+
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _calificacionService.GuardarNotas(idUsuario, notas));
+        }
+
         // ---- Auxiliares ----
 
         /// El id sale siempre de la sesión (claims), nunca de lo que envía el navegador.

@@ -17,5 +17,8 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
 
         // MCNF-01-03 y 01-12: registrar la nota de un estudiante en una actividad
         Task<RespuestaDTO<NotaCeldaDTO>> GuardarNota(int idUsuario, NotaGuardarDTO dto);
+
+        // Guarda de una vez todas las notas que el docente digitó y revisó
+        Task<RespuestaDTO<List<NotaLoteResultadoDTO>>> GuardarNotas(int idUsuario, List<NotaGuardarDTO> notas);
     }
 }
