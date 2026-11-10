@@ -104,6 +104,84 @@ namespace ProyectoLNSD_WApp.Controllers
             return Json(await _calificacionService.GuardarNotas(idUsuario, notas));
         }
 
+        // ---- Docente: editar o corregir notas, observaciones e historial (MCNF-01-06, 01-07 y 01-08) ----
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Docente")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public async Task<IActionResult> EditarNota([FromBody] NotaEditarDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return RespuestaModeloInvalido();
+
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _calificacionService.EditarNota(idUsuario, dto));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Docente")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetHistorial(int idMatricula, int idPeriodo, int idCurso, int idSeccion, int idGrupo)
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _calificacionService.GetHistorial(idUsuario, idMatricula, idPeriodo, idCurso, idSeccion, idGrupo));
+        }
+
+        // ---- Administrador y director: autorizar correcciones con el período cerrado (MCNF-01-13) ----
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public IActionResult Correcciones()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public async Task<IActionResult> GetPeriodosCorreccion()
+        {
+            return Json(await _calificacionService.GetPeriodos());
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public async Task<IActionResult> GetClasesCorreccion(int idPeriodo)
+        {
+            return Json(await _calificacionService.GetClasesDelPeriodo(idPeriodo));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public async Task<IActionResult> GetNotasCorreccion(int idPeriodo, int idCurso, int idSeccion, int idGrupo)
+        {
+            return Json(await _calificacionService.GetNotasParaCorreccion(idPeriodo, idCurso, idSeccion, idGrupo));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Editar")]
+        public async Task<IActionResult> AutorizarCorreccion([FromBody] CorreccionAutorizarDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return RespuestaModeloInvalido();
+
+            // Quien autoriza sale de la sesión, no del navegador
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _calificacionService.AutorizarCorreccion(idUsuario, dto));
+        }
+
         // ---- Auxiliares ----
 
         /// El id sale siempre de la sesión (claims), nunca de lo que envía el navegador.

@@ -32,5 +32,26 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Calificacion
         Task<Entities.Nota?> GetNota(int idMatricula, int idActividad);
 
         Task<bool> CrearNota(Entities.Nota nota, Entities.NotaHistorial historial);
+
+        // ---- Editar y corregir notas (MCNF-01-06, 01-07, 01-08, 01-13) ----
+        // Con seguimiento de cambios: el servicio la modifica y se guarda junto con su historial
+        Task<Entities.Nota?> GetNotaConActividad(int idNota);
+
+        // Guarda los cambios pendientes (nota y autorización usada) junto con el nuevo registro de historial
+        Task<bool> GuardarCambioNota(Entities.NotaHistorial historial);
+
+        Task<List<Entities.NotaHistorial>> GetHistorialDeNotas(List<int> idsNota);
+
+        Task<Dictionary<int, string>> GetNombresUsuarios(List<int> idsUsuario);
+
+        // Autorización sin usar de una nota (con seguimiento de cambios, para marcarla como usada)
+        Task<Entities.CorreccionAutorizada?> GetCorreccionPendiente(int idNota);
+
+        Task<List<Entities.CorreccionAutorizada>> GetCorreccionesDeNotas(List<int> idsNota);
+
+        Task<bool> CrearCorreccion(Entities.CorreccionAutorizada correccion);
+
+        // Horarios del período cuya clase (curso, sección y grupo) ya tiene actividades
+        Task<List<Entities.Horario>> GetClasesConActividades(int idPeriodo);
     }
 }

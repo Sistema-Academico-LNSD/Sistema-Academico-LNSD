@@ -12,8 +12,11 @@ namespace ProyectoLNSD_WApp.DAL.Entities
         public decimal? PuntosMinimo { get; set; }
         public decimal? PuntosMaximo { get; set; }
 
-        /// Cantidad fija de actividades del rubro (pruebas: 4); null = la define el docente.
+        /// Cantidad fija de actividades por período (pruebas: 2 por semestre, 4 al año); null = la define el docente.
         public int? CantidadActividades { get; set; }
+
+        /// true = el docente reparte el porcentaje anual del rubro entre sus actividades (pruebas).
+        public bool PesoManual { get; set; }
 
         public bool Estado { get; set; } = true;
     }

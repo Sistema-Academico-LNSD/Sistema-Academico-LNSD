@@ -46,6 +46,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<ActividadEvaluacion> ActividadesEvaluacion { get; set; }
         public virtual DbSet<Nota> Notas { get; set; }
         public virtual DbSet<NotaHistorial> NotasHistorial { get; set; }
+        public virtual DbSet<CorreccionAutorizada> CorreccionesAutorizadas { get; set; }
 
 
         //Tables override mode builder
@@ -1299,6 +1300,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.PuntosMinimo).HasColumnName("puntos_minimo").HasColumnType("decimal(5,2)");
                 entity.Property(e => e.PuntosMaximo).HasColumnName("puntos_maximo").HasColumnType("decimal(5,2)");
                 entity.Property(e => e.CantidadActividades).HasColumnName("cantidad_actividades");
+                entity.Property(e => e.PesoManual).HasColumnName("peso_manual");
                 entity.Property(e => e.Estado).HasColumnName("estado");
             });
 
@@ -1315,6 +1317,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.IdDocente).HasColumnName("id_docente");
                 entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
                 entity.Property(e => e.Puntos).HasColumnName("puntos").HasColumnType("decimal(5,2)");
+                entity.Property(e => e.Porcentaje).HasColumnName("porcentaje").HasColumnType("decimal(5,2)");
                 entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("date");
                 entity.Property(e => e.Estado).HasColumnName("estado");
                 entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2(0)");
@@ -1359,6 +1362,22 @@ namespace ProyectoLNSD_WApp.DAL.Data
 
                 entity.HasOne(e => e.Nota).WithMany().HasForeignKey(e => e.IdNota)
                       .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_NotaHistorial_Nota");
+            });
+
+            modelBuilder.Entity<CorreccionAutorizada>(entity =>
+            {
+                entity.ToTable("Correccion_Autorizada");
+                entity.HasKey(e => e.IdAutorizacion).HasName("PK_Correccion_Autorizada");
+                entity.Property(e => e.IdAutorizacion).HasColumnName("id_autorizacion");
+                entity.Property(e => e.IdNota).HasColumnName("id_nota");
+                entity.Property(e => e.IdUsuarioAutoriza).HasColumnName("id_usuario_autoriza");
+                entity.Property(e => e.Motivo).HasColumnName("motivo").HasMaxLength(500).IsRequired();
+                entity.Property(e => e.Usada).HasColumnName("usada");
+                entity.Property(e => e.FechaAutorizacion).HasColumnName("fecha_autorizacion").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaUso).HasColumnName("fecha_uso").HasColumnType("datetime2(0)");
+
+                entity.HasOne(e => e.Nota).WithMany().HasForeignKey(e => e.IdNota)
+                      .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_CorrAut_Nota");
             });
 
             OnModelCreatingPartial(modelBuilder);

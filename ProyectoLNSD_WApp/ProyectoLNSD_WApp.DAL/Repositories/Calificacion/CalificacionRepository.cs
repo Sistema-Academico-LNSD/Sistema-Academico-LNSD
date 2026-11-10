@@ -156,5 +156,79 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Calificacion
 
             return await _context.SaveChangesAsync() > 0;
         }
+
+        // ---------- Editar y corregir notas ----------
+
+        public async Task<Entities.Nota?> GetNotaConActividad(int idNota)
+        {
+            return await _context.Notas
+                .Include(n => n.Actividad)
+                .FirstOrDefaultAsync(n => n.IdNota == idNota);
+        }
+
+        public async Task<bool> GuardarCambioNota(Entities.NotaHistorial historial)
+        {
+            // La nota, la autorización usada y el historial se guardan juntos: o quedan todos o ninguno
+            _context.NotasHistorial.Add(historial);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Entities.NotaHistorial>> GetHistorialDeNotas(List<int> idsNota)
+        {
+            return await _context.NotasHistorial
+                .AsNoTracking()
+                .Where(h => idsNota.Contains(h.IdNota))
+                .OrderByDescending(h => h.FechaCambio)
+                .ThenByDescending(h => h.IdHistorial)
+                .ToListAsync();
+        }
+
+        public async Task<Dictionary<int, string>> GetNombresUsuarios(List<int> idsUsuario)
+        {
+            return await _context.Usuarios
+                .AsNoTracking()
+                .Where(u => idsUsuario.Contains(u.IdUsuario))
+                .ToDictionaryAsync(u => u.IdUsuario, u => u.Nombre + " " + u.Apellido);
+        }
+
+        public async Task<Entities.CorreccionAutorizada?> GetCorreccionPendiente(int idNota)
+        {
+            return await _context.CorreccionesAutorizadas
+                .Where(c => c.IdNota == idNota && !c.Usada)
+                .OrderBy(c => c.IdAutorizacion)
+                .FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Entities.CorreccionAutorizada>> GetCorreccionesDeNotas(List<int> idsNota)
+        {
+            return await _context.CorreccionesAutorizadas
+                .AsNoTracking()
+                .Where(c => idsNota.Contains(c.IdNota))
+                .ToListAsync();
+        }
+
+        public async Task<bool> CrearCorreccion(Entities.CorreccionAutorizada correccion)
+        {
+            _context.CorreccionesAutorizadas.Add(correccion);
+
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<List<Entities.Horario>> GetClasesConActividades(int idPeriodo)
+        {
+            return await _context.Horarios
+                .AsNoTracking()
+                .Include(h => h.Curso)
+                .Include(h => h.Seccion).ThenInclude(s => s!.Grado)
+                .Include(h => h.Grupo)
+                .Where(h => h.IdPeriodo == idPeriodo
+                         && _context.ActividadesEvaluacion.Any(a => a.Estado
+                                                                 && a.IdPeriodo == h.IdPeriodo
+                                                                 && a.IdCurso == h.IdCurso
+                                                                 && a.IdSeccion == h.IdSeccion
+                                                                 && a.IdGrupo == h.IdGrupo))
+                .ToListAsync();
+        }
     }
 }

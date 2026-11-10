@@ -76,7 +76,10 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
-                         && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true)
+                         && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
+                new("Corrección de notas", "bi-unlock", "Calificacion", "Correcciones",
+                    u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
+                         && u.TienePermiso("Calificaciones", "Editar"), CoincidirAccion: true)
             ]),
 
             new("Comedor", [

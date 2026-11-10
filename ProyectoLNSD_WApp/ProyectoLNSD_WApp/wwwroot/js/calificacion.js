@@ -1,6 +1,7 @@
 // Registro de calificaciones del docente (MCNF-01-01, 01-02, 01-03 y 01-12).
 // El docente crea las actividades (prácticas, exámenes, tareas) de cada rubro, digita las notas y las guarda con un botón.
-// Cada actividad tiene sus puntos (lo que vale) y su porcentaje (lo que pesa en la nota final del semestre).
+// Cada actividad tiene sus puntos (lo que vale) y su porcentaje (lo que pesa en la nota del año: cada semestre aporta la mitad).
+// En las pruebas el docente reparte el porcentaje anual; en los demás rubros el peso se calcula solo.
 // Usa los helpers globales de site.js: mostrarMensaje y escapeHtml.
 
 let calClases = [];
@@ -50,6 +51,10 @@ $(document).ready(function () {
     });
 
     $planilla.on("click", ".btn-nueva-actividad", abrirModalActividad);
+    $planilla.on("click", ".btn-editar-nota", abrirModalEditarNota);
+    $planilla.on("click", ".btn-historial", abrirHistorial);
+
+    $("#btnGuardarEdicion").on("click", guardarEdicionNota);
     $planilla.on("click", "#btnGuardarNotas", guardarNotasCalificacion);
     $planilla.on("input", ".nota-input", alEscribirNota);
 
@@ -290,7 +295,7 @@ function pintarResumenCalificacion() {
     rubros.forEach(function (r) {
         html += `<th class="text-center cal-nota">
                     <div class="fw-semibold">${escapeHtml(r.nombre)}</div>
-                    <div class="small text-muted fw-normal">${fmtNota(r.porcentaje)}% de la nota</div>
+                    <div class="small text-muted fw-normal">${fmtNota(r.porcentaje)}% de la nota del año</div>
                  </th>`;
     });
 
@@ -299,11 +304,7 @@ function pintarResumenCalificacion() {
     html += '</tr></thead><tbody>';
 
     calPlanilla.estudiantes.forEach(function (e) {
-        html += `<tr>
-                    <td class="cal-fijo">
-                        <div>${escapeHtml(e.nombre)}</div>
-                        <div class="small text-muted">${escapeHtml(e.carnet)}</div>
-                    </td>`;
+        html += `<tr>${celdaEstudiante(e)}`;
 
         rubros.forEach(function (r) {
             let res = e.resumen.find(x => x.idRubro === r.idRubro);
@@ -338,9 +339,11 @@ function pintarRubroCalificacion(rubro) {
         ? 'Todavía no hay actividades en este rubro.'
         : `${rubro.actividades.length} ${rubro.actividades.length === 1 ? 'actividad' : 'actividades'}`;
 
-    resumen += rubro.cantidadFija
-        ? ` · Siempre ${rubro.cantidadFija}, cada una pesa ${fmtNota(rubro.porcentaje / rubro.cantidadFija)}%`
-        : ` · El ${fmtNota(rubro.porcentaje)}% se reparte en partes iguales entre las actividades`;
+    if (rubro.pesoManual) {
+        resumen += ` · ${rubro.actividades.length} de ${rubro.cantidadFija} en este semestre · Quedan ${fmtNota(rubro.pesoRestante)}% por repartir en el año`;
+    } else {
+        resumen += ` · Este semestre aporta ${fmtNota(rubro.porcentajePeriodo)}% de la nota del año, en partes iguales`;
+    }
 
     let completo = rubro.cantidadFija && rubro.actividades.length >= rubro.cantidadFija;
 
@@ -377,11 +380,7 @@ function pintarRubroCalificacion(rubro) {
         let notas = {};
         e.notas.forEach(n => notas[n.idActividad] = n);
 
-        html += `<tr>
-                    <td class="cal-fijo">
-                        <div>${escapeHtml(e.nombre)}</div>
-                        <div class="small text-muted">${escapeHtml(e.carnet)}</div>
-                    </td>`;
+        html += `<tr>${celdaEstudiante(e)}`;
 
         rubro.actividades.forEach(function (a) {
             let nota = notas[a.idActividad];
@@ -389,7 +388,13 @@ function pintarRubroCalificacion(rubro) {
             if (nota) {
                 html += `<td class="text-center">
                             <div class="fw-semibold">${fmtNota(nota.puntos)} / ${fmtNota(a.puntos)}</div>
-                            <div class="small text-muted">${fmtNota(nota.puntos / a.puntos * 100)}%</div>
+                            <div class="small text-muted">${fmtNota(nota.puntos / a.puntos * 100)}%
+                                ${nota.observacion ? `<i class="bi bi-chat-left-text" title="${escapeHtml(nota.observacion)}"></i>` : ''}
+                                <button type="button" class="btn btn-link btn-sm p-0 ms-1 btn-editar-nota" title="Editar nota u observación"
+                                        data-matricula="${e.idMatricula}" data-actividad="${a.idActividad}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </div>
                          </td>`;
             } else if (calPlanilla.periodoActivo) {
                 let clave = e.idMatricula + '_' + a.idActividad;
@@ -439,9 +444,23 @@ function abrirModalActividad() {
     $("#actFecha").val('');
     $("#actError").addClass('d-none').text('');
 
-    $("#actPeso").text(rubro.cantidadFija
-        ? `${fmtNota(rubro.porcentaje / rubro.cantidadFija)}%`
-        : `${fmtNota(rubro.porcentaje)}% entre las actividades`);
+    // Peso de la actividad en la nota del año: automático, salvo en las pruebas (las reparte el docente)
+    let $peso = $("#actPorcentaje").val('').addClass('d-none');
+    $("#actPeso").removeClass('d-none');
+
+    if (!rubro.pesoManual) {
+        $("#actPeso").text(`${fmtNota(rubro.porcentajePeriodo)}% entre las del semestre`);
+        $("#actAyudaPeso").text('Se calcula automáticamente');
+    } else if (rubro.actividadesFaltantesAnio <= 1) {
+        $("#actPeso").text(`${fmtNota(rubro.pesoRestante)}%`);
+        $("#actAyudaPeso").text('Última del año: toma lo que queda del rubro');
+    } else {
+        let maximo = Math.round((rubro.pesoRestante - 0.01 * (rubro.actividadesFaltantesAnio - 1)) * 100) / 100;
+
+        $("#actPeso").addClass('d-none');
+        $peso.removeClass('d-none').attr('max', maximo);
+        $("#actAyudaPeso").text(`Máximo ${fmtNota(maximo)}% · quedan ${fmtNota(rubro.pesoRestante)}% por repartir en el año`);
+    }
 
     let min = rubro.puntosMinimo;
     let max = rubro.puntosMaximo;
@@ -481,6 +500,19 @@ async function guardarActividadCalificacion() {
         return;
     }
 
+    // En las pruebas el docente escribe el porcentaje (menos en la última del año, que la calcula el servidor)
+    let rubroModal = calPlanilla.rubros.find(r => r.idRubro === parseInt($("#actIdRubro").val(), 10));
+    let porcentaje = null;
+
+    if (rubroModal.pesoManual && rubroModal.actividadesFaltantesAnio > 1) {
+        porcentaje = parseFloat($("#actPorcentaje").val());
+
+        if (isNaN(porcentaje) || porcentaje <= 0) {
+            errorActividad("Escriba el porcentaje que pesa esta actividad en la nota del año.");
+            return;
+        }
+    }
+
     let $boton = $("#btnGuardarActividad").prop('disabled', true);
 
     try {
@@ -496,6 +528,7 @@ async function guardarActividadCalificacion() {
                 idRubro: parseInt($("#actIdRubro").val(), 10),
                 nombre: nombre,
                 puntos: puntos,
+                porcentaje: porcentaje,
                 fecha: fecha || null
             })
         });
@@ -663,6 +696,161 @@ async function guardarNotasCalificacion() {
     } catch (e) {
         mostrarMensaje("No fue posible guardar las notas.", 'danger');
         $boton.prop('disabled', false);
+    }
+}
+
+// ------------------------- Editar o corregir una nota (MCNF-01-06 y 01-07) -------------------------
+
+let calNotaEditando = null;
+
+function abrirModalEditarNota() {
+    let idMatricula = parseInt($(this).data("matricula"), 10);
+    let idActividad = parseInt($(this).data("actividad"), 10);
+
+    let est = calPlanilla.estudiantes.find(e => e.idMatricula === idMatricula);
+    let nota = est.notas.find(n => n.idActividad === idActividad);
+    let act = calPlanilla.rubros.flatMap(r => r.actividades).find(a => a.idActividad === idActividad);
+
+    calNotaEditando = { idNota: nota.idNota, puntos: nota.puntos, max: act.puntos };
+
+    $("#edtEstudiante").text(est.nombre);
+    $("#edtActividad").text(act.nombre);
+    $("#edtActual").text(`${fmtNota(nota.puntos)} / ${fmtNota(act.puntos)} (${fmtNota(nota.puntos / act.puntos * 100)}%)`);
+    $("#edtObsActual").text(nota.observacion || 'Sin observación');
+    $("#edtPuntos").val(nota.puntos).attr('max', act.puntos);
+    $("#edtAyudaPuntos").text(`Entre 0 y ${fmtNota(act.puntos)}`);
+    $("#edtObservacion").val('');
+    $("#edtError").addClass('d-none').text('');
+    $("#edtAviso").toggleClass('d-none', calPlanilla.periodoActivo);
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEditarNota')).show();
+}
+
+function errorEdicion(texto) {
+    $("#edtError").removeClass('d-none').text(texto);
+}
+
+async function guardarEdicionNota() {
+    let puntos = parseFloat($("#edtPuntos").val());
+    let observacion = $("#edtObservacion").val().trim();
+
+    $("#edtError").addClass('d-none').text('');
+
+    if (isNaN(puntos) || puntos < 0 || puntos > calNotaEditando.max) {
+        errorEdicion(`La nota debe estar entre 0 y ${fmtNota(calNotaEditando.max)}.`);
+        return;
+    }
+
+    if (puntos === calNotaEditando.puntos && observacion === '') {
+        errorEdicion("No hay cambios para guardar.");
+        return;
+    }
+
+    if (puntos !== calNotaEditando.puntos && observacion === '') {
+        errorEdicion("Escriba la observación que justifica el cambio de la nota.");
+        return;
+    }
+
+    let $boton = $("#btnGuardarEdicion").prop('disabled', true);
+
+    try {
+        let response = await $.ajax({
+            url: '/Calificacion/EditarNota',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                idNota: calNotaEditando.idNota,
+                puntosObtenidos: puntos,
+                observacion: observacion || null
+            })
+        });
+
+        if (!response.esCorrecto) {
+            errorEdicion(response.mensaje);
+            return;
+        }
+
+        bootstrap.Modal.getInstance(document.getElementById('modalEditarNota')).hide();
+        mostrarMensaje(response.mensaje, 'success');
+        cargarPlanillaCalificacion();
+    } catch (e) {
+        errorEdicion("No fue posible guardar el cambio.");
+    } finally {
+        $boton.prop('disabled', false);
+    }
+}
+
+// ------------------------- Historial del estudiante en el curso (MCNF-01-08) -------------------------
+
+function celdaEstudiante(e) {
+    return `<td class="cal-fijo">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <div>${escapeHtml(e.nombre)}</div>
+                        <div class="small text-muted">${escapeHtml(e.carnet)}</div>
+                    </div>
+                    <button type="button" class="btn btn-link btn-sm p-0 btn-historial" title="Ver historial de notas"
+                            data-matricula="${e.idMatricula}">
+                        <i class="bi bi-clock-history"></i>
+                    </button>
+                </div>
+            </td>`;
+}
+
+async function abrirHistorial() {
+    let idMatricula = parseInt($(this).data("matricula"), 10);
+    let est = calPlanilla.estudiantes.find(e => e.idMatricula === idMatricula);
+
+    $("#hisEstudiante").text(`${est.nombre} · ${calClaseActual.descripcion}`);
+    $("#hisCuerpo").html('<tr><td colspan="6" class="text-center text-muted">Cargando...</td></tr>');
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalHistorial')).show();
+
+    try {
+        let response = await $.ajax({
+            url: '/Calificacion/GetHistorial',
+            type: 'GET',
+            data: {
+                idMatricula: idMatricula,
+                idPeriodo: calClaseActual.idPeriodo,
+                idCurso: calClaseActual.idCurso,
+                idSeccion: calClaseActual.idSeccion,
+                idGrupo: calClaseActual.idGrupo
+            }
+        });
+
+        if (!response.esCorrecto) {
+            $("#hisCuerpo").html(`<tr><td colspan="6" class="text-center text-danger">${escapeHtml(response.mensaje)}</td></tr>`);
+            return;
+        }
+
+        let lista = response.dato || [];
+
+        if (lista.length === 0) {
+            $("#hisCuerpo").html(`<tr><td colspan="6" class="text-center text-muted">${escapeHtml(response.mensaje || 'Sin movimientos')}</td></tr>`);
+            return;
+        }
+
+        let colores = { Registro: 'secondary', Edicion: 'primary', Correccion: 'warning' };
+        let nombres = { Registro: 'Registro', Edicion: 'Edición', Correccion: 'Corrección' };
+        let html = '';
+
+        lista.forEach(function (h) {
+            let anterior = h.valorAnterior == null ? '—' : fmtNota(h.valorAnterior);
+
+            html += `<tr>
+                        <td class="text-nowrap">${new Date(h.fecha).toLocaleString('es-CR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                        <td>${escapeHtml(h.actividad)}<div class="small text-muted">${escapeHtml(h.rubro)}</div></td>
+                        <td><span class="badge text-bg-${colores[h.tipo] || 'secondary'}">${nombres[h.tipo] || escapeHtml(h.tipo)}</span></td>
+                        <td class="text-center text-nowrap">${anterior} → <strong>${fmtNota(h.valorNuevo)}</strong> / ${fmtNota(h.puntosActividad)}</td>
+                        <td>${h.observacion ? escapeHtml(h.observacion) : '<span class="text-muted">—</span>'}</td>
+                        <td>${escapeHtml(h.usuario)}</td>
+                     </tr>`;
+        });
+
+        $("#hisCuerpo").html(html);
+    } catch (e) {
+        $("#hisCuerpo").html('<tr><td colspan="6" class="text-center text-danger">No fue posible consultar el historial.</td></tr>');
     }
 }
 

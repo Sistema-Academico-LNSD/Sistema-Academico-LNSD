@@ -45,8 +45,17 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public decimal? PuntosMinimo { get; set; }
         public decimal? PuntosMaximo { get; set; }
 
-        /// Cantidad fija de actividades (pruebas: 4); null = la define el docente.
+        /// Cantidad fija de actividades por período (pruebas: 2); null = la define el docente.
         public int? CantidadFija { get; set; }
+
+        /// Lo que aporta un período (semestre) del porcentaje anual del rubro.
+        public decimal PorcentajePeriodo { get; set; }
+
+        /// Rubro donde el docente reparte el porcentaje anual (pruebas), con lo que queda por repartir en el año
+        /// y cuántas actividades faltan por crear en todo el año.
+        public bool PesoManual { get; set; }
+        public decimal PesoRestante { get; set; }
+        public int ActividadesFaltantesAnio { get; set; }
 
         public List<ActividadDTO> Actividades { get; set; } = new();
     }
@@ -122,6 +131,11 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         [Range(0.01d, 100d, ErrorMessage = "El valor de la actividad debe estar entre 0.01 y 100 puntos")]
         public decimal Puntos { get; set; }
 
+        /// Solo en rubros de peso manual (pruebas): lo que pesa en la nota anual.
+        /// En la última actividad del año el servidor usa lo que queda del rubro.
+        [Range(0.01d, 100d, ErrorMessage = "El porcentaje de la actividad debe estar entre 0.01 y 100")]
+        public decimal? Porcentaje { get; set; }
+
         public DateTime? Fecha { get; set; }
     }
 
@@ -148,5 +162,64 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public bool Exito { get; set; }
         public string? Mensaje { get; set; }
         public NotaCeldaDTO? Nota { get; set; }
+    }
+
+    /// Cambiar el valor de una nota y/o agregar una observación (MCNF-01-06 y 01-07).
+    public class NotaEditarDTO
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Debe indicar la nota")]
+        public int IdNota { get; set; }
+
+        [Range(0d, 100d, ErrorMessage = "La nota debe estar entre 0 y el valor de la actividad")]
+        public decimal PuntosObtenidos { get; set; }
+
+        /// Justifica el cambio; es obligatoria cuando cambia el valor de la nota.
+        [StringLength(500, ErrorMessage = "La observación no puede superar 500 caracteres")]
+        public string? Observacion { get; set; }
+    }
+
+    /// Un registro del historial de notas de un estudiante en un curso (MCNF-01-08).
+    public class HistorialNotaDTO
+    {
+        public DateTime Fecha { get; set; }
+        public string Rubro { get; set; } = string.Empty;
+        public string Actividad { get; set; } = string.Empty;
+        public decimal PuntosActividad { get; set; }
+
+        /// Registro, Edicion o Correccion.
+        public string Tipo { get; set; } = string.Empty;
+
+        public decimal? ValorAnterior { get; set; }
+        public decimal ValorNuevo { get; set; }
+        public string? Observacion { get; set; }
+        public string Usuario { get; set; } = string.Empty;
+    }
+
+    /// Una nota de un curso con el estado de su autorización de corrección (MCNF-01-13).
+    public class CorreccionNotaDTO
+    {
+        public int IdNota { get; set; }
+        public string Carnet { get; set; } = string.Empty;
+        public string Estudiante { get; set; } = string.Empty;
+        public string Rubro { get; set; } = string.Empty;
+        public string Actividad { get; set; } = string.Empty;
+        public decimal Puntos { get; set; }
+        public decimal PuntosActividad { get; set; }
+
+        /// "Sin autorización", "Autorizada" (pendiente de usar) o "Usada".
+        public string Estado { get; set; } = string.Empty;
+
+        public string? Motivo { get; set; }
+        public bool Autorizable { get; set; }
+    }
+
+    public class CorreccionAutorizarDTO
+    {
+        [Range(1, int.MaxValue, ErrorMessage = "Debe indicar la nota")]
+        public int IdNota { get; set; }
+
+        [Required(ErrorMessage = "Debe indicar el motivo de la corrección")]
+        [StringLength(500, ErrorMessage = "El motivo no puede superar 500 caracteres")]
+        public string Motivo { get; set; } = string.Empty;
     }
 }

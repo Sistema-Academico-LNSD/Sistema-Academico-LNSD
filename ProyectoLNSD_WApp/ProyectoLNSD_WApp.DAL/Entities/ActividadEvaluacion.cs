@@ -15,6 +15,9 @@ namespace ProyectoLNSD_WApp.DAL.Entities
         /// Lo que vale la actividad: la nota del estudiante va de 0 a este valor.
         public decimal Puntos { get; set; }
 
+        /// Lo que pesa en la nota anual; solo se guarda en rubros de peso manual (pruebas), en los demás es null.
+        public decimal? Porcentaje { get; set; }
+
         public DateTime? Fecha { get; set; }
         public bool Estado { get; set; } = true;
         public DateTime FechaCreacion { get; set; }
