@@ -161,6 +161,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                     estudiantes.Add(new PlanillaEstudianteDTO
                     {
                         IdMatricula = m.IdMatricula,
+                        IdEstudiante = m.IdEstudiante,
                         Carnet = m.Estudiante?.Carnet ?? string.Empty,
                         Nombre = usuario == null ? string.Empty : $"{usuario.Apellido} {usuario.Nombre}",
                         Notas = notasPorMatricula[m.IdMatricula].Select(n => new NotaCeldaDTO

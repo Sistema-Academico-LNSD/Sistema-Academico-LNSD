@@ -59,10 +59,20 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
 
         public async Task<ResultadoCursoDTO> GetResultadoCurso(int idEstudiante, int idCurso, int idPeriodo)
         {
+            return (await CalcularCurso(idEstudiante, idCurso, idPeriodo)).Resultado;
+        }
+
+        private sealed record ContextoPeriodo(int IdMatricula, DatosClase Datos);
+
+        // Calcula cada semestre del año en que el estudiante lleva el curso y los junta en la nota anual
+        private async Task<(ResultadoCursoDTO Resultado, List<ContextoPeriodo> Contextos)> CalcularCurso(
+            int idEstudiante, int idCurso, int idPeriodo)
+        {
             var config = await GetConfiguracion();
             var periodosDelAnio = await GetPeriodosDelAnio(idPeriodo);
 
             var resultado = new ResultadoCursoDTO { IdCurso = idCurso, NotaMinima = config.NotaMinima };
+            var contextos = new List<ContextoPeriodo>();
 
             foreach (var periodo in periodosDelAnio)
             {
@@ -77,6 +87,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                 var datos = await CargarClase(periodo, idCurso, matricula.IdSeccion, matricula.IdGrupo);
 
                 resultado.Periodos.Add(CalcularPeriodo(periodo, datos, matricula.IdMatricula, idEstudiante, config));
+                contextos.Add(new ContextoPeriodo(matricula.IdMatricula, datos));
             }
 
             resultado.Acumulado = resultado.Periodos.Sum(p => p.Acumulado);
@@ -95,7 +106,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                     ? (resultado.NotaAnual >= config.NotaMinima ? "Aprobado" : "Reprobado")
                     : (resultado.NotaAnual >= config.NotaMinima ? "Aprobando" : "Reprobando");
 
-            return resultado;
+            return (resultado, contextos);
         }
 
         // ---------- Promoción del año ----------
@@ -134,18 +145,9 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                     promocion.Cursos.Add(await GetResultadoCurso(idEstudiante, idCurso, idPeriodo));
 
                 promocion.Cursos = promocion.Cursos.OrderBy(c => c.Curso).ToList();
-                promocion.Aprobados = promocion.Cursos.Count(c => c.Estado == "Aprobado");
-                promocion.Reprobados = promocion.Cursos.Count(c => c.Estado == "Reprobado");
-                promocion.EnCurso = promocion.Cursos.Count - promocion.Aprobados - promocion.Reprobados;
 
-                // Aprueba el año si aprueba todas las materias
-                promocion.Estado = promocion.Cursos.Count == 0
-                    ? "Sin cursos"
-                    : promocion.Reprobados > 0
-                        ? "No promovido"
-                        : promocion.Aprobados == promocion.Cursos.Count
-                            ? "Promovido"
-                            : "En curso";
+                (promocion.Aprobados, promocion.Reprobados, promocion.EnCurso, promocion.Estado) =
+                    ClasificarPromocion(promocion.Cursos.Select(c => c.Estado));
 
                 return RespuestaDTO<PromocionDTO>.Exito(promocion, null);
             }
@@ -153,6 +155,149 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
             {
                 return RespuestaDTO<PromocionDTO>.Error("No fue posible calcular la promoción del estudiante", 1409);
             }
+        }
+
+        // ---------- Detalle completo (MCNF-01-15) ----------
+
+        public async Task<RespuestaDTO<DetalleEstudianteDTO>> GetDetalle(
+            int idEstudiante, int idPeriodo, int? idCurso, bool incluirObservaciones)
+        {
+            try
+            {
+                var periodosDelAnio = await GetPeriodosDelAnio(idPeriodo);
+
+                if (periodosDelAnio.Count == 0)
+                    return RespuestaDTO<DetalleEstudianteDTO>.Error("El período lectivo seleccionado no existe", 1404);
+
+                var matriculas = await _calificacionRepository.GetMatriculasDeEstudiante(
+                    idEstudiante, periodosDelAnio.Select(p => p.IdPeriodo).ToList());
+
+                var idsCurso = matriculas
+                    .SelectMany(m => m.MatriculasCursos)
+                    .Select(mc => mc.IdCurso)
+                    .Distinct()
+                    .Where(c => idCurso == null || c == idCurso)
+                    .ToList();
+
+                if (idsCurso.Count == 0)
+                    return RespuestaDTO<DetalleEstudianteDTO>.Error("El estudiante no tiene cursos matriculados en ese año lectivo", 1428);
+
+                var config = await GetConfiguracion();
+
+                var detalle = new DetalleEstudianteDTO
+                {
+                    IdEstudiante = idEstudiante,
+                    Anio = periodosDelAnio.First().FechaInicio.Year,
+                    NotaMinima = config.NotaMinima,
+                    IncluyeObservaciones = incluirObservaciones
+                };
+
+                foreach (var id in idsCurso)
+                    detalle.Cursos.Add(await GetDetalleCurso(idEstudiante, id, idPeriodo, incluirObservaciones));
+
+                detalle.Cursos = detalle.Cursos.OrderBy(c => c.Curso).ToList();
+
+                // La promoción solo tiene sentido con todos los cursos del estudiante
+                if (idCurso == null)
+                    (detalle.Aprobados, detalle.Reprobados, detalle.EnCurso, detalle.Estado) =
+                        ClasificarPromocion(detalle.Cursos.Select(c => c.Estado));
+
+                return RespuestaDTO<DetalleEstudianteDTO>.Exito(detalle, null);
+            }
+            catch (Exception)
+            {
+                return RespuestaDTO<DetalleEstudianteDTO>.Error("No fue posible consultar las calificaciones", 1409);
+            }
+        }
+
+        private async Task<DetalleCursoDTO> GetDetalleCurso(
+            int idEstudiante, int idCurso, int idPeriodo, bool incluirObservaciones)
+        {
+            var (resultado, contextos) = await CalcularCurso(idEstudiante, idCurso, idPeriodo);
+            var rubros = await GetRubros();
+
+            var detalle = new DetalleCursoDTO
+            {
+                IdCurso = idCurso,
+                Curso = resultado.Curso,
+                NotaMinima = resultado.NotaMinima,
+                NotaAnual = resultado.NotaAnual,
+                Estado = resultado.Estado,
+                Definitivo = resultado.Definitivo
+            };
+
+            for (int i = 0; i < resultado.Periodos.Count; i++)
+            {
+                var res = resultado.Periodos[i];
+                var datos = contextos[i].Datos;
+                var notas = datos.NotasPorMatricula[contextos[i].IdMatricula].ToDictionary(n => n.IdActividad);
+
+                detalle.Periodos.Add(new DetallePeriodoDTO
+                {
+                    IdPeriodo = res.IdPeriodo,
+                    Periodo = res.Periodo,
+                    Activo = res.Activo,
+                    Asistencia = res.Asistencia,
+                    Acumulado = res.Acumulado,
+                    Evaluado = res.Evaluado,
+                    Promedio = res.Promedio,
+                    Rubros = rubros.Select(r =>
+                    {
+                        var resumen = res.Rubros.First(x => x.IdRubro == r.IdRubro);
+
+                        return new DetalleRubroDTO
+                        {
+                            IdRubro = r.IdRubro,
+                            Nombre = r.Nombre,
+                            Porcentaje = r.Porcentaje,
+                            Acumulado = resumen.Acumulado,
+                            Evaluado = resumen.Evaluado,
+                            Actividades = datos.Actividades.Values
+                                .Where(a => a.IdRubro == r.IdRubro)
+                                .OrderBy(a => a.Fecha)
+                                .ThenBy(a => a.IdActividad)
+                                .Select(a =>
+                                {
+                                    notas.TryGetValue(a.IdActividad, out var nota);
+                                    decimal peso = datos.Pesos[a.IdActividad];
+                                    bool calificada = nota != null && a.Puntos > 0;
+
+                                    return new DetalleActividadDTO
+                                    {
+                                        Actividad = a.Nombre,
+                                        Fecha = a.Fecha,
+                                        Puntos = a.Puntos,
+                                        PuntosObtenidos = nota?.PuntosObtenidos,
+                                        Porcentaje = calificada ? Math.Round(nota!.PuntosObtenidos / a.Puntos * 100m, 2) : null,
+                                        Peso = Math.Round(peso, 2),
+                                        Aporte = calificada ? Math.Round(nota!.PuntosObtenidos / a.Puntos * peso, 2) : null,
+                                        Observacion = incluirObservaciones ? nota?.Observacion : null
+                                    };
+                                }).ToList()
+                        };
+                    }).ToList()
+                });
+            }
+
+            return detalle;
+        }
+
+        // Aprueba el año el estudiante que aprueba todas las materias
+        private static (int Aprobados, int Reprobados, int EnCurso, string Estado) ClasificarPromocion(IEnumerable<string> estados)
+        {
+            var lista = estados.ToList();
+            int aprobados = lista.Count(e => e == "Aprobado");
+            int reprobados = lista.Count(e => e == "Reprobado");
+
+            string estado = lista.Count == 0
+                ? "Sin cursos"
+                : reprobados > 0
+                    ? "No promovido"
+                    : aprobados == lista.Count
+                        ? "Promovido"
+                        : "En curso";
+
+            return (aprobados, reprobados, lista.Count - aprobados - reprobados, estado);
         }
 
         // ---------- Cálculo de un semestre ----------

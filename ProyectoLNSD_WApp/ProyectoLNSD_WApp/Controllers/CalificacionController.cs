@@ -12,13 +12,16 @@ namespace ProyectoLNSD_WApp.Controllers
     {
         private readonly ICalificacionService _calificacionService;
         private readonly IResultadoCalificacionService _resultadoService;
+        private readonly IConsultaCalificacionService _consultaService;
 
         public CalificacionController(
             ICalificacionService calificacionService,
-            IResultadoCalificacionService resultadoService)
+            IResultadoCalificacionService resultadoService,
+            IConsultaCalificacionService consultaService)
         {
             _calificacionService = calificacionService;
             _resultadoService = resultadoService;
+            _consultaService = consultaService;
         }
 
         // ---- Docente: registro de calificaciones (MCNF-01-01, 01-02, 01-03 y 01-12) ----
@@ -195,6 +198,142 @@ namespace ProyectoLNSD_WApp.Controllers
         public async Task<IActionResult> GetPromocion(int idEstudiante, int idPeriodo)
         {
             return Json(await _resultadoService.GetPromocion(idEstudiante, idPeriodo));
+        }
+
+        // ---- Estudiante: consulta de sus calificaciones (MCNF-01-09) ----
+        // El estudiante sale de la sesión, nunca del navegador.
+
+        [HttpGet]
+        [Authorize(Roles = "Estudiante")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public IActionResult MisCalificaciones()
+        {
+            ViewBag.EsEncargado = false;
+
+            return View("MisCalificaciones");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Estudiante")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetMisPeriodos()
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetMisPeriodos(idUsuario));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Estudiante")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetMiDetalle(int idPeriodo)
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetMiDetalle(idUsuario, idPeriodo));
+        }
+
+        // ---- Encargado: calificaciones de los estudiantes de su cuenta (MCNF-01-10) ----
+
+        [HttpGet]
+        [Authorize(Roles = "Encargado")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public IActionResult CalificacionesEstudiantes()
+        {
+            ViewBag.EsEncargado = true;
+
+            return View("MisCalificaciones");
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Encargado")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetMisEstudiantes()
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetMisEstudiantes(idUsuario));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Encargado")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetPeriodosDeEstudiante(int idEstudiante)
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetPeriodosDeMiEstudiante(idUsuario, idEstudiante));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Encargado")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetDetalleDeEstudiante(int idEstudiante, int idPeriodo)
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetDetalleDeMiEstudiante(idUsuario, idEstudiante, idPeriodo));
+        }
+
+        // ---- Administrador y director: consulta institucional (MCNF-01-11) ----
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public IActionResult Consulta()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetPeriodosConsulta()
+        {
+            return Json(await _calificacionService.GetPeriodos());
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetClasesConsulta(int idPeriodo)
+        {
+            return Json(await _calificacionService.GetClasesDelPeriodo(idPeriodo));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetConsultaNotas(int idPeriodo, int? idCurso, int? idSeccion, int? idGrupo, string? texto)
+        {
+            return Json(await _consultaService.GetConsulta(idPeriodo, idCurso, idSeccion, idGrupo, texto));
+        }
+
+        // ---- Detalle completo de un estudiante (MCNF-01-15) ----
+
+        [HttpGet]
+        [Authorize(Roles = "Administrador,Director")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetDetalleConsulta(int idEstudiante, int idPeriodo)
+        {
+            return Json(await _consultaService.GetDetalleAdministrativo(idEstudiante, idPeriodo));
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Docente")]
+        [RequierePermiso("Calificaciones", "Ver")]
+        public async Task<IActionResult> GetDetalleDocente(
+            int idEstudiante, int idPeriodo, int idCurso, int idSeccion, int idGrupo)
+        {
+            if (!TryObtenerIdUsuario(out int idUsuario))
+                return RespuestaSesionInvalida();
+
+            return Json(await _consultaService.GetDetalleDocente(idUsuario, idEstudiante, idPeriodo, idCurso, idSeccion, idGrupo));
         }
 
         // ---- Auxiliares ----

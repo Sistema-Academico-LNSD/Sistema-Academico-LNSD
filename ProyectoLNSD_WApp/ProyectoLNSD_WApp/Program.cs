@@ -112,6 +112,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IMatriculaService, MatriculaService>();
             builder.Services.AddScoped<IHorarioService, HorarioService>();
             builder.Services.AddScoped<IResultadoCalificacionService, ResultadoCalificacionService>();
+            builder.Services.AddScoped<IConsultaCalificacionService, ConsultaCalificacionService>();
             builder.Services.AddScoped<ICalificacionService, CalificacionService>();
 
             // Seguridad

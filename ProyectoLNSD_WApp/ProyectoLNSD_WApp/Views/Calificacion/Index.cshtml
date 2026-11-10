@@ -165,6 +165,19 @@
     </div>
 </div>
 
+<!-- Detalle completo del estudiante en el curso (MCNF-01-15) -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de calificaciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="detCuerpo"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Historial de notas del estudiante en el curso -->
 <div class="modal fade" id="modalHistorial" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
@@ -199,6 +212,7 @@
 
 @section Scripts {
 
+    <script src="~/js/calificacion-detalle.js" asp-append-version="true"></script>
     <script src="~/js/calificacion.js" asp-append-version="true"></script>
 
 }

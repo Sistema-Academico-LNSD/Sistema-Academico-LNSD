@@ -141,6 +141,7 @@ namespace ProyectoLNSD_WApp.BLL.DTO
     public class PlanillaEstudianteDTO
     {
         public int IdMatricula { get; set; }
+        public int IdEstudiante { get; set; }
         public string Carnet { get; set; } = string.Empty;
         public string Nombre { get; set; } = string.Empty;
         public List<NotaCeldaDTO> Notas { get; set; } = new();
@@ -292,5 +293,105 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         [Required(ErrorMessage = "Debe indicar el motivo de la corrección")]
         [StringLength(500, ErrorMessage = "El motivo no puede superar 500 caracteres")]
         public string Motivo { get; set; } = string.Empty;
+    }
+
+    // ---------- Consulta de calificaciones (MCNF-01-09, 01-10, 01-11 y 01-15) ----------
+
+    /// Una actividad con la nota del estudiante. PuntosObtenidos es null mientras no se haya calificado.
+    /// Porcentaje = puntos obtenidos / valor de la actividad x 100; Peso = lo que vale en la nota anual;
+    /// Aporte = lo que esa nota suma a la nota anual.
+    public class DetalleActividadDTO
+    {
+        public string Actividad { get; set; } = string.Empty;
+        public DateTime? Fecha { get; set; }
+        public decimal Puntos { get; set; }
+        public decimal? PuntosObtenidos { get; set; }
+        public decimal? Porcentaje { get; set; }
+        public decimal Peso { get; set; }
+        public decimal? Aporte { get; set; }
+
+        /// Solo se envía a quien puede verla (docente, administrador y director).
+        public string? Observacion { get; set; }
+    }
+
+    public class DetalleRubroDTO
+    {
+        public int IdRubro { get; set; }
+        public string Nombre { get; set; } = string.Empty;
+
+        /// Porcentaje del rubro en la nota anual.
+        public decimal Porcentaje { get; set; }
+
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+        public List<DetalleActividadDTO> Actividades { get; set; } = new();
+    }
+
+    public class DetallePeriodoDTO
+    {
+        public int IdPeriodo { get; set; }
+        public string Periodo { get; set; } = string.Empty;
+        public bool Activo { get; set; }
+        public List<DetalleRubroDTO> Rubros { get; set; } = new();
+        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+        public decimal Acumulado { get; set; }
+        public decimal Evaluado { get; set; }
+        public decimal? Promedio { get; set; }
+    }
+
+    public class DetalleCursoDTO
+    {
+        public int IdCurso { get; set; }
+        public string Curso { get; set; } = string.Empty;
+        public decimal NotaMinima { get; set; }
+        public List<DetallePeriodoDTO> Periodos { get; set; } = new();
+        public decimal? NotaAnual { get; set; }
+
+        /// Sin notas, Aprobando, Reprobando, Aprobado o Reprobado.
+        public string Estado { get; set; } = string.Empty;
+
+        public bool Definitivo { get; set; }
+    }
+
+    public class DetalleEstudianteDTO
+    {
+        public int IdEstudiante { get; set; }
+        public string Carnet { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public string? Grado { get; set; }
+        public int Anio { get; set; }
+        public decimal NotaMinima { get; set; }
+        public bool IncluyeObservaciones { get; set; }
+        public List<DetalleCursoDTO> Cursos { get; set; } = new();
+
+        /// Promoción del año (vacía cuando solo se consulta un curso).
+        public int Aprobados { get; set; }
+        public int Reprobados { get; set; }
+        public int EnCurso { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
+    /// Un estudiante en un curso, para la consulta del administrador y director.
+    public class ConsultaFilaDTO
+    {
+        public int IdEstudiante { get; set; }
+        public string Carnet { get; set; } = string.Empty;
+        public string Estudiante { get; set; } = string.Empty;
+        public int IdCurso { get; set; }
+        public string Curso { get; set; } = string.Empty;
+        public string Grado { get; set; } = string.Empty;
+        public string Seccion { get; set; } = string.Empty;
+        public string Grupo { get; set; } = string.Empty;
+        public decimal? Promedio { get; set; }
+        public decimal? NotaAnual { get; set; }
+        public string Estado { get; set; } = string.Empty;
+    }
+
+    public class EstudianteResumenDTO
+    {
+        public int IdEstudiante { get; set; }
+        public string Carnet { get; set; } = string.Empty;
+        public string Nombre { get; set; } = string.Empty;
+        public string? Grado { get; set; }
     }
 }

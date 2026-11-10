@@ -53,6 +53,7 @@ $(document).ready(function () {
     $planilla.on("click", ".btn-nueva-actividad", abrirModalActividad);
     $planilla.on("click", ".btn-editar-nota", abrirModalEditarNota);
     $planilla.on("click", ".btn-historial", abrirHistorial);
+    $planilla.on("click", ".btn-detalle", abrirDetalle);
 
     $("#btnGuardarEdicion").on("click", guardarEdicionNota);
     $planilla.on("click", "#btnGuardarNotas", guardarNotasCalificacion);
@@ -821,12 +822,47 @@ function celdaEstudiante(e) {
                         <div>${escapeHtml(e.nombre)}</div>
                         <div class="small text-muted">${escapeHtml(e.carnet)}</div>
                     </div>
-                    <button type="button" class="btn btn-link btn-sm p-0 btn-historial" title="Ver historial de notas"
-                            data-matricula="${e.idMatricula}">
-                        <i class="bi bi-clock-history"></i>
-                    </button>
+                    <span class="text-nowrap">
+                        <button type="button" class="btn btn-link btn-sm p-0 btn-detalle" title="Ver detalle completo"
+                                data-estudiante="${e.idEstudiante}">
+                            <i class="bi bi-card-list"></i>
+                        </button>
+                        <button type="button" class="btn btn-link btn-sm p-0 ms-1 btn-historial" title="Ver historial de notas"
+                                data-matricula="${e.idMatricula}">
+                            <i class="bi bi-clock-history"></i>
+                        </button>
+                    </span>
                 </div>
             </td>`;
+}
+
+// Detalle completo del estudiante en este curso: rubros, actividades, asistencia, promedios y estado (MCNF-01-15)
+async function abrirDetalle() {
+    let idEstudiante = parseInt($(this).data("estudiante"), 10);
+
+    $("#detCuerpo").html('<div class="text-center text-muted py-4">Cargando...</div>');
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
+
+    try {
+        let response = await $.ajax({
+            url: '/Calificacion/GetDetalleDocente',
+            type: 'GET',
+            data: {
+                idEstudiante: idEstudiante,
+                idPeriodo: calClaseActual.idPeriodo,
+                idCurso: calClaseActual.idCurso,
+                idSeccion: calClaseActual.idSeccion,
+                idGrupo: calClaseActual.idGrupo
+            }
+        });
+
+        $("#detCuerpo").html(response.esCorrecto
+            ? renderDetalleCalificaciones(response.dato)
+            : `<div class="text-danger">${escapeHtml(response.mensaje)}</div>`);
+    } catch (e) {
+        $("#detCuerpo").html('<div class="text-danger">No fue posible consultar el detalle.</div>');
+    }
 }
 
 async function abrirHistorial() {
