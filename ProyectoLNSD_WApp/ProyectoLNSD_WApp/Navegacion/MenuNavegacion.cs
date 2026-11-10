@@ -57,6 +57,11 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Mi asistencia", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
                     u => u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
                 new("Asistencia de mis estudiantes", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                // Becas (MBEF-01-07)
+                new("Mi beca", "bi-cash-coin", "Beca", "MiBeca",
+                    u => u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                new("Becas de mis estudiantes", "bi-cash-coin", "Beca", "MiBeca",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true)
             ]),
 
@@ -81,6 +86,10 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
                 new("Asistencia", "bi-clipboard-data", "Asistencia", "Consulta",
                     u => u.TienePermiso("Asistencia", "Ver"), CoincidirAccion: true),
+                new("Becas", "bi-cash-coin", "Beca", "Index",
+                    u => u.TienePermiso("Becas", "Ver"), CoincidirAccion: true),
+                new("Requisitos de beca", "bi-list-check", "Beca", "Requisitos",
+                    u => u.TienePermiso("Becas", "Editar"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
                          && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true)

@@ -2,7 +2,6 @@
 
 namespace ProyectoLNSD_WApp.BLL.DTO
 {
-    /// Lo que envía la pantalla al guardar la lista (MCAF-01-01, 03, 04 y 05)
     public class AsistenciaGuardarDTO
     {
         [Range(1, int.MaxValue, ErrorMessage = "Seleccione la clase")]

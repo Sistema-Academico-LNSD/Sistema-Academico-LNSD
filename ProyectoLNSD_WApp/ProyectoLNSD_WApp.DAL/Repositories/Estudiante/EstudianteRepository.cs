@@ -25,9 +25,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Estudiante
 
             if (!string.IsNullOrWhiteSpace(texto))
             {
-                // Cada palabra debe coincidir con alguno de los campos (nombre, apellido,
-                // identificación, correo, carné o datos de un encargado), de modo que
-                // "Ana Mora" encuentra a Ana Mora aunque nombre y apellido estén separados.
                 var palabras = texto.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
                 foreach (string palabra in palabras)
@@ -88,8 +85,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Estudiante
         {
             int anio = estudiante.FechaIngreso.Year;
 
-            // Dos registros simultáneos podrían calcular el mismo consecutivo: el índice único
-            // de carnet lo impide y aquí se reintenta con el siguiente número.
             for (int intento = 1; intento <= IntentosCarnet; intento++)
             {
                 await using var transaccion = await _context.Database.BeginTransactionAsync();

@@ -1,6 +1,5 @@
 ﻿namespace ProyectoLNSD_WApp.BLL.DTO
 {
-    /// Un registro de asistencia ya guardado, con su clase y su estudiante (consultas e historial)
     public class AsistenciaRegistroDTO
     {
         public int IdAsistencia { get; set; }
@@ -35,7 +34,6 @@
 
         public string? Observacion { get; set; }
 
-        /// true si se corrigió después de registrarse (MCAF-01-05)
         public bool Modificado { get; set; }
     }
 }

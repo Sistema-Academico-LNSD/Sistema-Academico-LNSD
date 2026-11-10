@@ -1,0 +1,16 @@
+﻿@{
+    bool esEncargado = User.IsInRole(RolesSistema.Encargado) && !User.IsInRole(RolesSistema.Estudiante);
+
+    ViewData["Title"] = esEncargado ? "Becas de mis estudiantes" : "Mi beca";
+    ViewData["Subtitle"] = "Vigencia y monto de las becas socioeconómicas activas";
+    ViewData["Icon"] = "bi-cash-coin";
+}
+
+<div id="mbContenido">
+    <p class="text-center text-muted">Cargando...</p>
+</div>
+
+@section Scripts {
+    <script src="~/js/becas-comun.js" asp-append-version="true"></script>
+    <script src="~/js/mi-beca.js" asp-append-version="true"></script>
+}

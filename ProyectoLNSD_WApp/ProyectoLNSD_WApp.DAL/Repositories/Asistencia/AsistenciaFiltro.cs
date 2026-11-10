@@ -1,6 +1,6 @@
 ﻿namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
 {
-    /// Criterios de búsqueda de asistencia. Se acumulan: solo quedan los registros que cumplen todos.
+    /// Criterios de búsqueda de asistencia
     public class AsistenciaFiltro
     {
         public int? IdPeriodo { get; set; }
@@ -13,15 +13,15 @@
 
         public int? IdCurso { get; set; }
 
-        /// Limita a las clases de un docente (lo usa el servicio cuando consulta un docente)
+        /// Limita a las clases de un docente
         public int? IdDocente { get; set; }
 
         public int? IdMatricula { get; set; }
 
-        /// Para estudiante y encargado: solo sus matrículas
+        /// Para estudiante y encargado
         public List<int>? IdsMatriculas { get; set; }
 
-        /// Nombre, apellido, carné o identificación del estudiante
+        /// Nombre, apellido, carnet o identificación del estudiante
         public string? Texto { get; set; }
 
         public DateOnly? Desde { get; set; }
@@ -30,11 +30,11 @@
 
         public string? Estado { get; set; }
 
-        /// true = sin las presencias (solo ausencias, tardías y justificadas)
+        /// true = sin las presencias
         public bool SoloIncidencias { get; set; }
     }
 
-    /// Conteo de estados de un estudiante (matrícula) en un curso. Lo calcula SQL Server.
+    /// Conteo de estados de un estudiante (matrícula) en un curso.
     public class ConteoAsistencia
     {
         public int IdMatricula { get; set; }

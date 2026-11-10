@@ -3,7 +3,6 @@ using ProyectoLNSD_WApp.BLL.DTO;
 
 namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
 {
-    /// Reporte de asistencia en Excel (MCAF-01-12). Separado del servicio: solo arma el archivo.
     public static class AsistenciaReporteExcel
     {
         public static byte[] Generar(List<AsistenciaResumenDTO> lista, string nombrePeriodo, AsistenciaFiltroDTO filtro)
@@ -71,7 +70,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             return memoria.ToArray();
         }
 
-        // Evita que Excel interprete como fórmula un texto escrito por un usuario (=, +, -, @)
         private static string TextoSeguro(string? texto)
         {
             if (string.IsNullOrEmpty(texto))

@@ -18,7 +18,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
 
         private const string MatriculaAnulada = "Anulada";
 
-        // Tope de filas del detalle, para no cargar un año entero en el navegador
         private const int LimiteRegistros = 1000;
 
         private readonly IAsistenciaRepository _asistenciaRepository;
@@ -40,10 +39,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             _periodoRepository = periodoRepository;
             _matriculaRepository = matriculaRepository;
         }
-
-        // =====================================================================
-        // Docente: pasar lista (MCAF-01-01 a 01-05)
-        // =====================================================================
 
         public async Task<RespuestaDTO<List<HorarioDTO>>> GetMisClases(int idUsuario)
         {
@@ -117,13 +112,11 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
 
                 var clase = sesion!.Clase;
 
-                // MCAF-01-13: período cerrado = solo lectura
                 if (await _asistenciaRepository.GetCierre(clase.IdPeriodo) != null)
                     return FallaLista(
                         $"El registro de asistencia del período {sesion.Periodo.Nombre} está cerrado; no se puede modificar",
                         1405);
 
-                // La lista que llega debe ser exactamente la de la clase: ni de más ni de menos
                 var matriculas = await _asistenciaRepository.GetMatriculasDeClase(
                     clase.IdPeriodo, clase.IdSeccion, clase.IdGrupo, clase.IdCurso);
 
@@ -148,13 +141,11 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
 
                 foreach (var r in dto.Registros)
                 {
-                    // MCAF-01-03
                     string? estado = AsistenciaReglas.NormalizarEstado(r.Estado);
 
                     if (estado == null)
                         return FallaLista("Marque un estado válido (presente, ausente, tardía o justificada) para cada estudiante", 1406);
 
-                    // MCAF-01-04
                     string? observacion = AsistenciaReglas.LimpiarObservacion(r.Observacion);
 
                     if (observacion?.Length > AsistenciaReglas.MaxObservacion)
@@ -169,7 +160,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
                     });
                 }
 
-                // MCAF-01-05: corregir una lista ya guardada requiere el permiso Editar
                 var existentes = await _asistenciaRepository.GetDeSesion(clase.IdHorario, fecha);
 
                 if (existentes.Count > 0 && !puedeEditar)
@@ -201,7 +191,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             {
                 var filtro = new AsistenciaFiltro { IdMatricula = idMatricula, IdCurso = idCurso };
 
-                // Un docente solo ve el historial de sus propias clases
                 string? errorAlcance = await AplicarAlcance(idUsuario, soloPropias, filtro);
 
                 if (errorAlcance != null)
@@ -220,10 +209,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
                 return RespuestaDTO<List<AsistenciaRegistroDTO>>.Error("No fue posible consultar el historial", 1409);
             }
         }
-
-        // =====================================================================
-        // Consulta y reportes (MCAF-01-09, 01-10 y 01-12)
-        // =====================================================================
 
         public async Task<RespuestaDTO<OpcionesAsistenciaDTO>> GetOpciones(int idUsuario, bool soloPropias, int? idPeriodo)
         {
@@ -246,7 +231,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
                     idDocente = docente.IdDocente;
                 }
 
-                // Las listas salen de los horarios del período: solo aparece lo que tiene clases
                 var horarios = idSeleccionado.HasValue
                     ? await _horarioRepository.Buscar(new HorarioFiltro { IdPeriodo = idSeleccionado, IdDocente = idDocente })
                     : new List<DAL.Entities.Horario>();
@@ -340,7 +324,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
                 if (error != null)
                     return RespuestaDTO<List<AsistenciaRegistroDTO>>.Error(error, 1406);
 
-                // Se pide uno de más para saber si hay más registros que el tope
                 var registros = await _asistenciaRepository.Buscar(filtroDal!, LimiteRegistros + 1);
 
                 string? mensaje = null;
@@ -385,15 +368,10 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             }
         }
 
-        // =====================================================================
-        // Estudiante y encargado (MCAF-01-07 y 01-08)
-        // =====================================================================
-
         public async Task<RespuestaDTO<MiAsistenciaDTO>> GetMiAsistencia(int idUsuario, bool esEncargado, int? idPeriodo)
         {
             try
             {
-                // La persona se identifica por la sesión: nunca ve matrículas que no son suyas
                 var matriculas = (await _matriculaRepository.MatriculasDeUsuario(idUsuario, esEncargado))
                     .Where(m => m.Estado != MatriculaAnulada)
                     .ToList();
@@ -412,7 +390,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
                     .OrderByDescending(p => p.FechaInicio)
                     .ToList();
 
-                // Período pedido (si es uno de los suyos), si no el activo, si no el más reciente
                 int idSeleccionado =
                     periodos.Any(p => p.IdPeriodo == idPeriodo) ? idPeriodo!.Value
                     : periodos.FirstOrDefault(p => p.Activo)?.IdPeriodo
@@ -476,10 +453,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             }
         }
 
-        // =====================================================================
-        // Cierre del período (MCAF-01-13)
-        // =====================================================================
-
         public async Task<RespuestaDTO<CierreAsistenciaDTO>> GetCierre(int idPeriodo)
         {
             try
@@ -532,10 +505,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             }
         }
 
-        // =====================================================================
-        // Integración con Notas (MCAF-01-11)
-        // =====================================================================
-
         public async Task<RespuestaDTO<decimal?>> ObtenerPorcentaje(int idMatricula, int idCurso)
         {
             try
@@ -560,10 +529,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             }
         }
 
-        // =====================================================================
-        // Auxiliares
-        // =====================================================================
-
         private sealed record Sesion(DAL.Entities.Horario Clase, DAL.Entities.PeriodoLectivo Periodo);
 
         private async Task<DAL.Entities.Docente?> GetDocenteActivo(int idUsuario)
@@ -573,8 +538,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             return docente != null && docente.Estado ? docente : null;
         }
 
-        /// Reglas comunes para abrir o guardar una lista: la clase es del docente,
-        /// está activa y la fecha corresponde a esa clase y a su período.
         private async Task<(Sesion? Sesion, RespuestaDTO<AsistenciaListaDTO>? Error)> ValidarSesion(
             int idUsuario, int idHorario, DateOnly fecha)
         {
@@ -585,7 +548,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
 
             var clase = await _horarioRepository.GetById(idHorario);
 
-            // Misma respuesta si no existe o es de otro docente: no se revela qué clases existen
             if (clase == null || clase.IdDocente != docente.IdDocente)
                 return (null, FallaLista("La clase seleccionada no existe o no está asignada a usted", 1403));
 
@@ -661,7 +623,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             };
         }
 
-        /// Si quien consulta es docente, limita la búsqueda a sus clases. Devuelve un error o null.
         private async Task<string?> AplicarAlcance(int idUsuario, bool soloPropias, AsistenciaFiltro filtro)
         {
             if (!soloPropias)
@@ -677,7 +638,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             return null;
         }
 
-        /// Pasa los filtros de pantalla a la DAL. Sin período se usa el activo.
         private async Task<(AsistenciaFiltro? Filtro, string? Error)> PrepararFiltro(
             int idUsuario, bool soloPropias, AsistenciaFiltroDTO dto)
         {
@@ -720,7 +680,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             return (filtro, null);
         }
 
-        /// Conteos de la BD + nombres de estudiantes y cursos + porcentaje (MCAF-01-10)
         private async Task<List<AsistenciaResumenDTO>> CalcularResumen(AsistenciaFiltro filtroDal, AsistenciaFiltroDTO dto)
         {
             var conteos = await _asistenciaRepository.Contar(filtroDal);
@@ -767,7 +726,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             if (dto.SoloBajoUmbral)
                 lista = lista.Where(r => r.BajoUmbral);
 
-            // Primero los casos de menor asistencia: es lo que se busca en un reporte
             return lista
                 .OrderBy(r => r.Porcentaje)
                 .ThenBy(r => r.NombreEstudiante)
@@ -779,7 +737,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
         {
             var cierre = await _asistenciaRepository.GetCierre(periodo.IdPeriodo);
 
-            // Solo se cierra un período finalizado: a partir de su último día
             bool finalizado = AsistenciaReglas.Hoy() >= periodo.FechaFin;
 
             return new CierreAsistenciaDTO
@@ -819,7 +776,6 @@ namespace ProyectoLNSD_WApp.BLL.Service.Asistencia
             Modificado = a.FechaModificacion.HasValue
         };
 
-        // "Apellido Nombre": así se ordenan las listas de clase
         private static string NombreEstudiante(DAL.Entities.Estudiante? e) =>
             e?.Usuario == null ? string.Empty : $"{e.Usuario.Apellido} {e.Usuario.Nombre}";
 

@@ -15,8 +15,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
             _context = context;
         }
 
-        // ---------- Lista de clase ----------
-
         public async Task<List<Entities.Matricula>> GetMatriculasDeClase(
             int idPeriodo, int idSeccion, int idGrupo, int idCurso)
         {
@@ -41,12 +39,9 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
                 .ToListAsync();
         }
 
-        // ---------- Escritura ----------
-
         public async Task<(int Nuevos, int Modificados)> GuardarSesion(
             int idHorario, DateOnly fecha, IReadOnlyList<Entities.Asistencia> registros, int idUsuario, DateTime ahora)
         {
-            // Se cargan con seguimiento para que EF actualice solo lo que cambió
             var existentes = await _context.Asistencias
                 .Where(a => a.IdHorario == idHorario && a.Fecha == fecha)
                 .ToDictionaryAsync(a => a.IdMatricula);
@@ -83,14 +78,11 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
                 }
             }
 
-            // Un solo SaveChanges: se guarda toda la lista o nada
             if (nuevos + modificados > 0)
                 await _context.SaveChangesAsync();
 
             return (nuevos, modificados);
         }
-
-        // ---------- Consultas ----------
 
         public async Task<List<Entities.Asistencia>> Buscar(AsistenciaFiltro filtro, int limite)
         {
@@ -110,7 +102,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
 
         public async Task<List<ConteoAsistencia>> Contar(AsistenciaFiltro filtro)
         {
-            // GROUP BY en SQL Server: no se traen a memoria todos los registros del período
             return await Filtrar(filtro)
                 .GroupBy(a => new { a.IdMatricula, a.Horario!.IdCurso })
                 .Select(g => new ConteoAsistencia
@@ -149,8 +140,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
                 .ToListAsync();
         }
 
-        // ---------- Cierre ----------
-
         public async Task<Entities.AsistenciaCierre?> GetCierre(int idPeriodo)
         {
             return await _context.AsistenciasCierres
@@ -169,8 +158,6 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Asistencia
 
             return true;
         }
-
-        // ---------- Auxiliares ----------
 
         private IQueryable<Entities.Asistencia> Filtrar(AsistenciaFiltro f)
         {

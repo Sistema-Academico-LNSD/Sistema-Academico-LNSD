@@ -1,0 +1,252 @@
+﻿@{
+    ViewData["Title"] = "Becas";
+    ViewData["Subtitle"] = "Becas socioeconómicas: registro, activación, consulta e historial";
+    ViewData["Icon"] = "bi-cash-coin";
+
+    bool puedeCrear = User.TienePermiso("Becas", "Crear");
+    bool puedeEditar = User.TienePermiso("Becas", "Editar");
+}
+
+@section Acciones {
+    @if (puedeEditar)
+    {
+        <a asp-action="Requisitos" class="btn btn-outline-primary">
+            <i class="bi bi-list-check"></i> Requisitos
+        </a>
+    }
+    @if (puedeCrear)
+    {
+        <button type="button" id="btnNuevaBeca" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Registrar beca
+        </button>
+    }
+}
+
+<div id="becasPagina" data-puede-crear="@(puedeCrear ? "true" : "false")"
+     data-puede-editar="@(puedeEditar ? "true" : "false")">
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form id="formFiltros" class="row g-2">
+                <div class="col-md-4 col-lg-3">
+                    <label for="fPeriodo" class="form-label small mb-1">Período lectivo</label>
+                    <select id="fPeriodo" class="form-select"></select>
+                </div>
+                <div class="col-md-4 col-lg-3">
+                    <label for="fTexto" class="form-label small mb-1">Estudiante</label>
+                    <input id="fTexto" class="form-control" placeholder="Nombre, identificación o carné" maxlength="100" />
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label for="fGrado" class="form-label small mb-1">Grado</label>
+                    <select id="fGrado" class="form-select"></select>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label for="fEstado" class="form-label small mb-1">Estado de la beca</label>
+                    <select id="fEstado" class="form-select">
+                        <option value="">Todos los estados</option>
+                        <option value="Activa" selected>Activa</option>
+                        <option value="Vencida">Vencida</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Inactiva">Inactiva</option>
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-2 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary flex-grow-1">
+                        <i class="bi bi-search"></i> Buscar
+                    </button>
+                    <button type="button" id="btnLimpiar" class="btn btn-outline-secondary" title="Limpiar filtros">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="becasContadores" class="d-flex flex-wrap gap-2 small mb-3"></div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle" id="tblBecas">
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Grado</th>
+                            <th>Período</th>
+                            <th class="text-end">Monto</th>
+                            <th>Vigencia</th>
+                            <th>Estado</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td colspan="7" class="text-center text-muted">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---------- Registro, actualización y detalle de una beca ---------- *@
+<div class="modal fade" id="modalBeca" tabindex="-1" aria-labelledby="modalBecaTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalBecaTitulo"><i class="bi bi-cash-coin"></i> Registrar beca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+
+                @* Paso 1 (solo al registrar): período y estudiante *@
+                <div id="pasoEstudiante">
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-5">
+                            <label for="bPeriodo" class="form-label">Período lectivo</label>
+                            <select id="bPeriodo" class="form-select"></select>
+                        </div>
+                        <div class="col-md-7">
+                            <label for="bBuscarEstudiante" class="form-label">Estudiante</label>
+                            <div class="input-group">
+                                <input id="bBuscarEstudiante" class="form-control" maxlength="100"
+                                       placeholder="Nombre, identificación o carné" autocomplete="off" />
+                                <button type="button" id="btnBuscarEstudiante" class="btn btn-outline-primary" title="Buscar">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="bResultados" class="list-group small"></div>
+                </div>
+
+                @* Paso 2: datos de la beca *@
+                <div id="pasoBeca" class="d-none">
+                    <div id="bAviso" class="alert d-none small" role="status"></div>
+
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3 p-3 rounded bg-light border">
+                        <div>
+                            <div class="fw-semibold" id="bNombre"></div>
+                            <div class="small text-muted" id="bIdentificacion"></div>
+                            <div class="small" id="bUbicacion"></div>
+                        </div>
+                        <div class="text-end">
+                            <div id="bEstado"></div>
+                            <button type="button" id="btnCambiarEstudiante" class="btn btn-link btn-sm p-0 mt-1">
+                                Elegir otro estudiante
+                            </button>
+                        </div>
+                    </div>
+
+                    <form id="formBeca" novalidate>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="bMonto" class="form-label">Monto asignado (₡)</label>
+                                <input id="bMonto" type="number" min="0.01" step="0.01" class="form-control" required />
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label for="bInicio" class="form-label">Inicio de la vigencia</label>
+                                <input id="bInicio" type="date" class="form-control" required />
+                            </div>
+                            <div class="col-6 col-md-4">
+                                <label for="bFin" class="form-label">Fin de la vigencia</label>
+                                <input id="bFin" type="date" class="form-control" required />
+                            </div>
+                            <div class="col-12">
+                                <div class="form-text mt-0" id="bAyudaVigencia"></div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label mb-1">Requisitos de elegibilidad</label>
+                                <div id="bRequisitos" class="list-group"></div>
+                                <div class="form-text">Marque los requisitos que el estudiante cumple. Los que verifica el sistema no se pueden marcar a mano.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="bObservacion" class="form-label">Observación <span class="text-muted small">(opcional)</span></label>
+                                <textarea id="bObservacion" class="form-control" rows="2" maxlength="500"></textarea>
+                            </div>
+
+                            <div class="col-12" id="bActivarFila">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="bActivar" />
+                                    <label class="form-check-label" for="bActivar">
+                                        Activar la beca al guardar <span class="text-muted small">(solo si cumple los requisitos obligatorios)</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div id="bAuditoria" class="small text-muted mt-3"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" id="btnGuardarBeca" class="btn btn-primary d-none">
+                    <i class="bi bi-save"></i> Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---------- Desactivar (MBEF-01-05) ---------- *@
+<div class="modal fade" id="modalDesactivar" tabindex="-1" aria-labelledby="modalDesactivarTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalDesactivarTitulo"><i class="bi bi-slash-circle"></i> Desactivar beca</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2" id="dEstudiante"></p>
+                <label for="dMotivo" class="form-label">Motivo</label>
+                <textarea id="dMotivo" class="form-control" rows="3" maxlength="500"
+                          placeholder="Por ejemplo: ya no cumple la condición de vulnerabilidad según SINIRUBE"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarDesactivar" class="btn btn-danger">Desactivar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* ---------- Historial de becas de un estudiante (MBEF-01-09) ---------- *@
+<div class="modal fade" id="modalHistorialBeca" tabindex="-1" aria-labelledby="modalHistorialBecaTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h5 class="modal-title" id="modalHistorialBecaTitulo"><i class="bi bi-clock-history"></i> Historial de becas</h5>
+                    <div class="small text-muted" id="hEstudiante"></div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="hResumen" class="d-flex flex-wrap gap-2 small mb-3"></div>
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle">
+                        <thead>
+                            <tr>
+                                <th>Período</th>
+                                <th class="text-end">Monto</th>
+                                <th>Vigencia</th>
+                                <th>Estado</th>
+                                <th>Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hFilas"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/becas-comun.js" asp-append-version="true"></script>
+    <script src="~/js/becas.js" asp-append-version="true"></script>
+}
