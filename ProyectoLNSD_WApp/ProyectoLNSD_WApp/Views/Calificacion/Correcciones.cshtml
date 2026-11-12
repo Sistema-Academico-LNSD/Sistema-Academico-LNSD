@@ -1,0 +1,95 @@
+@{
+    ViewData["Title"] = "Corrección de notas";
+    ViewData["Subtitle"] = "Autorice correcciones de notas en períodos lectivos cerrados";
+    ViewData["Icon"] = "bi-unlock";
+}
+
+<div class="card">
+
+    <div class="card-header">
+        <h2><i class="bi bi-unlock"></i> Autorizar correcciones</h2>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <label for="corPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="corPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-5">
+                <label for="corClase" class="form-label small mb-1">Curso, grado, sección y grupo</label>
+                <select id="corClase" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="corBuscar" class="form-label small mb-1">Buscar estudiante o actividad</label>
+                <input type="search" id="corBuscar" class="form-control form-control-sm" placeholder="Nombre, carné..." />
+            </div>
+        </div>
+
+        <div id="corAviso" class="alert alert-info py-2 small d-none"></div>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Rubro · Actividad</th>
+                        <th class="text-center">Nota</th>
+                        <th>Estado</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody id="corCuerpo">
+                    <tr><td colspan="5" class="text-center text-muted">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="form-text mt-2">Cada autorización sirve para un solo cambio. Después de usarla, el docente necesita otra para volver a modificar esa nota.</div>
+
+    </div>
+
+</div>
+
+<!-- Motivo de la autorización -->
+<div class="modal fade" id="modalCorreccion" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Autorizar corrección</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-3">
+                    <div class="fw-semibold" id="corEstudiante"></div>
+                    <div class="small text-muted" id="corDetalle"></div>
+                </div>
+
+                <label for="corMotivo" class="form-label">Motivo de la corrección</label>
+                <textarea id="corMotivo" class="form-control" rows="3" maxlength="500"
+                          placeholder="Justifique por qué se permite cambiar esta nota después del cierre"></textarea>
+
+                <div id="corError" class="text-danger small mt-2 d-none"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnAutorizar" class="btn btn-primary">Autorizar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/calificacion-correcciones.js" asp-append-version="true"></script>
+
+}

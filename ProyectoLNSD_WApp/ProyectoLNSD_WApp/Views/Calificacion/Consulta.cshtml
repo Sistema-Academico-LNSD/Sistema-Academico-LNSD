@@ -1,0 +1,85 @@
+@{
+    ViewData["Title"] = "Consulta de calificaciones";
+    ViewData["Subtitle"] = "Supervise el rendimiento académico por período, curso, grado, sección, grupo o estudiante";
+    ViewData["Icon"] = "bi-card-checklist";
+}
+
+<div class="card">
+
+    <div class="card-header">
+        <h2><i class="bi bi-card-checklist"></i> Consulta de calificaciones</h2>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-3">
+                <label for="cnsPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="cnsPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="cnsCurso" class="form-label small mb-1">Curso</label>
+                <select id="cnsCurso" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="cnsSeccion" class="form-label small mb-1">Grado y sección</label>
+                <select id="cnsSeccion" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="cnsGrupo" class="form-label small mb-1">Grupo</label>
+                <select id="cnsGrupo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-2">
+                <label for="cnsBuscar" class="form-label small mb-1">Estudiante</label>
+                <input type="search" id="cnsBuscar" class="form-control form-control-sm" placeholder="Nombre o carné" />
+            </div>
+        </div>
+
+        <div id="cnsAviso" class="alert alert-info py-2 small d-none"></div>
+
+        <div class="table-responsive">
+            <table class="table table-sm align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Estudiante</th>
+                        <th>Curso</th>
+                        <th>Grado · sección · grupo</th>
+                        <th class="text-center">Promedio del semestre</th>
+                        <th class="text-center">Nota del año</th>
+                        <th class="text-center">Resultado</th>
+                        <th class="text-end"></th>
+                    </tr>
+                </thead>
+                <tbody id="cnsCuerpo">
+                    <tr><td colspan="7" class="text-center text-muted">Cargando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Detalle completo del estudiante -->
+<div class="modal fade" id="modalDetalleConsulta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de calificaciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="cnsDetalle"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/calificacion-detalle.js" asp-append-version="true"></script>
+    <script src="~/js/calificacion-consulta.js" asp-append-version="true"></script>
+
+}

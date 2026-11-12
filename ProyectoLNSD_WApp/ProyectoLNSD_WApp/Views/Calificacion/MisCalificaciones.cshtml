@@ -1,0 +1,47 @@
+@{
+    bool esEncargado = ViewBag.EsEncargado == true;
+
+    ViewData["Title"] = esEncargado ? "Calificaciones de mis estudiantes" : "Mis calificaciones";
+    ViewData["Subtitle"] = "Notas por curso, semestre y rubro de evaluación";
+    ViewData["Icon"] = "bi-card-checklist";
+}
+
+<div class="card" id="calConsulta" data-modo="@(esEncargado ? "encargado" : "estudiante")">
+
+    <div class="card-header">
+        <h2><i class="bi bi-card-checklist"></i> @ViewData["Title"]</h2>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+
+            @if (esEncargado)
+            {
+                <div class="col-md-5">
+                    <label for="conEstudiante" class="form-label small mb-1">Estudiante</label>
+                    <select id="conEstudiante" class="form-select form-select-sm"></select>
+                </div>
+            }
+
+            <div class="col-md-4">
+                <label for="conPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="conPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+        </div>
+
+        <div id="conAviso" class="alert alert-info py-2 small d-none"></div>
+
+        <div id="conDetalle"></div>
+
+    </div>
+
+</div>
+
+@section Scripts {
+
+    <script src="~/js/calificacion-detalle.js" asp-append-version="true"></script>
+    <script src="~/js/calificacion-mis-notas.js" asp-append-version="true"></script>
+
+}

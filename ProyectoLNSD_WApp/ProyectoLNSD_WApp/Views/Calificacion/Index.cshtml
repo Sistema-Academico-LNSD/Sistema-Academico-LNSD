@@ -1,0 +1,218 @@
+@{
+    ViewData["Title"] = "Registro de calificaciones";
+    ViewData["Subtitle"] = "Cree sus actividades y registre las notas de sus estudiantes";
+    ViewData["Icon"] = "bi-journal-check";
+}
+
+<style>
+    /* Estudiante fijo al desplazar horizontalmente cuando hay muchas actividades */
+    .cal-tabla .cal-fijo {
+        position: sticky;
+        left: 0;
+        background: var(--bs-body-bg);
+        z-index: 1;
+        min-width: 200px;
+    }
+
+    .cal-tabla .cal-nota {
+        min-width: 110px;
+    }
+
+    /* Nota digitada que todavía no se ha guardado */
+    .cal-tabla .nota-input.nota-pendiente {
+        background-color: var(--bs-warning-bg-subtle);
+    }
+</style>
+
+<div class="card">
+
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h2><i class="bi bi-journal-check"></i> Planilla de calificaciones</h2>
+        <span id="calContador" class="badge bg-secondary"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-2 mb-3">
+            <div class="col-md-4">
+                <label for="calPeriodo" class="form-label small mb-1">Período lectivo</label>
+                <select id="calPeriodo" class="form-select form-select-sm"></select>
+            </div>
+
+            <div class="col-md-8">
+                <label for="calClase" class="form-label small mb-1">Curso, grado, sección y grupo</label>
+                <select id="calClase" class="form-select form-select-sm"></select>
+            </div>
+        </div>
+
+        <div id="calAviso" class="alert alert-info py-2 small d-none"></div>
+
+        <div id="calPlanilla">
+            <p class="text-center text-muted mb-0">Cargando...</p>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Nueva actividad -->
+<div class="modal fade" id="modalActividad" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Nueva actividad — <span id="actRubroNombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <input type="hidden" id="actIdRubro" />
+
+                <div class="mb-3">
+                    <label for="actNombre" class="form-label">Nombre</label>
+                    <input type="text" id="actNombre" class="form-control" maxlength="100" placeholder="Ej: Práctica 1, Examen I, Investigación" />
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label for="actPuntos" class="form-label">Valor (puntos totales)</label>
+                        <input type="number" id="actPuntos" class="form-control" min="0.01" max="100" step="0.01" />
+                        <div id="actAyudaPuntos" class="form-text"></div>
+                    </div>
+
+                    <div class="col-6">
+                        <label for="actPorcentaje" class="form-label">Peso en la nota del año (%)</label>
+                        <div id="actPeso" class="form-control-plaintext fw-semibold py-1"></div>
+                        <input type="number" id="actPorcentaje" class="form-control d-none" min="0.01" max="100" step="0.01" />
+                        <div id="actAyudaPeso" class="form-text"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="actFecha" class="form-label">Fecha <span class="text-muted">(opcional)</span></label>
+                        <input type="date" id="actFecha" class="form-control" />
+                    </div>
+                </div>
+
+                <div id="actError" class="text-danger small mt-2 d-none"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarActividad" class="btn btn-primary">Agregar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Editar nota u observación -->
+<div class="modal fade" id="modalEditarNota" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Editar nota</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="mb-2">
+                    <div class="fw-semibold" id="edtEstudiante"></div>
+                    <div class="small text-muted" id="edtActividad"></div>
+                </div>
+
+                <div id="edtAviso" class="alert alert-warning py-2 small d-none">
+                    El período está cerrado: solo puede cambiar esta nota si el administrador o director autorizó la corrección.
+                </div>
+
+                <div class="row g-2 mb-2">
+                    <div class="col-6">
+                        <div class="small text-muted">Nota actual</div>
+                        <div class="fw-semibold" id="edtActual"></div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="small text-muted">Observación actual</div>
+                        <div class="small" id="edtObsActual"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="edtPuntos" class="form-label">Nueva nota (puntos)</label>
+                    <input type="number" id="edtPuntos" class="form-control" min="0" step="0.01" />
+                    <div id="edtAyudaPuntos" class="form-text"></div>
+                </div>
+
+                <div class="mb-1">
+                    <label for="edtObservacion" class="form-label">Observación</label>
+                    <textarea id="edtObservacion" class="form-control" rows="3" maxlength="500"
+                              placeholder="Obligatoria si cambia la nota (error, revisión, corrección). También puede agregar un comentario sin cambiar la nota."></textarea>
+                </div>
+
+                <div id="edtError" class="text-danger small mt-2 d-none"></div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarEdicion" class="btn btn-primary">Guardar cambio</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Detalle completo del estudiante en el curso (MCNF-01-15) -->
+<div class="modal fade" id="modalDetalle" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalle de calificaciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body" id="detCuerpo"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Historial de notas del estudiante en el curso -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title">Historial de notas — <span id="hisEstudiante"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Actividad</th>
+                                <th>Tipo</th>
+                                <th class="text-center">Cambio</th>
+                                <th>Observación</th>
+                                <th>Realizado por</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hisCuerpo"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+
+    <script src="~/js/calificacion-detalle.js" asp-append-version="true"></script>
+    <script src="~/js/calificacion.js" asp-append-version="true"></script>
+
+}

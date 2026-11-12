@@ -53,6 +53,14 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Horario de mis estudiantes", "bi-calendar-week", "Horario", "PorMatricula",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
                          && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                // Calificaciones (MCNF-01)
+                new("Registrar notas", "bi-journal-check", "Calificacion", "Index",
+                    u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Calificaciones", "Crear"), CoincidirAccion: true),
+                new("Mis calificaciones", "bi-card-checklist", "Calificacion", "MisCalificaciones",
+                    u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Calificaciones", "Ver"), CoincidirAccion: true),
+                new("Calificaciones de mis estudiantes", "bi-card-checklist", "Calificacion", "CalificacionesEstudiantes",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
+                         && u.TienePermiso("Calificaciones", "Ver"), CoincidirAccion: true),
                 // Asistencia (MCAF-01)
                 new("Pasar asistencia", "bi-check2-square", "Asistencia", "Registrar",
                     u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Asistencia", "Crear"), CoincidirAccion: true),
@@ -94,7 +102,13 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Becas", "Editar"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
-                         && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true)
+                         && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
+                new("Consulta de calificaciones", "bi-card-checklist", "Calificacion", "Consulta",
+                    u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
+                         && u.TienePermiso("Calificaciones", "Ver"), CoincidirAccion: true),
+                new("Corrección de notas", "bi-unlock", "Calificacion", "Correcciones",
+                    u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
+                         && u.TienePermiso("Calificaciones", "Editar"), CoincidirAccion: true)
             ]),
 
             new("Comedor", [
