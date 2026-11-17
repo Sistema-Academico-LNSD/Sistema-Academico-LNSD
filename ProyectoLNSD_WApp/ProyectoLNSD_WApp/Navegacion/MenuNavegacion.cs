@@ -118,6 +118,15 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Boleteria", "Ver"), CoincidirAccion: true)
             ]),
 
+            new("Inventario", [
+                new("Artículos", "bi-box-seam", "Inventario", "Index",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true),
+                new("Tipos de inventario", "bi-tags", "Inventario", "Categorias",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true),
+                new("Reportes de inventario", "bi-bar-chart-line", "Inventario", "Reportes",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true)
+            ]),
+
             new("Administración", [
                 new("Usuarios", "bi-person-gear", "Usuario", "Index",
                     u => u.TienePermiso("Usuarios", "Ver")),
