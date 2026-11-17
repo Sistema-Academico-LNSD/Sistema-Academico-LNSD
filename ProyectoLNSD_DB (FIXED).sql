@@ -1535,3 +1535,133 @@ BEGIN
       AND NOT EXISTS (SELECT 1 FROM dbo.Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = @ModuloId);
 END;
 GO
+
+
+/* ============================================================
+   PROYECTO LNSD - MÓDULO DE INVENTARIO (MIVF-01)
+   Ejecutar sobre Proyecto_LNSD_DB DESPUÉS del script base.
+   Categoria_Inv e Inventario del script base no las usa ningún
+   código; se ajustan con ALTER (si tuvieran datos, se avisa).
+   ============================================================ */
+
+USE Proyecto_LNSD_DB;
+GO
+
+-- 0) Protección: no tocar la estructura si ya hay artículos con la forma antigua
+IF COL_LENGTH(N'dbo.Inventario', N'unidad_medida') IS NULL
+   AND EXISTS (SELECT 1 FROM Inventario)
+    THROW 50003, N'Inventario tiene datos con la estructura antigua. Revisar antes de modificarla.', 1;
+GO
+
+-- 1) Tipos / categorías: activar y desactivar (MIVF-01-02, 01-03)
+IF COL_LENGTH(N'dbo.Categoria_Inv', N'activo') IS NULL
+    ALTER TABLE Categoria_Inv ADD activo BIT NOT NULL
+        CONSTRAINT DF_CategoriaInv_Activo DEFAULT 1;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Papelería')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Papelería');
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Suministros de limpieza y materiales de oficina')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Suministros de limpieza y materiales de oficina');
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Equipo tecnológico')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Equipo tecnológico');
+GO
+
+-- 2) Inventario: quién registra pasa a los movimientos; el estado texto pasa a BIT
+IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Inventario_Personal_Admin')
+    ALTER TABLE Inventario DROP CONSTRAINT FK_Inventario_Personal_Admin;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'id_perAdm') IS NOT NULL
+    ALTER TABLE Inventario DROP COLUMN id_perAdm;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'estado') IS NOT NULL
+    ALTER TABLE Inventario DROP COLUMN estado;
+GO
+
+-- 3) Columnas nuevas (MIVF-01-04, 01-14)
+IF COL_LENGTH(N'dbo.Inventario', N'unidad_medida') IS NULL
+    ALTER TABLE Inventario ADD unidad_medida NVARCHAR(30) NOT NULL;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'fecha_registro') IS NULL
+    ALTER TABLE Inventario ADD fecha_registro DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Inventario_FechaRegistro DEFAULT SYSDATETIME();
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'fecha_vencimiento') IS NULL
+    ALTER TABLE Inventario ADD fecha_vencimiento DATE NULL;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'cantidad_minima') IS NULL
+    ALTER TABLE Inventario ADD cantidad_minima INT NOT NULL
+        CONSTRAINT DF_Inventario_CantidadMinima DEFAULT 0;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'activo') IS NULL
+    ALTER TABLE Inventario ADD activo BIT NOT NULL
+        CONSTRAINT DF_Inventario_Activo DEFAULT 1;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_Inventario_Minima')
+    ALTER TABLE Inventario ADD CONSTRAINT CK_Inventario_Minima CHECK (cantidad_minima >= 0);
+GO
+
+-- Un mismo nombre no se repite dentro de la misma categoría
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Inventario_Categoria_Nombre')
+    CREATE UNIQUE INDEX UX_Inventario_Categoria_Nombre ON Inventario(id_categoria, nombre);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Inventario_Activo')
+    CREATE INDEX IX_Inventario_Activo ON Inventario(activo, id_categoria);
+GO
+
+-- 4) Movimientos de entrada y salida (MIVF-01-09 a 01-12, 01-17)
+IF OBJECT_ID(N'dbo.Inventario_Movimiento', N'U') IS NULL
+BEGIN
+    CREATE TABLE Inventario_Movimiento
+    (
+        id_movimiento       INT IDENTITY(1,1) NOT NULL,
+        id_inventario       INT NOT NULL,
+        tipo                NVARCHAR(10) NOT NULL,
+        cantidad            INT NOT NULL,
+        existencia_resultante INT NOT NULL,
+        fecha               DATETIME2(0) NOT NULL
+            CONSTRAINT DF_InvMov_Fecha DEFAULT SYSDATETIME(),
+        motivo              NVARCHAR(300) NULL,
+        nombre_responsable  NVARCHAR(150) NULL,
+        cedula_responsable  NVARCHAR(30) NULL,
+        id_usuario_registra INT NOT NULL,
+
+        CONSTRAINT PK_Inventario_Movimiento PRIMARY KEY (id_movimiento),
+        CONSTRAINT CK_InvMov_Tipo CHECK (tipo IN (N'Entrada', N'Salida')),
+        CONSTRAINT CK_InvMov_Cantidad CHECK (cantidad > 0),
+        CONSTRAINT CK_InvMov_Existencia CHECK (existencia_resultante >= 0),
+        -- La salida exige responsable y motivo (MIVF-01-10 y 01-11)
+        CONSTRAINT CK_InvMov_Salida CHECK (
+            tipo = N'Entrada'
+            OR (motivo IS NOT NULL AND nombre_responsable IS NOT NULL AND cedula_responsable IS NOT NULL)),
+
+        CONSTRAINT FK_InvMov_Inventario
+            FOREIGN KEY (id_inventario) REFERENCES Inventario(id_inventario),
+        CONSTRAINT FK_InvMov_Usuario
+            FOREIGN KEY (id_usuario_registra) REFERENCES Usuario(id_usuario)
+    );
+
+    CREATE INDEX IX_InvMov_Inventario_Fecha ON Inventario_Movimiento(id_inventario, fecha);
+    CREATE INDEX IX_InvMov_Fecha ON Inventario_Movimiento(fecha, tipo);
+END
+GO
+
+-- 5) Módulo y permisos
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Inventario')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Inventario', N'Tipos, artículos, entradas, salidas, existencias y reportes de la bodega institucional.');
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM (VALUES
+        (N'Administrador',           1, 1, 1, 0),
+        (N'Personal administrativo', 1, 1, 1, 0),
+        (N'Director',                1, 0, 0, 0)
+     ) AS p(rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Inventario'
+WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
+                  WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
+GO
