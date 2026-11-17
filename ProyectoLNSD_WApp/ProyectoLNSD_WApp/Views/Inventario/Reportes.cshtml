@@ -1,0 +1,202 @@
+﻿@{
+    ViewData["Title"] = "Reportes de inventario";
+    ViewData["Subtitle"] = "Existencias, movimientos y estadísticas de la bodega";
+    ViewData["Icon"] = "bi-bar-chart-line";
+
+    bool verEstadisticas = User.IsInRole("Administrador") || User.IsInRole("Director");
+}
+
+@section Acciones {
+    <a asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Inventario
+    </a>
+}
+
+<ul class="nav nav-tabs mb-3" id="tabsReportes" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="tabExistencias" data-bs-toggle="tab" data-bs-target="#panelExistencias"
+                type="button" role="tab" aria-controls="panelExistencias" aria-selected="true">
+            <i class="bi bi-boxes"></i> Existencias
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tabMovimientos" data-bs-toggle="tab" data-bs-target="#panelMovimientos"
+                type="button" role="tab" aria-controls="panelMovimientos" aria-selected="false">
+            <i class="bi bi-arrow-left-right"></i> Movimientos
+        </button>
+    </li>
+    @if (verEstadisticas)
+    {
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tabEstadisticas" data-bs-toggle="tab" data-bs-target="#panelEstadisticas"
+                    type="button" role="tab" aria-controls="panelEstadisticas" aria-selected="false">
+                <i class="bi bi-graph-up"></i> Estadísticas
+            </button>
+        </li>
+    }
+</ul>
+
+<div class="tab-content">
+
+    @* ---------- Existencias (MIVF-01-16) ---------- *@
+    <div class="tab-pane fade show active" id="panelExistencias" role="tabpanel" aria-labelledby="tabExistencias">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <label for="eCategoria" class="form-label small mb-1">Tipo de inventario</label>
+                        <select id="eCategoria" class="form-select">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-check mt-md-4">
+                            <input class="form-check-input" type="checkbox" id="eInactivos" />
+                            <label class="form-check-label small" for="eInactivos">Incluir artículos inactivos</label>
+                        </div>
+                    </div>
+                    <div class="col-md-4 d-flex gap-2">
+                        <button type="button" id="btnGenerarExistencias" class="btn btn-primary flex-fill">
+                            <i class="bi bi-search"></i> Generar
+                        </button>
+                        <button type="button" id="btnExcelExistencias" class="btn btn-outline-success flex-fill">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="eResumen" class="alert alert-light border small d-none"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle" id="tblExistencias">
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th class="text-end">Disponible</th>
+                                <th class="text-end">Mínimo</th>
+                                <th>Vence</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="5" class="text-center text-muted">Pulse "Generar" para ver el reporte.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Movimientos (MIVF-01-17) ---------- *@
+    <div class="tab-pane fade" id="panelMovimientos" role="tabpanel" aria-labelledby="tabMovimientos">
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-2">
+                        <label for="mDesde" class="form-label small mb-1">Desde</label>
+                        <input id="mDesde" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-2">
+                        <label for="mHasta" class="form-label small mb-1">Hasta</label>
+                        <input id="mHasta" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-3">
+                        <label for="mCategoria" class="form-label small mb-1">Tipo de inventario</label>
+                        <select id="mCategoria" class="form-select">
+                            <option value="">Todos los tipos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="mTipoMov" class="form-label small mb-1">Movimiento</label>
+                        <select id="mTipoMov" class="form-select">
+                            <option value="">Entradas y salidas</option>
+                            <option value="Entrada">Solo entradas</option>
+                            <option value="Salida">Solo salidas</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex gap-2">
+                        <button type="button" id="btnGenerarMovimientos" class="btn btn-primary flex-fill">
+                            <i class="bi bi-search"></i> Generar
+                        </button>
+                        <button type="button" id="btnExcelMovimientos" class="btn btn-outline-success flex-fill">
+                            <i class="bi bi-file-earmark-excel"></i> Excel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mResumenReporte" class="alert alert-light border small d-none"></div>
+
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped align-middle" id="tblMovimientos">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Movimiento</th>
+                                <th>Artículo</th>
+                                <th class="text-end">Cantidad</th>
+                                <th class="text-end">Existencia</th>
+                                <th>Responsable</th>
+                                <th>Motivo</th>
+                                <th>Registró</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="8" class="text-center text-muted">Seleccione el período y pulse "Generar".</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* ---------- Estadísticas (MIVF-01-18) ---------- *@
+    @if (verEstadisticas)
+    {
+        <div class="tab-pane fade" id="panelEstadisticas" role="tabpanel" aria-labelledby="tabEstadisticas">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label for="sDesde" class="form-label small mb-1">Desde</label>
+                            <input id="sDesde" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-3">
+                            <label for="sHasta" class="form-label small mb-1">Hasta</label>
+                            <input id="sHasta" type="date" class="form-control" />
+                        </div>
+                        <div class="col-md-4">
+                            <label for="sCategoria" class="form-label small mb-1">Tipo de inventario</label>
+                            <select id="sCategoria" class="form-select">
+                                <option value="">Todos los tipos</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-grid">
+                            <button type="button" id="btnGenerarEstadisticas" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Ver
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sContenido">
+                <div class="text-center text-muted py-4">Cargando...</div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        window.inventarioReportes = { estadisticas: @(verEstadisticas ? "true" : "false") };
+    </script>
+    <script src="~/js/inventario-reportes.js" asp-append-version="true"></script>
+}
