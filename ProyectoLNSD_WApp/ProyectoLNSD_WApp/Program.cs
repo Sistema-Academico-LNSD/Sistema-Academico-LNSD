@@ -51,6 +51,8 @@ using ProyectoLNSD_WApp.DAL.Repositories.Calificacion;
 using ProyectoLNSD_WApp.BLL.Service.Asistencia;
 using ProyectoLNSD_WApp.DAL.Repositories.Asistencia;
 using ProyectoLNSD_WApp.BLL.Service.Beca;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
+using ProyectoLNSD_WApp.Services;
 using ProyectoLNSD_WApp.DAL.Repositories.Beca;
 
 namespace ProyectoLNSD_WApp
@@ -122,6 +124,8 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<ICalificacionService, CalificacionService>();
             builder.Services.AddScoped<IAsistenciaService, AsistenciaService>();
             builder.Services.AddScoped<IBecaService, BecaService>();
+            builder.Services.AddScoped<INotificacionService, NotificacionService>();
+            builder.Services.AddHostedService<NotificacionProgramadaHostedService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

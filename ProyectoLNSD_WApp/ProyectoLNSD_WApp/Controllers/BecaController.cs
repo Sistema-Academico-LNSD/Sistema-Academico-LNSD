@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.Service.Beca;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 using System.Security.Claims;
 
 namespace ProyectoLNSD_WApp.Controllers
@@ -17,10 +18,12 @@ namespace ProyectoLNSD_WApp.Controllers
         private const string Modulo = "Becas";
 
         private readonly IBecaService _becaService;
+        private readonly INotificacionService _notificacionService;
 
-        public BecaController(IBecaService becaService)
+        public BecaController(IBecaService becaService, INotificacionService notificacionService)
         {
             _becaService = becaService;
+            _notificacionService = notificacionService;
         }
 
         // ---- Lista, búsqueda e historial (MBEF-01-08, 01-09 y 01-10) ----
@@ -98,7 +101,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _becaService.Guardar(idUsuario, dto));
+            var resultado = await _becaService.Guardar(idUsuario, dto);
+            if (resultado.EsCorrecto && resultado.Dato != null && dto.IdBeca > 0)
+                await _notificacionService.NotificarBeca(resultado.Dato.IdBeca, "ACTUALIZADA");
+            return Json(resultado);
         }
 
         // ---- Activar y desactivar (MBEF-01-04 y 01-05) ----
@@ -111,7 +117,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _becaService.Activar(idUsuario, idBeca));
+            var resultado = await _becaService.Activar(idUsuario, idBeca);
+            if (resultado.EsCorrecto)
+                await _notificacionService.NotificarBeca(idBeca, "APROBADA");
+            return Json(resultado);
         }
 
         [HttpPost]
@@ -122,7 +131,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _becaService.Desactivar(idUsuario, idBeca, motivo));
+            var resultado = await _becaService.Desactivar(idUsuario, idBeca, motivo);
+            if (resultado.EsCorrecto)
+                await _notificacionService.NotificarBeca(idBeca, "CANCELADA");
+            return Json(resultado);
         }
 
         // ---- Requisitos de elegibilidad (MBEF-01-01) ----

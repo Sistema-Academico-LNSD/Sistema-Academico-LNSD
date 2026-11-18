@@ -1,0 +1,13 @@
+<link rel="stylesheet" href="~/css/notificaciones.css" asp-append-version="true" />
+@{
+    ViewData["Title"] = "Configuración de notificaciones";
+}
+<div class="notificaciones-config">
+    @Html.AntiForgeryToken()
+    <p class="text-muted">Configure qué eventos generan notificaciones, a cuáles roles se envían y si el tipo está activo. El historial existente se conserva al desactivar un tipo.</p>
+    <div id="estadoConfiguracion" class="alert alert-light border">Cargando configuración...</div>
+    <div id="tiposNotificacion" class="row g-3"></div>
+</div>
+@section Scripts {
+    <script src="~/js/notificaciones-config.js" asp-append-version="true"></script>
+}

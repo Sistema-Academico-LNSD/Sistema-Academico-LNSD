@@ -626,16 +626,188 @@ GO
    9. COMUNICACIÓN Y REPORTES
    ============================================================ */
 
-CREATE TABLE Notificacion
+CREATE TABLE dbo.Notificacion_Tipo
 (
-    id_notificacion INT IDENTITY(1,1) NOT NULL,
-    id_usuario INT NOT NULL,
+    id_tipo INT IDENTITY(1,1) NOT NULL,
+    codigo NVARCHAR(60) NOT NULL,
+    nombre NVARCHAR(120) NOT NULL,
+    modulo NVARCHAR(60) NOT NULL,
+    descripcion NVARCHAR(300) NOT NULL,
+    activo BIT NOT NULL
+        CONSTRAINT DF_NotificacionTipo_Activo DEFAULT (1),
+    fecha_creacion DATETIME2 NOT NULL
+        CONSTRAINT DF_NotificacionTipo_Fecha DEFAULT (GETDATE()),
 
-    CONSTRAINT PK_Notificacion PRIMARY KEY (id_notificacion),
-    CONSTRAINT FK_Notificacion_Usuario
-        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+    CONSTRAINT PK_Notificacion_Tipo PRIMARY KEY (id_tipo),
+    CONSTRAINT UQ_NotificacionTipo_Codigo UNIQUE (codigo)
 );
 GO
+
+CREATE TABLE dbo.Notificacion_Tipo_Rol
+(
+    id_tipo INT NOT NULL,
+    rol NVARCHAR(60) NOT NULL,
+
+    CONSTRAINT PK_Notificacion_Tipo_Rol
+        PRIMARY KEY (id_tipo, rol),
+
+    CONSTRAINT FK_NotificacionTipoRol_Tipo
+        FOREIGN KEY (id_tipo)
+        REFERENCES dbo.Notificacion_Tipo(id_tipo)
+        ON DELETE CASCADE
+);
+GO
+
+CREATE TABLE dbo.Notificacion
+(
+    id_notificacion BIGINT IDENTITY(1,1) NOT NULL,
+    id_usuario INT NOT NULL,
+    id_tipo INT NOT NULL,
+    titulo NVARCHAR(180) NOT NULL,
+    mensaje NVARCHAR(2000) NOT NULL,
+    referencia NVARCHAR(250) NULL,
+    clave_evento NVARCHAR(180) NOT NULL,
+    fecha_creacion DATETIME2 NOT NULL
+        CONSTRAINT DF_Notificacion_Fecha DEFAULT (GETDATE()),
+    leida BIT NOT NULL
+        CONSTRAINT DF_Notificacion_Leida DEFAULT (0),
+    fecha_lectura DATETIME2 NULL,
+
+    CONSTRAINT PK_Notificacion PRIMARY KEY (id_notificacion),
+
+    CONSTRAINT FK_Notificacion_Usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES dbo.Usuario(id_usuario)
+        ON DELETE CASCADE,
+
+    CONSTRAINT FK_Notificacion_Tipo
+        FOREIGN KEY (id_tipo)
+        REFERENCES dbo.Notificacion_Tipo(id_tipo),
+
+    CONSTRAINT UQ_Notificacion_Usuario_Evento
+        UNIQUE (id_usuario, clave_evento)
+);
+GO
+
+CREATE INDEX IX_Notificacion_Usuario_Leida_Fecha
+    ON dbo.Notificacion(id_usuario, leida, fecha_creacion DESC);
+GO
+
+/* Tipos de notificaciones disponibles */
+
+INSERT INTO dbo.Notificacion_Tipo
+    (codigo, nombre, modulo, descripcion)
+VALUES
+(N'CALIFICACION_REGISTRADA', N'Calificación registrada',
+ N'Calificaciones', N'Se registra una nueva calificación.'),
+
+(N'CALIFICACION_ACTUALIZADA', N'Calificación actualizada',
+ N'Calificaciones', N'Se modifica una calificación existente.'),
+
+(N'ASISTENCIA_EXCEPCIONAL', N'Asistencia excepcional',
+ N'Asistencia', N'Se registra ausencia, tardía o justificación.'),
+
+(N'HORARIO_ASIGNADO', N'Nuevo horario asignado',
+ N'Horarios', N'Se asigna una nueva clase.'),
+
+(N'HORARIO_MODIFICADO', N'Horario modificado',
+ N'Horarios', N'Se modifica una clase existente.'),
+
+(N'HORARIO_RETIRADO', N'Horario retirado',
+ N'Horarios', N'Se retira o inactiva una clase.'),
+
+(N'ANUNCIO_PUBLICADO', N'Anuncio publicado',
+ N'Informativo', N'Se publica un anuncio institucional.'),
+
+(N'ANUNCIO_ACTUALIZADO', N'Anuncio actualizado',
+ N'Informativo', N'Se actualiza un anuncio publicado.'),
+
+(N'ACTIVIDAD_PUBLICADA', N'Actividad publicada',
+ N'Informativo', N'Se publica una actividad de calendario.'),
+
+(N'ACTIVIDAD_ACTUALIZADA', N'Actividad actualizada',
+ N'Informativo', N'Se modifica una actividad publicada.'),
+
+(N'ACTIVIDAD_CANCELADA', N'Actividad cancelada',
+ N'Informativo', N'Se cancela una actividad publicada.'),
+
+(N'EVENTO_PUBLICADO', N'Evento publicado',
+ N'Informativo', N'Se publica un evento institucional.'),
+
+(N'EVENTO_ACTUALIZADO', N'Evento actualizado',
+ N'Informativo', N'Se actualiza un evento institucional.'),
+
+(N'EVENTO_CANCELADO', N'Evento cancelado',
+ N'Informativo', N'Se cancela un evento institucional.'),
+
+(N'BECA_APROBADA', N'Beca aprobada',
+ N'Becas', N'Se activa o aprueba una beca.'),
+
+(N'BECA_ACTUALIZADA', N'Beca actualizada',
+ N'Becas', N'Se actualiza el monto o vigencia de una beca.'),
+
+(N'BECA_CANCELADA', N'Beca cancelada',
+ N'Becas', N'Se desactiva o cancela una beca.');
+GO
+
+/* Roles destinatarios predeterminados */
+
+INSERT INTO dbo.Notificacion_Tipo_Rol (id_tipo, rol)
+SELECT t.id_tipo, r.rol
+FROM
+(
+    VALUES
+    (N'CALIFICACION_REGISTRADA', N'Estudiante'),
+    (N'CALIFICACION_REGISTRADA', N'Encargado'),
+    (N'CALIFICACION_ACTUALIZADA', N'Estudiante'),
+    (N'CALIFICACION_ACTUALIZADA', N'Encargado'),
+
+    (N'ASISTENCIA_EXCEPCIONAL', N'Estudiante'),
+    (N'ASISTENCIA_EXCEPCIONAL', N'Encargado'),
+
+    (N'HORARIO_ASIGNADO', N'Estudiante'),
+    (N'HORARIO_ASIGNADO', N'Docente'),
+    (N'HORARIO_MODIFICADO', N'Estudiante'),
+    (N'HORARIO_MODIFICADO', N'Docente'),
+    (N'HORARIO_RETIRADO', N'Estudiante'),
+    (N'HORARIO_RETIRADO', N'Docente'),
+
+    (N'ANUNCIO_PUBLICADO', N'Estudiante'),
+    (N'ANUNCIO_PUBLICADO', N'Encargado'),
+    (N'ANUNCIO_PUBLICADO', N'Docente'),
+    (N'ANUNCIO_ACTUALIZADO', N'Docente'),
+
+    (N'ACTIVIDAD_PUBLICADA', N'Estudiante'),
+    (N'ACTIVIDAD_PUBLICADA', N'Encargado'),
+    (N'ACTIVIDAD_PUBLICADA', N'Docente'),
+    (N'ACTIVIDAD_ACTUALIZADA', N'Estudiante'),
+    (N'ACTIVIDAD_ACTUALIZADA', N'Encargado'),
+    (N'ACTIVIDAD_ACTUALIZADA', N'Docente'),
+    (N'ACTIVIDAD_CANCELADA', N'Estudiante'),
+    (N'ACTIVIDAD_CANCELADA', N'Encargado'),
+    (N'ACTIVIDAD_CANCELADA', N'Docente'),
+
+    (N'EVENTO_PUBLICADO', N'Estudiante'),
+    (N'EVENTO_PUBLICADO', N'Encargado'),
+    (N'EVENTO_PUBLICADO', N'Docente'),
+    (N'EVENTO_ACTUALIZADO', N'Estudiante'),
+    (N'EVENTO_ACTUALIZADO', N'Encargado'),
+    (N'EVENTO_ACTUALIZADO', N'Docente'),
+    (N'EVENTO_CANCELADO', N'Estudiante'),
+    (N'EVENTO_CANCELADO', N'Encargado'),
+    (N'EVENTO_CANCELADO', N'Docente'),
+
+    (N'BECA_APROBADA', N'Estudiante'),
+    (N'BECA_APROBADA', N'Encargado'),
+    (N'BECA_ACTUALIZADA', N'Estudiante'),
+    (N'BECA_ACTUALIZADA', N'Encargado'),
+    (N'BECA_CANCELADA', N'Estudiante'),
+    (N'BECA_CANCELADA', N'Encargado')
+) AS r(codigo, rol)
+INNER JOIN dbo.Notificacion_Tipo t
+    ON t.codigo = r.codigo;
+GO
+
 
 CREATE TABLE Anuncio
 (
