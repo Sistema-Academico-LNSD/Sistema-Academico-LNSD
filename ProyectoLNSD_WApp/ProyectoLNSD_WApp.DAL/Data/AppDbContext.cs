@@ -26,6 +26,7 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Institucion> Instituciones { get; set; }
         public virtual DbSet<PeriodoLectivo> PeriodosLectivos { get; set; }
         public virtual DbSet<ContenidoSitio> ContenidosSitio { get; set; }
+        public virtual DbSet<InformativoRegistro> InformativoRegistros { get; set; }
         public virtual DbSet<AccesoRapido> AccesosRapidos { get; set; }
         public virtual DbSet<AccesoRapidoRol> AccesosRapidosRoles { get; set; }
         public virtual DbSet<Tiquete> Tiquetes { get; set; }
@@ -47,9 +48,15 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<Nota> Notas { get; set; }
         public virtual DbSet<NotaHistorial> NotasHistorial { get; set; }
         public virtual DbSet<CorreccionAutorizada> CorreccionesAutorizadas { get; set; }
-        public virtual DbSet<Asistencia> Asistencias { get; set; }
         public virtual DbSet<ConfiguracionCalificacion> ConfiguracionesCalificacion { get; set; }
-
+        public virtual DbSet<Asistencia> Asistencias { get; set; }
+        public virtual DbSet<AsistenciaCierre> AsistenciasCierres { get; set; }
+        public virtual DbSet<Beca> Becas { get; set; }
+        public virtual DbSet<BecaRequisito> BecasRequisitos { get; set; }
+        public virtual DbSet<BecaRequisitoCumplido> BecasRequisitosCumplidos { get; set; }
+        public virtual DbSet<CategoriaInventario> CategoriasInventario { get; set; }
+        public virtual DbSet<Inventario> Inventarios { get; set; }
+        public virtual DbSet<InventarioMovimiento> InventarioMovimientos { get; set; }
 
         //Tables override mode builder
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -588,6 +595,29 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasForeignKey(d => d.IdUsuario)
                       .HasConstraintName("FK_LogAcceso_Usuario");
             });
+            modelBuilder.Entity<InformativoRegistro>(entity =>
+            {
+                entity.ToTable("Informativo_Registro");
+                entity.HasKey(e => e.IdInformativo).HasName("PK_Informativo_Registro");
+                entity.Property(e => e.IdInformativo).HasColumnName("id_informativo");
+                entity.Property(e => e.Tipo).HasColumnName("tipo").HasMaxLength(20).IsRequired();
+                entity.Property(e => e.Titulo).HasColumnName("titulo").HasMaxLength(180).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(4000).IsRequired();
+                entity.Property(e => e.FechaPublicacion).HasColumnName("fecha_publicacion").HasColumnType("datetime2");
+                entity.Property(e => e.FechaVigencia).HasColumnName("fecha_vigencia").HasColumnType("datetime2");
+                entity.Property(e => e.FechaInicio).HasColumnName("fecha_inicio").HasColumnType("datetime2");
+                entity.Property(e => e.FechaFin).HasColumnName("fecha_fin").HasColumnType("datetime2");
+                entity.Property(e => e.HoraInicio).HasColumnName("hora_inicio");
+                entity.Property(e => e.HoraFin).HasColumnName("hora_fin");
+                entity.Property(e => e.Ubicacion).HasColumnName("ubicacion").HasMaxLength(250);
+                entity.Property(e => e.Categoria).HasColumnName("categoria").HasMaxLength(60);
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).HasDefaultValue("Borrador");
+                entity.Property(e => e.Eliminado).HasColumnName("eliminado").HasDefaultValue(false);
+                entity.Property(e => e.IdUsuarioCrea).HasColumnName("id_usuario_crea");
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasDefaultValueSql("SYSUTCDATETIME()");
+                entity.HasIndex(e => new { e.Tipo, e.FechaInicio, e.Estado }).HasDatabaseName("IX_Informativo_Tipo_Fecha_Estado");
+            });
+
             modelBuilder.Entity<Institucion>(entity =>
             {
                 entity.ToTable("Institucion");
@@ -1291,6 +1321,67 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasConstraintName("FK_Horario_Docente");
             });
 
+
+            modelBuilder.Entity<CategoriaInventario>(entity =>
+            {
+                entity.ToTable("Categoria_Inv");
+                entity.HasKey(e => e.IdCategoria).HasName("PK_Categoria_Inv");
+
+                entity.Property(e => e.IdCategoria).HasColumnName("id_categoria");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(100).IsRequired();
+                entity.Property(e => e.Activo).HasColumnName("activo");
+
+                entity.HasIndex(e => e.Nombre).IsUnique().HasDatabaseName("UQ_Categoria_Inv_Nombre");
+            });
+
+            modelBuilder.Entity<Inventario>(entity =>
+            {
+                entity.ToTable("Inventario");
+                entity.HasKey(e => e.IdInventario).HasName("PK_Inventario");
+
+                entity.Property(e => e.IdInventario).HasColumnName("id_inventario");
+                entity.Property(e => e.IdCategoria).HasColumnName("id_categoria");
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(150).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(300);
+                entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+                entity.Property(e => e.UnidadMedida).HasColumnName("unidad_medida").HasMaxLength(30).IsRequired();
+                entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaVencimiento).HasColumnName("fecha_vencimiento");
+                entity.Property(e => e.CantidadMinima).HasColumnName("cantidad_minima");
+                entity.Property(e => e.Activo).HasColumnName("activo");
+
+                entity.HasIndex(e => new { e.IdCategoria, e.Nombre }).IsUnique().HasDatabaseName("UX_Inventario_Categoria_Nombre");
+                entity.HasIndex(e => new { e.Activo, e.IdCategoria }).HasDatabaseName("IX_Inventario_Activo");
+
+                entity.HasOne(e => e.Categoria).WithMany(c => c.Articulos)
+                      .HasForeignKey(e => e.IdCategoria).HasConstraintName("FK_Inventario_Categoria");
+            });
+
+            modelBuilder.Entity<InventarioMovimiento>(entity =>
+            {
+                entity.ToTable("Inventario_Movimiento");
+                entity.HasKey(e => e.IdMovimiento).HasName("PK_Inventario_Movimiento");
+
+                entity.Property(e => e.IdMovimiento).HasColumnName("id_movimiento");
+                entity.Property(e => e.IdInventario).HasColumnName("id_inventario");
+                entity.Property(e => e.Tipo).HasColumnName("tipo").HasMaxLength(10).IsRequired();
+                entity.Property(e => e.Cantidad).HasColumnName("cantidad");
+                entity.Property(e => e.ExistenciaResultante).HasColumnName("existencia_resultante");
+                entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("datetime2(0)");
+                entity.Property(e => e.Motivo).HasColumnName("motivo").HasMaxLength(300);
+                entity.Property(e => e.NombreResponsable).HasColumnName("nombre_responsable").HasMaxLength(150);
+                entity.Property(e => e.CedulaResponsable).HasColumnName("cedula_responsable").HasMaxLength(30);
+                entity.Property(e => e.IdUsuarioRegistra).HasColumnName("id_usuario_registra");
+
+                entity.HasIndex(e => new { e.IdInventario, e.Fecha }).HasDatabaseName("IX_InvMov_Inventario_Fecha");
+                entity.HasIndex(e => new { e.Fecha, e.Tipo }).HasDatabaseName("IX_InvMov_Fecha");
+
+                entity.HasOne(e => e.Inventario).WithMany(i => i.Movimientos)
+                      .HasForeignKey(e => e.IdInventario).HasConstraintName("FK_InvMov_Inventario");
+                entity.HasOne(e => e.UsuarioRegistra).WithMany()
+                      .HasForeignKey(e => e.IdUsuarioRegistra).HasConstraintName("FK_InvMov_Usuario");
+            });
+
             modelBuilder.Entity<RubroEvaluacion>(entity =>
             {
                 entity.ToTable("Rubro_Evaluacion");
@@ -1382,18 +1473,6 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_CorrAut_Nota");
             });
 
-            modelBuilder.Entity<Asistencia>(entity =>
-            {
-                entity.ToTable("Asistencia");
-                entity.HasKey(e => e.IdAsistencia).HasName("PK_Asistencia");
-                entity.Property(e => e.IdAsistencia).HasColumnName("id_asistencia");
-                entity.Property(e => e.IdEstudiante).HasColumnName("id_estudiante");
-                entity.Property(e => e.IdHorario).HasColumnName("id_horario");
-                entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("date");
-                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(20).IsRequired();
-                entity.Property(e => e.Observacion).HasColumnName("observacion").HasMaxLength(250);
-            });
-
             modelBuilder.Entity<ConfiguracionCalificacion>(entity =>
             {
                 entity.ToTable("Configuracion_Calificacion");
@@ -1402,6 +1481,251 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.NotaMinima).HasColumnName("nota_minima").HasColumnType("decimal(5,2)");
                 entity.Property(e => e.ConsiderarAsistencia).HasColumnName("considerar_asistencia");
                 entity.Property(e => e.PorcentajeAsistencia).HasColumnName("porcentaje_asistencia").HasColumnType("decimal(5,2)");
+            });
+
+            modelBuilder.Entity<Asistencia>(entity =>
+            {
+                entity.ToTable("Asistencia");
+
+                entity.HasKey(e => e.IdAsistencia)
+                      .HasName("PK_Asistencia");
+
+                entity.Property(e => e.IdAsistencia)
+                      .HasColumnName("id_asistencia");
+
+                entity.Property(e => e.IdHorario)
+                      .HasColumnName("id_horario");
+
+                entity.Property(e => e.IdMatricula)
+                      .HasColumnName("id_matricula");
+
+                entity.Property(e => e.Fecha)
+                      .HasColumnName("fecha")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Observacion)
+                      .HasColumnName("observacion")
+                      .HasMaxLength(250);
+
+                entity.Property(e => e.IdUsuarioRegistra)
+                      .HasColumnName("id_usuario_registra");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasColumnType("datetime2(0)")
+                      .HasDefaultValueSql("SYSDATETIME()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdHorario, e.IdMatricula, e.Fecha })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Asistencia_Horario_Matricula_Fecha");
+
+                entity.HasOne(d => d.Horario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdHorario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Horario");
+
+                entity.HasOne(d => d.Matricula)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdMatricula)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Asistencia_Matricula");
+            });
+
+            modelBuilder.Entity<AsistenciaCierre>(entity =>
+            {
+                entity.ToTable("Asistencia_Cierre");
+
+                entity.HasKey(e => e.IdPeriodo)
+                      .HasName("PK_Asistencia_Cierre");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo")
+                      .ValueGeneratedNever();
+
+                entity.Property(e => e.FechaCierre)
+                      .HasColumnName("fecha_cierre")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.IdUsuario)
+                      .HasColumnName("id_usuario");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Periodo");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_AsistenciaCierre_Usuario");
+            });
+
+            modelBuilder.Entity<BecaRequisito>(entity =>
+            {
+                entity.ToTable("Beca_Requisito");
+
+                entity.HasKey(e => e.IdRequisito)
+                      .HasName("PK_Beca_Requisito");
+
+                entity.Property(e => e.IdRequisito)
+                      .HasColumnName("id_requisito");
+
+                entity.Property(e => e.Nombre)
+                      .HasColumnName("nombre")
+                      .HasMaxLength(150)
+                      .IsRequired();
+
+                entity.Property(e => e.Descripcion)
+                      .HasColumnName("descripcion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.Obligatorio)
+                      .HasColumnName("obligatorio");
+
+                entity.Property(e => e.Verificacion)
+                      .HasColumnName("verificacion")
+                      .HasMaxLength(30);
+
+                entity.Property(e => e.Activo)
+                      .HasColumnName("activo");
+
+                entity.HasIndex(e => e.Nombre)
+                      .IsUnique()
+                      .HasDatabaseName("UQ_BecaRequisito_Nombre");
+            });
+
+            modelBuilder.Entity<Beca>(entity =>
+            {
+                entity.ToTable("Beca");
+
+                entity.HasKey(e => e.IdBeca)
+                      .HasName("PK_Beca");
+
+                entity.Property(e => e.IdBeca)
+                      .HasColumnName("id_beca");
+
+                entity.Property(e => e.IdEstudiante)
+                      .HasColumnName("id_estudiante");
+
+                entity.Property(e => e.IdPeriodo)
+                      .HasColumnName("id_periodo");
+
+                entity.Property(e => e.Monto)
+                      .HasColumnName("monto")
+                      .HasColumnType("decimal(12,2)");
+
+                entity.Property(e => e.FechaInicio)
+                      .HasColumnName("fecha_inicio")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.FechaFin)
+                      .HasColumnName("fecha_fin")
+                      .HasColumnType("date");
+
+                entity.Property(e => e.Estado)
+                      .HasColumnName("estado")
+                      .HasMaxLength(20)
+                      .IsRequired();
+
+                entity.Property(e => e.Observacion)
+                      .HasColumnName("observacion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.MotivoDesactivacion)
+                      .HasColumnName("motivo_desactivacion")
+                      .HasMaxLength(500);
+
+                entity.Property(e => e.FechaActivacion)
+                      .HasColumnName("fecha_activacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.FechaDesactivacion)
+                      .HasColumnName("fecha_desactivacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.Property(e => e.IdUsuarioRegistra)
+                      .HasColumnName("id_usuario_registra");
+
+                entity.Property(e => e.FechaRegistro)
+                      .HasColumnName("fecha_registro")
+                      .HasColumnType("datetime2(0)")
+                      .HasDefaultValueSql("SYSDATETIME()");
+
+                entity.Property(e => e.IdUsuarioModifica)
+                      .HasColumnName("id_usuario_modifica");
+
+                entity.Property(e => e.FechaModificacion)
+                      .HasColumnName("fecha_modificacion")
+                      .HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdEstudiante, e.IdPeriodo })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Beca_Estudiante_Periodo");
+
+                entity.HasOne(d => d.Estudiante)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdEstudiante)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_Estudiante");
+
+                entity.HasOne(d => d.Periodo)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdPeriodo)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_Periodo");
+
+                entity.HasOne(d => d.UsuarioRegistra)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioRegistra)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_UsuarioRegistra");
+
+                entity.HasOne(d => d.UsuarioModifica)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioModifica)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_Beca_UsuarioModifica");
+            });
+
+            modelBuilder.Entity<BecaRequisitoCumplido>(entity =>
+            {
+                entity.ToTable("Beca_Requisito_Cumplido");
+
+                entity.HasKey(e => new { e.IdBeca, e.IdRequisito })
+                      .HasName("PK_Beca_Requisito_Cumplido");
+
+                entity.Property(e => e.IdBeca)
+                      .HasColumnName("id_beca");
+
+                entity.Property(e => e.IdRequisito)
+                      .HasColumnName("id_requisito");
+
+                entity.HasOne(d => d.Beca)
+                      .WithMany(b => b.RequisitosCumplidos)
+                      .HasForeignKey(d => d.IdBeca)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_BecaCumplido_Beca");
+
+                entity.HasOne(d => d.Requisito)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdRequisito)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_BecaCumplido_Requisito");
             });
 
             OnModelCreatingPartial(modelBuilder);

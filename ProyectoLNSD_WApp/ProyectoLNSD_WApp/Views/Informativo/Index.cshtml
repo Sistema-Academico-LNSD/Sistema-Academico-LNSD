@@ -1,0 +1,48 @@
+@{
+    ViewData["Title"] = "Módulo informativo";
+    bool puedeGestionar = User.IsInRole("Administrador") || User.IsInRole("Director");
+}
+<link rel="stylesheet" href="~/css/informativo.css" asp-append-version="true" />
+<div class="container-fluid py-4">
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap gap-2"><div><h3 class="mb-0"><i class="bi bi-megaphone"></i> Módulo informativo</h3><small>Anuncios, calendario académico y eventos institucionales</small></div>@if (puedeGestionar) {
+            <button class="btn btn-light" id="btnNuevo"><i class="bi bi-plus-circle"></i> Nuevo registro</button>
+        }
+    </div>
+    <div class="card-body">
+        <div id="alertaInfo" class="alert d-none" role="alert"></div>
+        <ul class="nav nav-pills gap-2 mb-3" id="tabsInfo"><li class="nav-item"><button class="nav-link active" data-tipo="Todos">Todo</button></li><li class="nav-item"><button class="nav-link" data-tipo="Anuncio">Anuncios</button></li><li class="nav-item"><button class="nav-link" data-tipo="Actividad">Calendario académico</button></li><li class="nav-item"><button class="nav-link" data-tipo="Evento">Eventos</button></li></ul>
+        <div class="row g-2 mb-3"><div class="col-sm-4 col-md-3"><label class="form-label" for="fDesde">Desde</label><input type="date" id="fDesde" class="form-control"></div><div class="col-sm-4 col-md-3"><label class="form-label" for="fHasta">Hasta</label><input type="date" id="fHasta" class="form-control"></div><div class="col-sm-4 col-md-2 d-flex align-items-end"><button class="btn btn-outline-primary w-100" id="btnFiltrar"><i class="bi bi-funnel"></i> Filtrar</button></div></div>
+        <div id="calendarioWrap" class="d-none mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3"><button type="button" class="btn btn-outline-secondary btn-sm" id="mesAnterior"><i class="bi bi-chevron-left"></i> Anterior</button><h5 class="mb-0 text-capitalize" id="tituloMes"></h5><button type="button" class="btn btn-outline-secondary btn-sm" id="mesSiguiente">Siguiente <i class="bi bi-chevron-right"></i></button></div>
+            <div id="grillaCalendario" class="row g-1"></div>
+        </div>
+        <div id="listaInformativo" class="row g-3"><div class="col-12 text-center text-muted py-4">Cargando información…</div></div>
+    </div>
+</div>
+</div>
+@if (puedeGestionar)
+{
+    <div class="modal fade" id="modalInfo" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <form id="formInfo">
+                    <div class="modal-header"><h5 class="modal-title" id="tituloModalInfo">Nuevo registro</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body">
+                    <input type="hidden" id="idInformativo" value="0"><div class="row g-3">
+                    <div class="col-md-4"><label class="form-label" for="tipoInfo">Tipo *</label><select id="tipoInfo" class="form-select" required><option value="Anuncio">Anuncio institucional</option><option value="Actividad">Actividad del calendario</option><option value="Evento">Evento institucional</option></select></div><div class="col-md-8"><label class="form-label" for="tituloInfo">Título *</label><input id="tituloInfo" class="form-control" maxlength="180" required></div><div class="col-12"><label class="form-label" for="descripcionInfo">Descripción *</label><textarea id="descripcionInfo" class="form-control" rows="3" maxlength="4000" required></textarea></div>
+                    <div class="col-md-4"><label class="form-label" for="fechaPublicacionInfo">Fecha/hora de publicación *</label><input type="datetime-local" id="fechaPublicacionInfo" class="form-control" required></div><div class="col-md-4" id="grupoVigencia"><label class="form-label" for="fechaVigenciaInfo">Vigente hasta</label><input type="date" id="fechaVigenciaInfo" class="form-control"></div><div class="col-md-4"><label class="form-label" for="estadoInfo">Estado</label><select id="estadoInfo" class="form-select"><option value="Publicado">Publicar</option><option value="Borrador">Guardar borrador</option></select></div>
+                    <div class="col-md-4" id="grupoFechaInicio"><label class="form-label" for="fechaInicioInfo">Fecha de inicio *</label><input type="date" id="fechaInicioInfo" class="form-control"></div><div class="col-md-4" id="grupoFechaFin"><label class="form-label" for="fechaFinInfo">Fecha final</label><input type="date" id="fechaFinInfo" class="form-control"></div><div class="col-md-3" id="grupoHoraInicio"><label class="form-label" for="horaInicioInfo">Hora inicio</label><input type="time" id="horaInicioInfo" class="form-control"></div><div class="col-md-3" id="grupoHoraFin"><label class="form-label" for="horaFinInfo">Hora final</label><input type="time" id="horaFinInfo" class="form-control"></div><div class="col-md-6" id="grupoUbicacion"><label class="form-label" for="ubicacionInfo">Ubicación</label><input id="ubicacionInfo" class="form-control" maxlength="250"></div>
+                    <div class="col-md-6" id="grupoCategoria"><label class="form-label" for="categoriaInfo">Tipo de actividad</label><select id="categoriaInfo" class="form-select"><option value="">Seleccione…</option><option>Día no lectivo</option><option>Vacaciones</option><option>Feriado</option><option>Reunión docente</option><option>Acto cívico</option><option>Suspensión de clases</option><option>Actividad académica</option><option>Otro</option></select></div><div class="col-md-4" id="grupoRecurrencia"><label class="form-label" for="recurrenciaInfo">Repetir actividad</label><select id="recurrenciaInfo" class="form-select"><option value="Ninguna">No repetir</option><option value="Diaria">Diariamente</option><option value="Semanal">Semanalmente</option><option value="Mensual">Mensualmente</option></select></div><div class="col-md-4" id="grupoRepetirHasta"><label class="form-label" for="repetirHastaInfo">Repetir hasta</label><input type="date" id="repetirHastaInfo" class="form-control"></div>
+                </div><div class="form-text mt-3">Las publicaciones con fecha futura quedan programadas automáticamente. Las vacaciones pueden registrarse como un rango.</div>
+            </div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-outline-info" id="btnVistaPrevia">Vista previa</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div>
+</div>
+</div>
+}
+<div class="modal fade" id="modalDetalleInfo" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Detalle informativo</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body" id="detalleInfo"></div><div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button></div></div></div></div>
+<form id="tokenInfoForm" class="d-none">@Html.AntiForgeryToken()</form>
+<input type="hidden" id="puedeGestionarInfo" value="@(puedeGestionar ? "true" : "false")">
+@section Scripts {
+    <script src="~/js/informativo.js" asp-append-version="true"></script>
+}

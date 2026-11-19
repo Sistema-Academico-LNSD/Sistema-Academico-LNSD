@@ -25,6 +25,30 @@ function escapeHtml(texto) {
     return $('<div>').text(texto ?? '').html();
 }
 
+// escapeHtml no escapa comillas: para valores dentro de atributos se usa esta
+function escapeAttr(texto) {
+    return escapeHtml(texto).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// "2026-11-09" -> "09/11/2026" sin pasar por Date (evita el desfase de zona horaria)
+function fechaCorta(iso) {
+    if (!iso) return '';
+    const [anio, mes, dia] = String(iso).substring(0, 10).split('-');
+    return `${dia}/${mes}/${anio}`;
+}
+
+// Fecha local en formato yyyy-MM-dd (para los <input type="date">)
+function fechaIso(d) {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Monto en colones: 125000 -> "₡125 000,00"
+const formatoColones = new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC' });
+
+function formatoMonto(monto) {
+    return formatoColones.format(Number(monto) || 0);
+}
+
 // -------------------------------------------------------------
 // Feedback visual unificado
 // -------------------------------------------------------------

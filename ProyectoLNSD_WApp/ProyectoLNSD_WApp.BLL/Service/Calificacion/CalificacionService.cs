@@ -172,7 +172,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                             Observacion = n.Observacion
                         }).ToList(),
                         Resumen = delPeriodo?.Rubros ?? new List<RubroResumenDTO>(),
-                        Asistencia = delPeriodo?.Asistencia ?? new AsistenciaResumenDTO(),
+                        Asistencia = delPeriodo?.Asistencia ?? new AsistenciaCalificacionDTO(),
                         Acumulado = delPeriodo?.Acumulado ?? 0m,
                         Evaluado = delPeriodo?.Evaluado ?? 0m,
                         Promedio = delPeriodo?.Promedio,

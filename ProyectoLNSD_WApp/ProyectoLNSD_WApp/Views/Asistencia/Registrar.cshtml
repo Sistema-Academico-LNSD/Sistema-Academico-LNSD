@@ -1,0 +1,86 @@
+﻿@{
+    ViewData["Title"] = "Pasar asistencia";
+    ViewData["Subtitle"] = "Registro de asistencia por clase y fecha";
+    ViewData["Icon"] = "bi-check2-square";
+}
+
+<div class="card mb-4">
+    <div class="card-body">
+
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-6">
+                <label for="asClase" class="form-label">Clase</label>
+                <select id="asClase" class="form-select">
+                    <option value="">Cargando sus clases...</option>
+                </select>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <label for="asFecha" class="form-label">Fecha</label>
+                <input type="date" id="asFecha" class="form-control" />
+            </div>
+            <div class="col-sm-6 col-lg-3 d-grid">
+                <button type="button" id="btnCargarLista" class="btn btn-primary">
+                    <i class="bi bi-people"></i> Cargar lista
+                </button>
+            </div>
+        </div>
+
+        <div class="form-text mt-2">
+            Solo aparecen sus clases activas del período lectivo activo. La fecha debe coincidir con el día de la clase.
+        </div>
+
+    </div>
+</div>
+
+<div id="tarjetaLista" class="card d-none">
+
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <div>
+            <h2 id="listaTitulo"></h2>
+            <span id="listaSubtitulo" class="small text-muted fw-normal"></span>
+        </div>
+        <span id="listaEstado" class="badge"></span>
+    </div>
+
+    <div class="card-body">
+
+        <div id="listaAviso" class="alert alert-warning d-none" role="alert"></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <button type="button" id="btnTodosPresentes" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-check-all"></i> Marcar todos presentes
+            </button>
+            <div id="listaContadores" class="d-flex flex-wrap gap-2 small"></div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="tblLista">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Estudiante</th>
+                        <th>Estado</th>
+                        <th class="w-25">Observación</th>
+                        <th class="text-end">Historial</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end mt-3">
+            <button type="button" id="btnGuardarLista" class="btn btn-primary">
+                <i class="bi bi-save"></i> Guardar asistencia
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<partial name="_ModalHistorialAsistencia" />
+
+@section Scripts {
+    <script src="~/js/asistencia-comun.js" asp-append-version="true"></script>
+    <script src="~/js/asistencia-registro.js" asp-append-version="true"></script>
+}

@@ -32,7 +32,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
             public Dictionary<int, Ent.ActividadEvaluacion> Actividades { get; init; } = new();
             public Dictionary<int, decimal> Pesos { get; init; } = new();
             public ILookup<int, Ent.Nota> NotasPorMatricula { get; init; } = null!;
-            public ILookup<int, Ent.Asistencia> AsistenciaPorEstudiante { get; init; } = null!;
+            public ILookup<int, Ent.Asistencia> AsistenciaPorMatricula { get; init; } = null!;
         }
 
         // ---------- Configuración ----------
@@ -332,9 +332,10 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                 };
             }).ToList();
 
-            // MCNF-01-04: la asistencia sale de los registros de la tabla Asistencia del período.
-            // Solo "Ausente" resta; cada semestre aporta la mitad del porcentaje anual de asistencia.
-            var registros = datos.AsistenciaPorEstudiante[idEstudiante].ToList();
+            // MCNF-01-04 / MCAF-01-11: la asistencia sale de lo que registra el módulo de Asistencia
+            // (por matrícula y clase del horario). Solo "Ausente" resta, igual que en AsistenciaReglas;
+            // cada semestre aporta la mitad del porcentaje anual de asistencia.
+            var registros = datos.AsistenciaPorMatricula[idMatricula].ToList();
             int ausencias = registros.Count(a => a.Estado.Trim().Equals("Ausente", StringComparison.OrdinalIgnoreCase));
             decimal cuota = config.ConsideraAsistencia ? config.PorcentajeAsistencia / ReglasCalificacion.PeriodosPorAnio : 0m;
 
@@ -344,7 +345,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
 
             bool cuentaAsistencia = cuota > 0 && porcentaje != null;
 
-            var asistencia = new AsistenciaResumenDTO
+            var asistencia = new AsistenciaCalificacionDTO
             {
                 Registros = registros.Count,
                 Ausencias = ausencias,
@@ -417,7 +418,7 @@ namespace ProyectoLNSD_WApp.BLL.Service.Calificacion
                 Actividades = actividades.ToDictionary(a => a.IdActividad),
                 Pesos = ReglasCalificacion.CalcularPesos(rubros, actividades),
                 NotasPorMatricula = notas.ToLookup(n => n.IdMatricula),
-                AsistenciaPorEstudiante = asistencias.ToLookup(a => a.IdEstudiante)
+                AsistenciaPorMatricula = asistencias.ToLookup(a => a.IdMatricula)
             };
 
             _clases[clave] = datos;

@@ -80,7 +80,7 @@ namespace ProyectoLNSD_WApp.BLL.DTO
 
     /// Asistencia del estudiante en el período: Porcentaje = clases sin ausencia / clases registradas.
     /// Acumulado y Evaluado van en puntos de la nota anual (la asistencia vale 5%, 2.5% por semestre).
-    public class AsistenciaResumenDTO
+    public class AsistenciaCalificacionDTO
     {
         public int Registros { get; set; }
         public int Ausencias { get; set; }
@@ -103,7 +103,7 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public string Periodo { get; set; } = string.Empty;
         public bool Activo { get; set; }
         public List<RubroResumenDTO> Rubros { get; set; } = new();
-        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+        public AsistenciaCalificacionDTO Asistencia { get; set; } = new();
         public decimal Acumulado { get; set; }
         public decimal Evaluado { get; set; }
         public decimal? Promedio { get; set; }
@@ -153,7 +153,7 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         /// Promedio del semestre sobre lo ya calificado, con la asistencia (0-100); null si aún no hay notas.
         public decimal? Promedio { get; set; }
 
-        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+        public AsistenciaCalificacionDTO Asistencia { get; set; } = new();
 
         /// Nota del año (suma de los semestres) y resultado del curso según la nota mínima.
         public decimal? NotaAnual { get; set; }
@@ -333,7 +333,7 @@ namespace ProyectoLNSD_WApp.BLL.DTO
         public string Periodo { get; set; } = string.Empty;
         public bool Activo { get; set; }
         public List<DetalleRubroDTO> Rubros { get; set; } = new();
-        public AsistenciaResumenDTO Asistencia { get; set; } = new();
+        public AsistenciaCalificacionDTO Asistencia { get; set; } = new();
         public decimal Acumulado { get; set; }
         public decimal Evaluado { get; set; }
         public decimal? Promedio { get; set; }

@@ -1,11 +1,13 @@
 /* ============================================================
    PROYECTO LNSD - SCRIPT DE BASE DE DATOS
    ============================================================ */
+
 CREATE DATABASE Proyecto_LNSD_DB;
 GO
 
 USE Proyecto_LNSD_DB;
 GO
+
 
 /* ============================================================
    1. SEGURIDAD Y USUARIOS
@@ -511,8 +513,6 @@ CREATE INDEX IX_Horario_Curso
     ON Horario(id_curso);
 GO
 
--- "estado": solo 'Ausente' resta a la nota de asistencia (5% de la nota anual); cualquier otro estado
--- (Presente, Tarde, Justificada...) cuenta como asistencia. El porcentaje se calcula con los registros del período.
 CREATE TABLE Asistencia
 (
     id_asistencia INT IDENTITY(1,1) NOT NULL,
@@ -532,172 +532,25 @@ CREATE TABLE Asistencia
 );
 GO
 
--- Rubros de evaluación: catálogo FIJO según el MEP.
--- Trabajo cotidiano 50% + Pruebas 35% + Tarea 10% = 95%.
--- Los porcentajes son de la NOTA ANUAL (suma de los dos semestres): cada semestre aporta la mitad de cada rubro.
--- "cantidad_actividades": cuántas actividades por período (semestre) tiene el rubro cuando es fija
---   (pruebas: 2 por semestre, 4 al año según el MEP); NULL = el docente decide cuántas crea.
--- "peso_manual": 1 = el docente reparte el porcentaje anual del rubro entre sus actividades como quiera (pruebas);
---   0 = el peso de cada actividad se calcula en partes iguales dentro del semestre.
--- La asistencia (5%) se calcula aparte (ver Configuracion_Calificacion).
-
-CREATE TABLE Rubro_Evaluacion
-(
-    id_rubro INT IDENTITY(1,1) NOT NULL,
-    nombre NVARCHAR(100) NOT NULL,
-    porcentaje DECIMAL(5,2) NOT NULL,
-    orden INT NOT NULL,
-    puntos_minimo DECIMAL(5,2) NULL,
-    puntos_maximo DECIMAL(5,2) NULL,
-    cantidad_actividades INT NULL,
-    peso_manual BIT NOT NULL CONSTRAINT DF_Rubro_PesoManual DEFAULT 0,
-    estado BIT NOT NULL CONSTRAINT DF_Rubro_Estado DEFAULT 1,
-
-    CONSTRAINT PK_Rubro_Evaluacion PRIMARY KEY (id_rubro),
-    CONSTRAINT UQ_Rubro_Nombre UNIQUE (nombre),
-    CONSTRAINT CK_Rubro_Porcentaje CHECK (porcentaje > 0 AND porcentaje <= 100),
-    CONSTRAINT CK_Rubro_Puntos CHECK (puntos_minimo IS NULL OR puntos_maximo IS NULL OR puntos_minimo <= puntos_maximo),
-    CONSTRAINT CK_Rubro_Cantidad CHECK (cantidad_actividades IS NULL OR cantidad_actividades > 0)
-);
-GO
-
-INSERT INTO Rubro_Evaluacion (nombre, porcentaje, orden, puntos_minimo, puntos_maximo, cantidad_actividades, peso_manual)
-VALUES (N'Trabajo cotidiano',  50, 1, NULL, NULL, NULL, 0),
-       (N'Pruebas / Exámenes', 35, 2, 15,   30,   2,    1),
-       (N'Tareas',             10, 3, NULL, NULL, NULL, 0);
-GO
-
--- Actividades de evaluación: cada práctica, examen o tarea que el docente crea en su curso, sección y grupo.
--- "puntos" es lo que vale la actividad (la nota del estudiante va de 0 a ese valor).
--- "porcentaje": lo que pesa la actividad en la nota ANUAL; solo se guarda en los rubros de peso manual (pruebas).
--- En los demás es NULL y el peso se calcula: (porcentaje del rubro / 2 semestres) / actividades del semestre.
--- El docente decide cuántas actividades tiene cada rubro, salvo en los que tienen cantidad fija (ver Rubro_Evaluacion).
-
-CREATE TABLE Actividad_Evaluacion
-(
-    id_actividad INT IDENTITY(1,1) NOT NULL,
-    id_rubro INT NOT NULL,
-    id_periodo INT NOT NULL,
-    id_curso INT NOT NULL,
-    id_seccion INT NOT NULL,
-    id_grupo INT NOT NULL,
-    id_docente INT NOT NULL,
-    nombre NVARCHAR(100) NOT NULL,
-    puntos DECIMAL(5,2) NOT NULL,
-    porcentaje DECIMAL(5,2) NULL,
-    fecha DATE NULL,
-    estado BIT NOT NULL CONSTRAINT DF_Actividad_Estado DEFAULT 1,
-    fecha_creacion DATETIME2(0) NOT NULL CONSTRAINT DF_Actividad_FechaCreacion DEFAULT SYSDATETIME(),
-
-    CONSTRAINT PK_Actividad_Evaluacion PRIMARY KEY (id_actividad),
-    CONSTRAINT CK_Actividad_Puntos CHECK (puntos > 0 AND puntos <= 100),
-    CONSTRAINT CK_Actividad_Porcentaje CHECK (porcentaje IS NULL OR (porcentaje > 0 AND porcentaje <= 100)),
-    CONSTRAINT FK_Actividad_Rubro FOREIGN KEY (id_rubro) REFERENCES Rubro_Evaluacion(id_rubro),
-    CONSTRAINT FK_Actividad_Periodo FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
-    CONSTRAINT FK_Actividad_Curso FOREIGN KEY (id_curso) REFERENCES Curso(id_curso),
-    CONSTRAINT FK_Actividad_Seccion FOREIGN KEY (id_seccion) REFERENCES Seccion(id_seccion),
-    CONSTRAINT FK_Actividad_Grupo FOREIGN KEY (id_grupo) REFERENCES Grupo(id_grupo),
-    CONSTRAINT FK_Actividad_Docente FOREIGN KEY (id_docente) REFERENCES Docente(id_docente)
-);
-GO
-
--- No se repite el nombre de una actividad activa dentro del mismo rubro, curso, sección, grupo y período
-CREATE UNIQUE INDEX UQ_Actividad_Nombre
-    ON Actividad_Evaluacion(id_periodo, id_curso, id_seccion, id_grupo, id_rubro, nombre)
-    WHERE estado = 1;
-
-CREATE INDEX IX_Actividad_Clase
-    ON Actividad_Evaluacion(id_periodo, id_curso, id_seccion, id_grupo);
-GO
-
--- Notas: una por matrícula y rubro. 
--- La matrícula ya trae estudiante, período, grupo y sección.
--- La nota de cada rubro es el resultado que el docente asigna (0-100).
 CREATE TABLE Nota
 (
     id_nota INT IDENTITY(1,1) NOT NULL,
-    id_matricula INT NOT NULL,
-    id_actividad INT NOT NULL,
-    puntos_obtenidos DECIMAL(5,2) NOT NULL,
-    observacion NVARCHAR(500) NULL,
-    id_usuario_registro INT NOT NULL,
-    fecha_registro DATETIME2(0) NOT NULL CONSTRAINT DF_Nota_Fecha DEFAULT SYSDATETIME(),
-    fecha_modificacion DATETIME2(0) NULL,
+    id_estudiante INT NOT NULL,
+    id_curso INT NOT NULL,
+    tipo_evaluacion NVARCHAR(50) NOT NULL,
+    valor_nota DECIMAL(5,2) NOT NULL,
+    porcentaje DECIMAL(5,2) NULL,
+    periodo NVARCHAR(50) NULL,
+    fecha_registro DATE NOT NULL,
 
     CONSTRAINT PK_Nota PRIMARY KEY (id_nota),
-    CONSTRAINT UQ_Nota_Matricula_Actividad UNIQUE (id_matricula, id_actividad),
-    CONSTRAINT CK_Nota_Puntos CHECK (puntos_obtenidos >= 0 AND puntos_obtenidos <= 100),
-    CONSTRAINT FK_Nota_Matricula FOREIGN KEY (id_matricula) REFERENCES Matricula(id_matricula),
-    CONSTRAINT FK_Nota_Actividad FOREIGN KEY (id_actividad) REFERENCES Actividad_Evaluacion(id_actividad),
-    CONSTRAINT FK_Nota_UsuarioRegistro FOREIGN KEY (id_usuario_registro) REFERENCES Usuario(id_usuario)
+    CONSTRAINT CK_Nota_Valor
+        CHECK (valor_nota >= 0 AND valor_nota <= 100),
+    CONSTRAINT FK_Nota_Estudiante
+        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
+    CONSTRAINT FK_Nota_Curso
+        FOREIGN KEY (id_curso) REFERENCES Curso(id_curso)
 );
-GO
-
-CREATE INDEX IX_Nota_Actividad ON Nota(id_actividad);
-GO
-
--- Historial de cambios de cada nota. 
-CREATE TABLE Nota_Historial
-(
-    id_historial INT IDENTITY(1,1) NOT NULL,
-    id_nota INT NOT NULL,
-    id_usuario INT NOT NULL,
-    tipo_cambio NVARCHAR(20) NOT NULL,
-    valor_anterior DECIMAL(5,2) NULL,
-    valor_nuevo DECIMAL(5,2) NOT NULL,
-    observacion NVARCHAR(500) NULL,
-    fecha_cambio DATETIME2(0) NOT NULL CONSTRAINT DF_NotaHistorial_Fecha DEFAULT SYSDATETIME(),
-
-    CONSTRAINT PK_Nota_Historial PRIMARY KEY (id_historial),
-    CONSTRAINT CK_NotaHistorial_Tipo CHECK (tipo_cambio IN (N'Registro', N'Edicion', N'Correccion')),
-    CONSTRAINT FK_NotaHistorial_Nota FOREIGN KEY (id_nota) REFERENCES Nota(id_nota),
-    CONSTRAINT FK_NotaHistorial_Usuario FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
-);
-GO
-
-CREATE INDEX IX_NotaHistorial_Nota_Fecha ON Nota_Historial(id_nota, fecha_cambio DESC);
-GO
-
--- Autorización de correcciones con el período cerrado. 
--- Una autorización sirve para UN cambio (usada = 1 después).
-CREATE TABLE Correccion_Autorizada
-(
-    id_autorizacion INT IDENTITY(1,1) NOT NULL,
-    id_nota INT NOT NULL,
-    id_usuario_autoriza INT NOT NULL,
-    motivo NVARCHAR(500) NOT NULL,
-    usada BIT NOT NULL CONSTRAINT DF_CorrAut_Usada DEFAULT 0,
-    fecha_autorizacion DATETIME2(0) NOT NULL CONSTRAINT DF_CorrAut_Fecha DEFAULT SYSDATETIME(),
-    fecha_uso DATETIME2(0) NULL,
-
-    CONSTRAINT PK_Correccion_Autorizada PRIMARY KEY (id_autorizacion),
-    CONSTRAINT CK_CorrAut_Motivo CHECK (LEN(LTRIM(RTRIM(motivo))) > 0),
-    CONSTRAINT FK_CorrAut_Nota FOREIGN KEY (id_nota) REFERENCES Nota(id_nota),
-    CONSTRAINT FK_CorrAut_Usuario FOREIGN KEY (id_usuario_autoriza) REFERENCES Usuario(id_usuario)
-);
-GO
-
-CREATE INDEX IX_CorrAut_Nota_Usada ON Correccion_Autorizada(id_nota, usada);
-GO
-
--- Configuración (una sola fila). 
--- nota_minima: mínimo para aprobar.
--- Asistencia = 5% de la nota final (MEP): rubros 95% + asistencia 5% = 100%.
-CREATE TABLE Configuracion_Calificacion
-(
-    id_config INT NOT NULL,
-    nota_minima DECIMAL(5,2) NOT NULL CONSTRAINT DF_ConfCal_Minima DEFAULT 70,
-    considerar_asistencia BIT NOT NULL CONSTRAINT DF_ConfCal_UsaAsist DEFAULT 1,
-    porcentaje_asistencia DECIMAL(5,2) NOT NULL CONSTRAINT DF_ConfCal_PctAsist DEFAULT 5,
-
-    CONSTRAINT PK_Configuracion_Calificacion PRIMARY KEY (id_config),
-    CONSTRAINT CK_ConfCal_UnaFila CHECK (id_config = 1),
-    CONSTRAINT CK_ConfCal_Minima CHECK (nota_minima >= 0 AND nota_minima <= 100),
-    CONSTRAINT CK_ConfCal_PctAsist CHECK (porcentaje_asistencia >= 0 AND porcentaje_asistencia < 100)
-);
-GO
-
-INSERT INTO Configuracion_Calificacion (id_config) VALUES (1);
 GO
 
 
@@ -1149,12 +1002,8 @@ GO
    Usuarios de prueba:
      admin@lnsd.local              /  Admin123!         (rol Administrador)
      estudiante.prueba@lnsd.local  /  Estudiante123*    (rol Estudiante)
-     estudiante2.prueba@lnsd.local /  Estudiante123*
-     estudiante3.prueba@lnsd.local /  Estudiante123*
-     encargado.prueba@lnsd.local   /  Encargado123*     (rol Encargado) de estudiante.prueba
-     FMendez@ejemplo.com           /  aaaaaaaa
-     docente.prueba@lnsd.local     /  Docente123*       (rol Docente)
-     director.prueba@lnsd.local    /  Director123*      (rol Director)
+     encargado.prueba@lnsd.local   /  Encargado123*     (rol Encargado)
+     FMendez@lnsd.com           /  aaaaaaaa
    ============================================================ */
 
 INSERT INTO Usuario
@@ -1263,144 +1112,7 @@ VALUES
 );
 GO
 
-USE Proyecto_LNSD_DB;
-GO
- 
-SET NOCOUNT ON;
-SET XACT_ABORT ON;
- 
-BEGIN TRAN;
- 
-DECLARE @hashDocente  VARBINARY(256) = 0x0100000001000186A000000010959499D207F9274D7793E020A8A296BB801A347D0C0C62579F8985D6D0A37B1C850A7899216AED4D605AD9756F15D832;
-DECLARE @hashDirector VARBINARY(256) = 0x0100000001000186A0000000106AA91A711AE3510EB75F380235D6693AEEF1B09ADBE1A2985683D4A5D8CCA310F58F62D052604301ED990A6AFAD365CD;
-DECLARE @hashEstud    VARBINARY(256) = 0x0100000001000186A0000000108760C60D5E72121B52832E5B76E8C2D38B7594203BFD27E0345D59EB4C449C76A4166C59C2F2C683396299ABE595520A;
- 
-/* ---- Período lectivo: se usa el activo; si no hay, se crea uno ---- */
-DECLARE @idPeriodo INT = (SELECT TOP 1 id_periodo FROM Periodo_Lectivo WHERE activo = 1);
- 
-IF @idPeriodo IS NULL
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM Periodo_Lectivo WHERE nombre = N'Período 2026 prueba')
-        INSERT INTO Periodo_Lectivo (nombre, fecha_inicio, fecha_fin, activo)
-        VALUES (N'Período 2026 prueba', '2026-02-01', '2026-12-15', 0);
- 
-    UPDATE Periodo_Lectivo SET activo = 1 WHERE nombre = N'Período 2026 prueba';
-    SET @idPeriodo = (SELECT id_periodo FROM Periodo_Lectivo WHERE nombre = N'Período 2026 prueba');
-END
- 
-/* ---- Usuarios ---- */
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'docente.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Docente'), N'Docente', N'Prueba',
-            N'docente.prueba@lnsd.local', @hashDocente, 1);
- 
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'director.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Director'), N'Director', N'Prueba',
-            N'director.prueba@lnsd.local', @hashDirector, 1);
- 
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'estudiante2.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Estudiante'), N'María', N'Rojas Prueba',
-            N'estudiante2.prueba@lnsd.local', @hashEstud, 1);
- 
-IF NOT EXISTS (SELECT 1 FROM Usuario WHERE correo = N'estudiante3.prueba@lnsd.local')
-    INSERT INTO Usuario (id_rol, nombre, apellido, correo, password_hash, estado)
-    VALUES ((SELECT id_rol FROM Rol WHERE nombre = N'Estudiante'), N'Luis', N'Vargas Prueba',
-            N'estudiante3.prueba@lnsd.local', @hashEstud, 1);
- 
-/* ---- Grado, sección, grupo y curso ---- */
-IF NOT EXISTS (SELECT 1 FROM Grado WHERE codigo = N'PRB-7')
-    INSERT INTO Grado (codigo, nombre, nivel, estado) VALUES (N'PRB-7', N'Sétimo prueba', N'Secundaria', 1);
- 
-DECLARE @idGrado INT = (SELECT id_grado FROM Grado WHERE codigo = N'PRB-7');
- 
-IF NOT EXISTS (SELECT 1 FROM Seccion WHERE id_grado = @idGrado AND nombre = N'A')
-    INSERT INTO Seccion (id_grado, nombre, capacidad_maxima, estado) VALUES (@idGrado, N'A', 30, 1);
- 
-DECLARE @idSeccion INT = (SELECT id_seccion FROM Seccion WHERE id_grado = @idGrado AND nombre = N'A');
- 
-IF NOT EXISTS (SELECT 1 FROM Grupo WHERE nombre = N'A' AND nivel = N'Secundaria' AND anio = 2026)
-    INSERT INTO Grupo (nombre, nivel, anio) VALUES (N'A', N'Secundaria', 2026);
- 
-DECLARE @idGrupo INT = (SELECT id_grupo FROM Grupo WHERE nombre = N'A' AND nivel = N'Secundaria' AND anio = 2026);
- 
-IF NOT EXISTS (SELECT 1 FROM Curso WHERE codigo = N'MAT-PRB')
-    INSERT INTO Curso (codigo, nombre, descripcion, id_area, estado)
-    VALUES (N'MAT-PRB', N'Matemática prueba', N'Curso de prueba para el módulo de calificaciones',
-            (SELECT id_area FROM Area_Academica WHERE nombre = N'Matemáticas'), 1);
- 
-DECLARE @idCurso INT = (SELECT id_curso FROM Curso WHERE codigo = N'MAT-PRB');
- 
-IF NOT EXISTS (SELECT 1 FROM Curso_Grado WHERE id_curso = @idCurso AND id_grado = @idGrado)
-    INSERT INTO Curso_Grado (id_curso, id_grado) VALUES (@idCurso, @idGrado);
- 
-/* ---- Docente, asignación del curso y horario ---- */
-IF NOT EXISTS (SELECT 1 FROM Docente WHERE correo = N'docente.prueba@lnsd.local')
-    INSERT INTO Docente (id_usuario, nombre, apellidos, identificacion, correo, telefono, estado, especialidad, id_area)
-    VALUES ((SELECT id_usuario FROM Usuario WHERE correo = N'docente.prueba@lnsd.local'),
-            N'Docente', N'Prueba', N'2-2222-2222', N'docente.prueba@lnsd.local', N'8888-0003', 1,
-            N'Matemática', (SELECT id_area FROM Area_Academica WHERE nombre = N'Matemáticas'));
- 
-DECLARE @idDocente INT = (SELECT id_docente FROM Docente WHERE correo = N'docente.prueba@lnsd.local');
- 
-IF NOT EXISTS (SELECT 1 FROM Docente_Curso WHERE id_docente = @idDocente AND id_curso = @idCurso AND id_periodo = @idPeriodo)
-    INSERT INTO Docente_Curso (id_docente, id_curso, id_periodo) VALUES (@idDocente, @idCurso, @idPeriodo);
- 
-IF NOT EXISTS (SELECT 1 FROM Horario WHERE id_docente = @idDocente AND id_periodo = @idPeriodo AND dia = N'Lunes' AND hora_inicio = '07:00')
-    INSERT INTO Horario (id_docente, id_curso, dia, hora_inicio, hora_fin, id_periodo, id_seccion, id_grupo, aula, estado)
-    VALUES (@idDocente, @idCurso, N'Lunes', '07:00', '08:20', @idPeriodo, @idSeccion, @idGrupo, N'Aula 1', 1);
- 
-IF NOT EXISTS (SELECT 1 FROM Horario WHERE id_docente = @idDocente AND id_periodo = @idPeriodo AND dia = N'Miércoles' AND hora_inicio = '07:00')
-    INSERT INTO Horario (id_docente, id_curso, dia, hora_inicio, hora_fin, id_periodo, id_seccion, id_grupo, aula, estado)
-    VALUES (@idDocente, @idCurso, N'Miércoles', '07:00', '08:20', @idPeriodo, @idSeccion, @idGrupo, N'Aula 1', 1);
- 
-/* ---- Estudiantes ---- */
-IF NOT EXISTS (SELECT 1 FROM Estudiante WHERE carnet = N'PRUEBA-0002')
-    INSERT INTO Estudiante (id_usuario, identificacion, carnet, fecha_ingreso, fecha_nacimiento, id_grado, estado_academico, estado)
-    VALUES ((SELECT id_usuario FROM Usuario WHERE correo = N'estudiante2.prueba@lnsd.local'),
-            N'1-2222-2222', N'PRUEBA-0002', '2026-02-01', '2012-03-15', @idGrado, N'Regular', 1);
- 
-IF NOT EXISTS (SELECT 1 FROM Estudiante WHERE carnet = N'PRUEBA-0003')
-    INSERT INTO Estudiante (id_usuario, identificacion, carnet, fecha_ingreso, fecha_nacimiento, id_grado, estado_academico, estado)
-    VALUES ((SELECT id_usuario FROM Usuario WHERE correo = N'estudiante3.prueba@lnsd.local'),
-            N'1-3333-3333', N'PRUEBA-0003', '2026-02-01', '2012-08-20', @idGrado, N'Regular', 1);
- 
-UPDATE Estudiante SET id_grado = @idGrado WHERE carnet = N'PRUEBA-0001' AND id_grado IS NULL;
- 
-/* ---- Matrículas activas en el curso ---- */
-INSERT INTO Matricula (id_estudiante, id_periodo, id_grupo, id_seccion, estado)
-SELECT e.id_estudiante, @idPeriodo, @idGrupo, @idSeccion, N'Activa'
-FROM Estudiante e
-WHERE e.carnet IN (N'PRUEBA-0001', N'PRUEBA-0002', N'PRUEBA-0003')
-  AND NOT EXISTS (SELECT 1 FROM Matricula m
-                  WHERE m.id_estudiante = e.id_estudiante
-                    AND m.id_periodo = @idPeriodo
-                    AND m.estado <> N'Anulada');
- 
-INSERT INTO Matricula_Curso (id_matricula, id_curso)
-SELECT m.id_matricula, @idCurso
-FROM Matricula m
-JOIN Estudiante e ON e.id_estudiante = m.id_estudiante
-WHERE e.carnet IN (N'PRUEBA-0001', N'PRUEBA-0002', N'PRUEBA-0003')
-  AND m.id_periodo = @idPeriodo
-  AND m.estado = N'Activa'
-  AND NOT EXISTS (SELECT 1 FROM Matricula_Curso mc
-                  WHERE mc.id_matricula = m.id_matricula AND mc.id_curso = @idCurso);
- 
-COMMIT;
 
-/* ---- Verificación: debe devolver 3 estudiantes en el curso de prueba ---- */
-SELECT e.carnet, u.apellido, u.nombre, m.estado AS estado_matricula, s.nombre AS seccion, g.nombre AS grupo
-FROM Matricula m
-JOIN Matricula_Curso mc ON mc.id_matricula = m.id_matricula
-JOIN Curso c ON c.id_curso = mc.id_curso AND c.codigo = N'MAT-PRB'
-JOIN Estudiante e ON e.id_estudiante = m.id_estudiante
-JOIN Usuario u ON u.id_usuario = e.id_usuario
-JOIN Seccion s ON s.id_seccion = m.id_seccion
-JOIN Grupo g ON g.id_grupo = m.id_grupo
-ORDER BY u.apellido;
-GO
 
 /* ---- Horarios (MHOF-01) ---- */
 
@@ -1500,26 +1212,456 @@ WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
                   WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO
 
-/* ---- Calificaciones (MCNF-01) ---- */
 
--- Módulo y permisos (sembrados aquí para no depender
--- de la pantalla de permisos).
-IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Calificaciones')
+/* ============================================================
+   PROYECTO LNSD - MÓDULO DE CONTROL DE ASISTENCIA (MCAF-01)
+   Ejecutar sobre Proyecto_LNSD_DB DESPUÉS del script base y de
+   los cambios de Horarios (Horario con período, sección, grupo).
+
+   Reemplaza la propuesta anterior (Asistencia_cambios_BD.sql):
+   como Horario ya indica docente + curso + sección + grupo,
+   no hace falta modificar Docente_Curso.
+   ============================================================ */
+
+USE Proyecto_LNSD_DB;
+GO
+
+/* ------------------------------------------------------------
+   1. Asistencia = una CLASE del horario en una FECHA, por estudiante.
+      - id_horario  -> período, curso, docente, sección (grado) y grupo
+      - id_matricula -> el estudiante en ese período
+      La tabla Asistencia del script base no la usa ningún código,
+      así que se reemplaza sin migrar datos.
+   ------------------------------------------------------------ */
+
+
+DROP TABLE IF EXISTS Asistencia;
+GO
+
+CREATE TABLE Asistencia
+(
+    id_asistencia       INT IDENTITY(1,1) NOT NULL,
+    id_horario          INT NOT NULL,
+    id_matricula        INT NOT NULL,
+    fecha               DATE NOT NULL,
+    estado              NVARCHAR(20) NOT NULL,
+    observacion         NVARCHAR(250) NULL,
+    id_usuario_registra INT NOT NULL,
+    fecha_registro      DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Asistencia_FechaRegistro DEFAULT SYSDATETIME(),
+    id_usuario_modifica INT NULL,
+    fecha_modificacion  DATETIME2(0) NULL,
+
+    CONSTRAINT PK_Asistencia PRIMARY KEY (id_asistencia),
+
+    -- Un registro por estudiante, clase y fecha
+    CONSTRAINT UQ_Asistencia_Horario_Matricula_Fecha
+        UNIQUE (id_horario, id_matricula, fecha),
+
+    -- MCAF-01-03 (sin tilde, igual que los demás estados del sistema)
+    CONSTRAINT CK_Asistencia_Estado
+        CHECK (estado IN (N'Presente', N'Ausente', N'Tardia', N'Justificada')),
+
+    CONSTRAINT FK_Asistencia_Horario
+        FOREIGN KEY (id_horario) REFERENCES Horario(id_horario),
+    CONSTRAINT FK_Asistencia_Matricula
+        FOREIGN KEY (id_matricula) REFERENCES Matricula(id_matricula),
+    CONSTRAINT FK_Asistencia_UsuarioRegistra
+        FOREIGN KEY (id_usuario_registra) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Asistencia_UsuarioModifica
+        FOREIGN KEY (id_usuario_modifica) REFERENCES Usuario(id_usuario)
+);
+GO
+
+CREATE INDEX IX_Asistencia_Matricula
+    ON Asistencia(id_matricula);
+
+CREATE INDEX IX_Asistencia_Fecha
+    ON Asistencia(fecha);
+GO
+
+/* ------------------------------------------------------------
+   2. Cierre del registro de asistencia por período (MCAF-01-13).
+      Que exista la fila = el período está cerrado.
+      Tabla aparte para no tocar Periodo_Lectivo (Configuración).
+   ------------------------------------------------------------ */
+DROP TABLE IF EXISTS Asistencia_Cierre;
+GO
+
+CREATE TABLE Asistencia_Cierre
+(
+    id_periodo   INT NOT NULL,
+    fecha_cierre DATETIME2(0) NOT NULL
+        CONSTRAINT DF_AsistenciaCierre_Fecha DEFAULT SYSDATETIME(),
+    id_usuario   INT NOT NULL,
+
+    CONSTRAINT PK_Asistencia_Cierre PRIMARY KEY (id_periodo),
+    CONSTRAINT FK_AsistenciaCierre_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
+    CONSTRAINT FK_AsistenciaCierre_Usuario
+        FOREIGN KEY (id_usuario) REFERENCES Usuario(id_usuario)
+);
+GO
+
+/* ------------------------------------------------------------
+   3. Módulo y permisos.
+      - Docente: Ver (sus reportes), Crear (pasar lista), Editar (corregir, MCAF-01-05)
+      - Administrador y Director: Ver (consulta y reportes) y Editar (cerrar período)
+      - Estudiante y Encargado entran por su rol a "Mi asistencia" y solo
+        ven lo propio; no necesitan permiso sobre el módulo.
+   ------------------------------------------------------------ */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Asistencia')
     INSERT INTO Modulo (nombre, descripcion)
-    VALUES (N'Calificaciones', N'Registro, consulta, corrección y seguimiento de calificaciones por curso y período lectivo.');
+    VALUES (N'Asistencia', N'Registro, consulta, reportes y cierre de la asistencia por clase.');
+GO
+
+DELETE rp
+FROM Rol_Permiso rp
+JOIN Modulo m ON m.id_modulo = rp.id_modulo
+WHERE m.nombre = N'Asistencia';
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM
+(
+    VALUES
+        (N'Administrador', 1, 0, 1, 0),
+        (N'Director',      1, 0, 1, 0),
+        (N'Docente',       1, 1, 1, 0)
+) AS p (rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Asistencia';
+GO
+
+/* ============================================================
+   PROYECTO LNSD - MÓDULO DE BECAS SOCIOECONÓMICAS (MBEF-01)
+   Ejecutar sobre Proyecto_LNSD_DB DESPUÉS del script base.
+
+   La tabla Beca del script base (porcentaje, sin estado ni
+   período) no la usa ningún código, así que se reemplaza sin
+   migrar datos.
+   ============================================================ */
+
+USE Proyecto_LNSD_DB;
+GO
+
+DROP TABLE IF EXISTS Beca_Requisito_Cumplido;
+DROP TABLE IF EXISTS Beca;
+DROP TABLE IF EXISTS Beca_Requisito;
+GO
+
+/* ------------------------------------------------------------
+   1. Requisitos de elegibilidad (MBEF-01-01).
+      - obligatorio = 1: se exige para activar la beca.
+      - verificacion: NULL = lo marca el administrador;
+        'MatriculaActiva' = lo comprueba el sistema con la matrícula
+        del estudiante en el período de la beca.
+      - No se borran: se desactivan, para no perder el historial
+        de lo que cumplió cada beca.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca_Requisito
+(
+    id_requisito INT IDENTITY(1,1) NOT NULL,
+    nombre       NVARCHAR(150) NOT NULL,
+    descripcion  NVARCHAR(500) NULL,
+    obligatorio  BIT NOT NULL CONSTRAINT DF_BecaRequisito_Obligatorio DEFAULT 1,
+    verificacion NVARCHAR(30) NULL,
+    activo       BIT NOT NULL CONSTRAINT DF_BecaRequisito_Activo DEFAULT 1,
+
+    CONSTRAINT PK_Beca_Requisito PRIMARY KEY (id_requisito),
+    CONSTRAINT UQ_BecaRequisito_Nombre UNIQUE (nombre),
+    CONSTRAINT CK_BecaRequisito_Verificacion
+        CHECK (verificacion IS NULL OR verificacion IN (N'MatriculaActiva'))
+);
+GO
+
+INSERT INTO Beca_Requisito (nombre, descripcion, obligatorio, verificacion)
+VALUES
+    (N'Condición de vulnerabilidad según SINIRUBE',
+     N'El hogar del estudiante está clasificado en pobreza extrema, pobreza o vulnerabilidad en el SINIRUBE.',
+     1, NULL),
+    (N'Matrícula activa',
+     N'El estudiante tiene matrícula activa en el período lectivo de la beca. La verifica el sistema.',
+     1, N'MatriculaActiva'),
+    (N'Aprobación del grado anterior',
+     N'El estudiante aprobó el grado cursado en el período lectivo anterior.',
+     1, NULL);
+GO
+
+/* ------------------------------------------------------------
+   2. Beca de un estudiante en un período lectivo (MBEF-01-02 a 01-06).
+      - Una sola beca por estudiante y período.
+      - Vigencia (MBEF-01-06): la aplicación exige que inicio y fin
+        estén dentro del período lectivo (máximo un año lectivo).
+      - Estados: Pendiente (registrada, sin activar), Activa, Inactiva.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca
+(
+    id_beca              INT IDENTITY(1,1) NOT NULL,
+    id_estudiante        INT NOT NULL,
+    id_periodo           INT NOT NULL,
+    monto                DECIMAL(12,2) NOT NULL,
+    fecha_inicio         DATE NOT NULL,
+    fecha_fin            DATE NOT NULL,
+    estado               NVARCHAR(20) NOT NULL
+        CONSTRAINT DF_Beca_Estado DEFAULT N'Pendiente',
+    observacion          NVARCHAR(500) NULL,
+    motivo_desactivacion NVARCHAR(500) NULL,
+    fecha_activacion     DATETIME2(0) NULL,
+    fecha_desactivacion  DATETIME2(0) NULL,
+    id_usuario_registra  INT NOT NULL,
+    fecha_registro       DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Beca_FechaRegistro DEFAULT SYSDATETIME(),
+    id_usuario_modifica  INT NULL,
+    fecha_modificacion   DATETIME2(0) NULL,
+
+    CONSTRAINT PK_Beca PRIMARY KEY (id_beca),
+    CONSTRAINT UQ_Beca_Estudiante_Periodo UNIQUE (id_estudiante, id_periodo),
+    CONSTRAINT CK_Beca_Monto CHECK (monto > 0),
+    CONSTRAINT CK_Beca_Fechas CHECK (fecha_fin >= fecha_inicio),
+    CONSTRAINT CK_Beca_Estado
+        CHECK (estado IN (N'Pendiente', N'Activa', N'Inactiva')),
+
+    CONSTRAINT FK_Beca_Estudiante
+        FOREIGN KEY (id_estudiante) REFERENCES Estudiante(id_estudiante),
+    CONSTRAINT FK_Beca_Periodo
+        FOREIGN KEY (id_periodo) REFERENCES Periodo_Lectivo(id_periodo),
+    CONSTRAINT FK_Beca_UsuarioRegistra
+        FOREIGN KEY (id_usuario_registra) REFERENCES Usuario(id_usuario),
+    CONSTRAINT FK_Beca_UsuarioModifica
+        FOREIGN KEY (id_usuario_modifica) REFERENCES Usuario(id_usuario)
+);
+GO
+
+CREATE INDEX IX_Beca_Periodo_Estado
+    ON Beca(id_periodo, estado);
+GO
+
+/* ------------------------------------------------------------
+   3. Requisitos que el administrador marcó como cumplidos
+      en cada beca (MBEF-01-03). Los automáticos no se guardan:
+      se calculan en el momento.
+   ------------------------------------------------------------ */
+CREATE TABLE Beca_Requisito_Cumplido
+(
+    id_beca      INT NOT NULL,
+    id_requisito INT NOT NULL,
+
+    CONSTRAINT PK_Beca_Requisito_Cumplido PRIMARY KEY (id_beca, id_requisito),
+    CONSTRAINT FK_BecaCumplido_Beca
+        FOREIGN KEY (id_beca) REFERENCES Beca(id_beca),
+    CONSTRAINT FK_BecaCumplido_Requisito
+        FOREIGN KEY (id_requisito) REFERENCES Beca_Requisito(id_requisito)
+);
+GO
+
+/* ------------------------------------------------------------
+   4. Módulo y permisos.
+      - Administrador: Ver, Crear (registrar), Editar (actualizar,
+        activar, desactivar y administrar requisitos).
+      - Director: Ver (lista, búsqueda e historial).
+      - Estudiante y Encargado entran por su rol a "Mi beca" y solo
+        ven lo propio; no necesitan permiso sobre el módulo.
+   ------------------------------------------------------------ */
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Becas')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Becas', N'Becas socioeconómicas: requisitos, registro, activación, consulta e historial.');
+GO
+
+DELETE rp
+FROM Rol_Permiso rp
+JOIN Modulo m ON m.id_modulo = rp.id_modulo
+WHERE m.nombre = N'Becas';
+GO
+
+INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
+FROM
+(
+    VALUES
+        (N'Administrador', 1, 1, 1, 0),
+        (N'Director',      1, 0, 0, 0)
+) AS p (rol, ver, crear, editar, eliminar)
+JOIN Rol r ON r.nombre = p.rol
+JOIN Modulo m ON m.nombre = N'Becas';
+GO
+
+/* Módulo Informativo: ejecutar una sola vez en la base de datos del proyecto. */
+IF OBJECT_ID(N'dbo.Informativo_Registro', N'U') IS NULL
+BEGIN
+    CREATE TABLE dbo.Informativo_Registro
+    (
+        id_informativo INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_Informativo_Registro PRIMARY KEY,
+        tipo NVARCHAR(20) NOT NULL,
+        titulo NVARCHAR(180) NOT NULL,
+        descripcion NVARCHAR(4000) NOT NULL,
+        fecha_publicacion DATETIME2 NOT NULL,
+        fecha_vigencia DATETIME2 NULL,
+        fecha_inicio DATETIME2 NOT NULL,
+        fecha_fin DATETIME2 NULL,
+        hora_inicio TIME NULL,
+        hora_fin TIME NULL,
+        ubicacion NVARCHAR(250) NULL,
+        categoria NVARCHAR(60) NULL,
+        estado NVARCHAR(20) NOT NULL CONSTRAINT DF_Informativo_Estado DEFAULT N'Borrador',
+        eliminado BIT NOT NULL CONSTRAINT DF_Informativo_Eliminado DEFAULT 0,
+        id_usuario_crea INT NULL,
+        fecha_creacion DATETIME2 NOT NULL CONSTRAINT DF_Informativo_Fecha DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT CK_Informativo_Tipo CHECK (tipo IN (N'Anuncio',N'Actividad',N'Evento')),
+        CONSTRAINT CK_Informativo_Estado CHECK (estado IN (N'Borrador',N'Programado',N'Publicado')),
+        CONSTRAINT FK_Informativo_Usuario FOREIGN KEY (id_usuario_crea) REFERENCES dbo.Usuario(id_usuario)
+    );
+    CREATE INDEX IX_Informativo_Tipo_Fecha_Estado ON dbo.Informativo_Registro(tipo, fecha_inicio, estado) INCLUDE (fecha_publicacion, fecha_vigencia, eliminado);
+END;
+GO
+
+/* Registra el módulo y sus permisos. Los nombres de roles deben existir previamente. */
+IF NOT EXISTS (SELECT 1 FROM dbo.Modulo WHERE nombre = N'Informativo')
+    INSERT INTO dbo.Modulo(nombre, descripcion) VALUES (N'Informativo', N'Anuncios institucionales, calendario académico y eventos');
+GO
+
+DECLARE @ModuloId INT = (SELECT id_modulo FROM dbo.Modulo WHERE nombre = N'Informativo');
+IF @ModuloId IS NOT NULL
+BEGIN
+    INSERT INTO dbo.Rol_Permiso(id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
+    SELECT r.id_rol, @ModuloId,
+           1,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END,
+           CASE WHEN r.nombre IN (N'Administrador',N'Director') THEN 1 ELSE 0 END
+    FROM dbo.Rol r
+    WHERE r.nombre IN (N'Administrador',N'Director',N'Docente',N'Estudiante',N'Encargado')
+      AND NOT EXISTS (SELECT 1 FROM dbo.Rol_Permiso rp WHERE rp.id_rol = r.id_rol AND rp.id_modulo = @ModuloId);
+END;
+GO
+
+
+/* ============================================================
+   PROYECTO LNSD - MÓDULO DE INVENTARIO (MIVF-01)
+   Ejecutar sobre Proyecto_LNSD_DB DESPUÉS del script base.
+   Categoria_Inv e Inventario del script base no las usa ningún
+   código; se ajustan con ALTER (si tuvieran datos, se avisa).
+   ============================================================ */
+
+USE Proyecto_LNSD_DB;
+GO
+
+-- 0) Protección: no tocar la estructura si ya hay artículos con la forma antigua
+IF COL_LENGTH(N'dbo.Inventario', N'unidad_medida') IS NULL
+   AND EXISTS (SELECT 1 FROM Inventario)
+    THROW 50003, N'Inventario tiene datos con la estructura antigua. Revisar antes de modificarla.', 1;
+GO
+
+-- 1) Tipos / categorías: activar y desactivar (MIVF-01-02, 01-03)
+IF COL_LENGTH(N'dbo.Categoria_Inv', N'activo') IS NULL
+    ALTER TABLE Categoria_Inv ADD activo BIT NOT NULL
+        CONSTRAINT DF_CategoriaInv_Activo DEFAULT 1;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Papelería')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Papelería');
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Suministros de limpieza y materiales de oficina')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Suministros de limpieza y materiales de oficina');
+IF NOT EXISTS (SELECT 1 FROM Categoria_Inv WHERE nombre = N'Equipo tecnológico')
+    INSERT INTO Categoria_Inv (nombre) VALUES (N'Equipo tecnológico');
+GO
+
+-- 2) Inventario: quién registra pasa a los movimientos; el estado texto pasa a BIT
+IF EXISTS (SELECT 1 FROM sys.foreign_keys WHERE name = N'FK_Inventario_Personal_Admin')
+    ALTER TABLE Inventario DROP CONSTRAINT FK_Inventario_Personal_Admin;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'id_perAdm') IS NOT NULL
+    ALTER TABLE Inventario DROP COLUMN id_perAdm;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'estado') IS NOT NULL
+    ALTER TABLE Inventario DROP COLUMN estado;
+GO
+
+-- 3) Columnas nuevas (MIVF-01-04, 01-14)
+IF COL_LENGTH(N'dbo.Inventario', N'unidad_medida') IS NULL
+    ALTER TABLE Inventario ADD unidad_medida NVARCHAR(30) NOT NULL;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'fecha_registro') IS NULL
+    ALTER TABLE Inventario ADD fecha_registro DATETIME2(0) NOT NULL
+        CONSTRAINT DF_Inventario_FechaRegistro DEFAULT SYSDATETIME();
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'fecha_vencimiento') IS NULL
+    ALTER TABLE Inventario ADD fecha_vencimiento DATE NULL;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'cantidad_minima') IS NULL
+    ALTER TABLE Inventario ADD cantidad_minima INT NOT NULL
+        CONSTRAINT DF_Inventario_CantidadMinima DEFAULT 0;
+GO
+IF COL_LENGTH(N'dbo.Inventario', N'activo') IS NULL
+    ALTER TABLE Inventario ADD activo BIT NOT NULL
+        CONSTRAINT DF_Inventario_Activo DEFAULT 1;
+GO
+
+IF NOT EXISTS (SELECT 1 FROM sys.check_constraints WHERE name = N'CK_Inventario_Minima')
+    ALTER TABLE Inventario ADD CONSTRAINT CK_Inventario_Minima CHECK (cantidad_minima >= 0);
+GO
+
+-- Un mismo nombre no se repite dentro de la misma categoría
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'UX_Inventario_Categoria_Nombre')
+    CREATE UNIQUE INDEX UX_Inventario_Categoria_Nombre ON Inventario(id_categoria, nombre);
+GO
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = N'IX_Inventario_Activo')
+    CREATE INDEX IX_Inventario_Activo ON Inventario(activo, id_categoria);
+GO
+
+-- 4) Movimientos de entrada y salida (MIVF-01-09 a 01-12, 01-17)
+IF OBJECT_ID(N'dbo.Inventario_Movimiento', N'U') IS NULL
+BEGIN
+    CREATE TABLE Inventario_Movimiento
+    (
+        id_movimiento       INT IDENTITY(1,1) NOT NULL,
+        id_inventario       INT NOT NULL,
+        tipo                NVARCHAR(10) NOT NULL,
+        cantidad            INT NOT NULL,
+        existencia_resultante INT NOT NULL,
+        fecha               DATETIME2(0) NOT NULL
+            CONSTRAINT DF_InvMov_Fecha DEFAULT SYSDATETIME(),
+        motivo              NVARCHAR(300) NULL,
+        nombre_responsable  NVARCHAR(150) NULL,
+        cedula_responsable  NVARCHAR(30) NULL,
+        id_usuario_registra INT NOT NULL,
+
+        CONSTRAINT PK_Inventario_Movimiento PRIMARY KEY (id_movimiento),
+        CONSTRAINT CK_InvMov_Tipo CHECK (tipo IN (N'Entrada', N'Salida')),
+        CONSTRAINT CK_InvMov_Cantidad CHECK (cantidad > 0),
+        CONSTRAINT CK_InvMov_Existencia CHECK (existencia_resultante >= 0),
+        -- La salida exige responsable y motivo (MIVF-01-10 y 01-11)
+        CONSTRAINT CK_InvMov_Salida CHECK (
+            tipo = N'Entrada'
+            OR (motivo IS NOT NULL AND nombre_responsable IS NOT NULL AND cedula_responsable IS NOT NULL)),
+
+        CONSTRAINT FK_InvMov_Inventario
+            FOREIGN KEY (id_inventario) REFERENCES Inventario(id_inventario),
+        CONSTRAINT FK_InvMov_Usuario
+            FOREIGN KEY (id_usuario_registra) REFERENCES Usuario(id_usuario)
+    );
+
+    CREATE INDEX IX_InvMov_Inventario_Fecha ON Inventario_Movimiento(id_inventario, fecha);
+    CREATE INDEX IX_InvMov_Fecha ON Inventario_Movimiento(fecha, tipo);
+END
+GO
+
+-- 5) Módulo y permisos
+IF NOT EXISTS (SELECT 1 FROM Modulo WHERE nombre = N'Inventario')
+    INSERT INTO Modulo (nombre, descripcion)
+    VALUES (N'Inventario', N'Tipos, artículos, entradas, salidas, existencias y reportes de la bodega institucional.');
 GO
 
 INSERT INTO Rol_Permiso (id_rol, id_modulo, puede_ver, puede_crear, puede_editar, puede_eliminar)
 SELECT r.id_rol, m.id_modulo, p.ver, p.crear, p.editar, p.eliminar
 FROM (VALUES
-        (N'Administrador', 1, 1, 1, 1),
-        (N'Director',      1, 0, 1, 0),
-        (N'Docente',       1, 1, 1, 0),
-        (N'Estudiante',    1, 0, 0, 0),
-        (N'Encargado',     1, 0, 0, 0)
+        (N'Administrador',           1, 1, 1, 0),
+        (N'Personal administrativo', 1, 1, 1, 0),
+        (N'Director',                1, 0, 0, 0)
      ) AS p(rol, ver, crear, editar, eliminar)
 JOIN Rol r ON r.nombre = p.rol
-JOIN Modulo m ON m.nombre = N'Calificaciones'
+JOIN Modulo m ON m.nombre = N'Inventario'
 WHERE NOT EXISTS (SELECT 1 FROM Rol_Permiso rp
                   WHERE rp.id_rol = r.id_rol AND rp.id_modulo = m.id_modulo);
 GO

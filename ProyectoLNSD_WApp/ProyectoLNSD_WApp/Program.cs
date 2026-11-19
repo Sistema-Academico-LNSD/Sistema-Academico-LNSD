@@ -48,6 +48,12 @@ using ProyectoLNSD_WApp.BLL.Service.Horario;
 using ProyectoLNSD_WApp.DAL.Repositories.Horario;
 using ProyectoLNSD_WApp.BLL.Service.Calificacion;
 using ProyectoLNSD_WApp.DAL.Repositories.Calificacion;
+using ProyectoLNSD_WApp.BLL.Service.Asistencia;
+using ProyectoLNSD_WApp.DAL.Repositories.Asistencia;
+using ProyectoLNSD_WApp.BLL.Service.Beca;
+using ProyectoLNSD_WApp.DAL.Repositories.Beca;
+using ProyectoLNSD_WApp.BLL.Service.Inventario;
+using ProyectoLNSD_WApp.DAL.Repositories.Inventario;
 
 namespace ProyectoLNSD_WApp
 {
@@ -86,6 +92,9 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IMatriculaRepository, MatriculaRepository>();
             builder.Services.AddScoped<IHorarioRepository, HorarioRepository>();
             builder.Services.AddScoped<ICalificacionRepository, CalificacionRepository>();
+            builder.Services.AddScoped<IAsistenciaRepository, AsistenciaRepository>();
+            builder.Services.AddScoped<IBecaRepository, BecaRepository>();
+            builder.Services.AddScoped<IInventarioRepository, InventarioRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -114,6 +123,9 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IResultadoCalificacionService, ResultadoCalificacionService>();
             builder.Services.AddScoped<IConsultaCalificacionService, ConsultaCalificacionService>();
             builder.Services.AddScoped<ICalificacionService, CalificacionService>();
+            builder.Services.AddScoped<IAsistenciaService, AsistenciaService>();
+            builder.Services.AddScoped<IBecaService, BecaService>();
+            builder.Services.AddScoped<IInventarioService, InventarioService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

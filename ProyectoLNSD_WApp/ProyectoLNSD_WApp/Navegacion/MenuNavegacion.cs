@@ -40,6 +40,8 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.IsInRole(RolesSistema.Docente), CoincidirAccion: true),
                 new("Mi tiquete", "bi-ticket-perforated", "Boleteria", "Index",
                     _ => true, CoincidirAccion: true),
+                new("Información institucional", "bi-megaphone", "Informativo", "Index",
+                    _ => true, CoincidirAccion: true),
                 new("Material de estudio", "bi-journal-bookmark", "Recurso", "Material",
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
                 new("Mis recursos", "bi-folder2-open", "Recurso", "Index",
@@ -51,6 +53,7 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Horario de mis estudiantes", "bi-calendar-week", "Horario", "PorMatricula",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
                          && u.TienePermiso("Horarios", "Ver"), CoincidirAccion: true),
+                // Calificaciones (MCNF-01)
                 new("Registrar notas", "bi-journal-check", "Calificacion", "Index",
                     u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Calificaciones", "Crear"), CoincidirAccion: true),
                 new("Mis calificaciones", "bi-card-checklist", "Calificacion", "MisCalificaciones",
@@ -58,6 +61,18 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Calificaciones de mis estudiantes", "bi-card-checklist", "Calificacion", "CalificacionesEstudiantes",
                     u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante)
                          && u.TienePermiso("Calificaciones", "Ver"), CoincidirAccion: true),
+                // Asistencia (MCAF-01)
+                new("Pasar asistencia", "bi-check2-square", "Asistencia", "Registrar",
+                    u => u.IsInRole(RolesSistema.Docente) && u.TienePermiso("Asistencia", "Crear"), CoincidirAccion: true),
+                new("Mi asistencia", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
+                    u => u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                new("Asistencia de mis estudiantes", "bi-clipboard2-check", "Asistencia", "MiAsistencia",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                // Becas (MBEF-01-07)
+                new("Mi beca", "bi-cash-coin", "Beca", "MiBeca",
+                    u => u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true),
+                new("Becas de mis estudiantes", "bi-cash-coin", "Beca", "MiBeca",
+                    u => u.IsInRole(RolesSistema.Encargado) && !u.IsInRole(RolesSistema.Estudiante), CoincidirAccion: true)
             ]),
 
             new("Gestión académica", [
@@ -79,6 +94,12 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
                 new("Horarios por grupo", "bi-grid-3x3-gap", "Horario", "PorGrupo",
                     u => u.TienePermiso("Horarios", "Crear"), CoincidirAccion: true),
+                new("Asistencia", "bi-clipboard-data", "Asistencia", "Consulta",
+                    u => u.TienePermiso("Asistencia", "Ver"), CoincidirAccion: true),
+                new("Becas", "bi-cash-coin", "Beca", "Index",
+                    u => u.TienePermiso("Becas", "Ver"), CoincidirAccion: true),
+                new("Requisitos de beca", "bi-list-check", "Beca", "Requisitos",
+                    u => u.TienePermiso("Becas", "Editar"), CoincidirAccion: true),
                 new("Supervisión de recursos", "bi-card-checklist", "Recurso", "Supervision",
                     u => (u.IsInRole(RolesSistema.Administrador) || u.IsInRole(RolesSistema.Director))
                          && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
@@ -95,6 +116,15 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Boleteria", "Editar"), CoincidirAccion: true),
                 new("Control de tiquetes", "bi-clipboard-data", "Boleteria", "Consulta",
                     u => u.TienePermiso("Boleteria", "Ver"), CoincidirAccion: true)
+            ]),
+
+            new("Inventario", [
+                new("Artículos", "bi-box-seam", "Inventario", "Index",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true),
+                new("Tipos de inventario", "bi-tags", "Inventario", "Categorias",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true),
+                new("Reportes de inventario", "bi-bar-chart-line", "Inventario", "Reportes",
+                    u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true)
             ]),
 
             new("Administración", [
