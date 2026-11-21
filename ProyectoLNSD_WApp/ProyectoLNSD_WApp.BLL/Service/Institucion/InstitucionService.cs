@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using AutoMapper;
@@ -51,6 +51,12 @@ namespace ProyectoLNSD_WApp.BLL.Service.Institucion
             entidad.Direccion = institucion.Direccion?.Trim();
             entidad.TelefonoSecundario = institucion.TelefonoSecundario?.Trim();
 
+            // Datos para las pautas del MEP: vacío se guarda como null
+            entidad.CodigoPresupuestario = LimpiarOpcional(institucion.CodigoPresupuestario);
+            entidad.CircuitoEscolar = LimpiarOpcional(institucion.CircuitoEscolar);
+            entidad.Dre = LimpiarOpcional(institucion.Dre);
+            entidad.NombreDirector = LimpiarOpcional(institucion.NombreDirector);
+
             // La ruta del logo nunca se toma de lo que manda el cliente:
             // solo se cambia si el controller guardó un archivo nuevo; si no, se conserva el anterior.
             entidad.RutaLogo = nuevaRutaLogo ?? existente?.RutaLogo;
@@ -75,5 +81,8 @@ namespace ProyectoLNSD_WApp.BLL.Service.Institucion
 
             return RespuestaDTO<InstitucionDTO>.Exito(_mapper.Map<InstitucionDTO>(entidad), mensaje);
         }
+
+        private static string? LimpiarOpcional(string? valor)
+            => string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
     }
 }

@@ -54,6 +54,7 @@ using ProyectoLNSD_WApp.BLL.Service.Beca;
 using ProyectoLNSD_WApp.DAL.Repositories.Beca;
 using ProyectoLNSD_WApp.BLL.Service.Inventario;
 using ProyectoLNSD_WApp.DAL.Repositories.Inventario;
+using ProyectoLNSD_WApp.DAL.Repositories.Pauta;
 
 namespace ProyectoLNSD_WApp
 {
@@ -95,6 +96,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IAsistenciaRepository, AsistenciaRepository>();
             builder.Services.AddScoped<IBecaRepository, BecaRepository>();
             builder.Services.AddScoped<IInventarioRepository, InventarioRepository>();
+            builder.Services.AddScoped<IPautaRepository, PautaRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();

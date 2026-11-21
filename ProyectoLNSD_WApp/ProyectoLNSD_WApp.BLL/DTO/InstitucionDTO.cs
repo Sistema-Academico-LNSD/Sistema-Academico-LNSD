@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.ComponentModel.DataAnnotations;
@@ -30,6 +30,19 @@ namespace ProyectoLNSD_WApp.BLL.DTO
 
         // Solo lectura desde la vista: la ruta la asigna el servidor al subir el logo.
         public string? RutaLogo { get; set; }
+
+        // Datos que usan las plantillas de pautas del MEP (MPPAF-01-12). Opcionales para no romper el guardado actual.
+        [StringLength(30, ErrorMessage = "El código presupuestario no puede superar los 30 caracteres")]
+        public string? CodigoPresupuestario { get; set; }
+
+        [StringLength(100, ErrorMessage = "El circuito escolar no puede superar los 100 caracteres")]
+        public string? CircuitoEscolar { get; set; }
+
+        [StringLength(150, ErrorMessage = "La Dirección Regional de Educación no puede superar los 150 caracteres")]
+        public string? Dre { get; set; }
+
+        [StringLength(150, ErrorMessage = "El nombre de la persona directora no puede superar los 150 caracteres")]
+        public string? NombreDirector { get; set; }
 
         public DateTime FechaActualizacion { get; set; }
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProyectoLNSD_WApp.DAL.Data;
 
 namespace ProyectoLNSD_WApp.DAL.Repositories.Institucion
@@ -46,6 +46,10 @@ namespace ProyectoLNSD_WApp.DAL.Repositories.Institucion
             existing.TelefonoSecundario = institucion.TelefonoSecundario;
             existing.Correo = institucion.Correo;
             existing.RutaLogo = institucion.RutaLogo;
+            existing.CodigoPresupuestario = institucion.CodigoPresupuestario;
+            existing.CircuitoEscolar = institucion.CircuitoEscolar;
+            existing.Dre = institucion.Dre;
+            existing.NombreDirector = institucion.NombreDirector;
             existing.FechaActualizacion = DateTime.UtcNow;   // siempre cambia, así SaveChanges devuelve > 0
 
             return await _context.SaveChangesAsync() > 0;

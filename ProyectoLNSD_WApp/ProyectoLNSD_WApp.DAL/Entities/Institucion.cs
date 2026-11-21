@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,5 +13,9 @@ public partial class Institucion
     public string? TelefonoSecundario { get; set; }
     public string Correo { get; set; } = string.Empty;
     public string? RutaLogo { get; set; }
+    public string? CodigoPresupuestario { get; set; }
+    public string? CircuitoEscolar { get; set; }
+    public string? Dre { get; set; }
+    public string? NombreDirector { get; set; }
     public DateTime FechaActualizacion { get; set; }
 }
