@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Nueva pauta";
+    ViewData["Subtitle"] = "Elija la pauta que corresponde a la situación y registre a las personas involucradas";
+    ViewData["Icon"] = "bi-plus-circle";
+}
+
+<link rel="stylesheet" href="~/css/pauta.css" asp-append-version="true" />
+
+<div class="alert alert-warning py-2 small d-flex align-items-center gap-2">
+    <i class="bi bi-shield-lock"></i>
+    <span>La información de esta sección es confidencial. Trátela con discreción; cada consulta, edición y descarga queda registrada.</span>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header fw-semibold">1. Pauta que se activa</div>
+    <div class="card-body">
+        <div id="listaPautas" class="row g-3">
+            <div class="col-12 text-muted">Cargando...</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header fw-semibold">2. Personas estudiantes involucradas</div>
+    <div class="card-body">
+        <p class="text-muted small mb-2">
+            Puede completarlas ahora o después, dentro del expediente. Se usarán para precargar los formularios.
+        </p>
+        <div id="selectorEstudiantes"></div>
+    </div>
+</div>
+
+<div class="text-end mb-4">
+    <a asp-controller="Pauta" asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+    <button type="button" id="btnCrear" class="btn btn-primary" disabled>
+        <i class="bi bi-folder-plus"></i> Crear expediente
+    </button>
+</div>
+
+@section Scripts {
+    <script>
+        window.pautaOrigen = @(ViewBag.IdExpedienteOrigen == null ? "null" : ViewBag.IdExpedienteOrigen.ToString());
+    </script>
+    <script src="~/js/pauta-comun.js" asp-append-version="true"></script>
+    <script src="~/js/pauta-nueva.js" asp-append-version="true"></script>
+}

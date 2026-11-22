@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Plantillas del MEP";
+    ViewData["Subtitle"] = "Formularios de las pautas de actuación";
+    ViewData["Icon"] = "bi-file-earmark-text";
+}
+
+<link rel="stylesheet" href="~/css/pauta.css" asp-append-version="true" />
+
+<p class="text-muted">
+    Estos son los 12 formularios del MEP. Los formularios se completan dentro de un expediente: el sistema
+    sugiere los de cada pauta cuando se activa.
+</p>
+
+<div id="listaPlantillas" class="row g-3">
+    <div class="col-12 text-muted">Cargando...</div>
+</div>
+
+@section Scripts {
+    <script src="~/js/pauta-comun.js" asp-append-version="true"></script>
+    <script src="~/js/pauta-plantillas.js" asp-append-version="true"></script>
+}

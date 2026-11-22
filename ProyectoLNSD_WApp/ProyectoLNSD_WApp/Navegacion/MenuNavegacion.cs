@@ -127,6 +127,15 @@ namespace ProyectoLNSD_WApp.Navegacion
                     u => u.TienePermiso("Inventario", "Ver"), CoincidirAccion: true)
             ]),
 
+            new("Pautas de actuación", [
+                new("Expedientes", "bi-folder2-open", "Pauta", "Index",
+                    u => u.TienePermiso("Pautas", "Ver"), CoincidirAccion: true),
+                new("Nueva pauta", "bi-plus-circle", "Pauta", "Nueva",
+                    u => u.TienePermiso("Pautas", "Crear"), CoincidirAccion: true),
+                new("Plantillas del MEP", "bi-file-earmark-text", "Pauta", "Plantillas",
+                    u => u.TienePermiso("Pautas", "Ver"), CoincidirAccion: true)
+            ]),
+
             new("Administración", [
                 new("Usuarios", "bi-person-gear", "Usuario", "Index",
                     u => u.TienePermiso("Usuarios", "Ver")),
