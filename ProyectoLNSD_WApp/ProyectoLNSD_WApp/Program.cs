@@ -130,6 +130,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IBecaService, BecaService>();
             builder.Services.AddScoped<IInventarioService, InventarioService>();
             builder.Services.AddScoped<IPautaService, PautaService>();
+            builder.Services.AddScoped<IPautaDocumentoService, PautaDocumentoService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();

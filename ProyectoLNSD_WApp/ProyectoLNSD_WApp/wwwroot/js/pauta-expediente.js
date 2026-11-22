@@ -66,6 +66,10 @@ function dibujar() {
     $('#expCodigo').text(expediente.codigo);
     $('#expPauta').text(`Pauta ${expediente.numeroPauta}. ${expediente.nombrePauta}`);
     $('#expEstado').html(badgeEstado(expediente.estado));
+
+    $('#btnImprimirExpediente')
+        .attr('href', `/PautaDocumento/Expediente/${Number(expediente.idExpediente)}`)
+        .toggleClass('d-none', !(expediente.formularios || []).length);
     $('#expFecha').text(fechaCorta(expediente.fechaActivacion));
     $('#expResponsable').text(expediente.responsable);
 
@@ -129,6 +133,9 @@ function dibujarFormularios() {
                 <td>${badgeEstado(f.estado)}</td>
                 <td>${new Date(f.fechaActualizacion).toLocaleString('es-CR')}</td>
                 <td class="text-end">
+                    <a class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" href="/PautaDocumento/Formulario/${Number(f.idFormulario)}" title="Vista previa / Imprimir">
+                        <i class="bi bi-printer"></i>
+                    </a>
                     <a class="btn btn-sm btn-outline-primary" href="/Pauta/Formulario/${Number(f.idFormulario)}">
                         <i class="bi ${editable ? 'bi-pencil-square' : 'bi-eye'}"></i> ${editable ? 'Completar' : 'Ver'}
                     </a>

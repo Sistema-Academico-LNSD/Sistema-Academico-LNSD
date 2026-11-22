@@ -18,6 +18,14 @@ $(function () {
     });
     $('#btnConfirmarReabrir').on('click', reabrir);
 
+    // El documento se arma con lo que está guardado: si hay cambios sin guardar, primero se guardan.
+    $('#btnImprimir').on('click', function (e) {
+        if (sucio) {
+            e.preventDefault();
+            mostrarMensaje('Guarde el borrador antes de imprimir para que el documento incluya los últimos cambios.', 'warning');
+        }
+    });
+
     window.addEventListener('beforeunload', function (e) {
         if (sucio) {
             e.preventDefault();
@@ -66,6 +74,7 @@ function dibujar() {
     $('#frmExpediente').text(formulario.codigoExpediente + (formulario.secuencia > 1 ? ` (#${formulario.secuencia})` : ''));
     $('#frmEstado').html(badgeEstado(formulario.estado));
     $('#btnVolver').attr('href', `/Pauta/Expediente/${Number(formulario.idExpediente)}`);
+    $('#btnImprimir').attr('href', `/PautaDocumento/Formulario/${Number(formulario.idFormulario)}`);
 
     const $contenedor = $('#seccionesFormulario').empty();
     p.secciones.forEach(s => $contenedor.append(crearSeccion(s)));

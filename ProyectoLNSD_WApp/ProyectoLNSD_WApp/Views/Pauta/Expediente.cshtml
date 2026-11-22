@@ -10,6 +10,9 @@
 <link rel="stylesheet" href="~/css/pauta.css" asp-append-version="true" />
 
 @section Acciones {
+    <a id="btnImprimirExpediente" href="#" target="_blank" rel="noopener" class="btn btn-outline-primary d-none">
+        <i class="bi bi-printer"></i> Imprimir expediente completo
+    </a>
     <a asp-controller="Pauta" asp-action="Index" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Volver a los expedientes
     </a>

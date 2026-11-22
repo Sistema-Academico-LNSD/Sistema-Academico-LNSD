@@ -27,6 +27,10 @@ function cargarInstitucion() {
             $("#Telefono").val(d.telefono);
             $("#TelefonoSecundario").val(d.telefonoSecundario);
             $("#Correo").val(d.correo);
+            $("#CodigoPresupuestario").val(d.codigoPresupuestario);
+            $("#CircuitoEscolar").val(d.circuitoEscolar);
+            $("#Dre").val(d.dre);
+            $("#NombreDirector").val(d.nombreDirector);
  
             if (d.rutaLogo) {
                 $("#previewLogo").attr("src", d.rutaLogo).removeClass("d-none");
