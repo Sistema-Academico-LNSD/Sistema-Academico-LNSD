@@ -51,9 +51,13 @@ using ProyectoLNSD_WApp.DAL.Repositories.Calificacion;
 using ProyectoLNSD_WApp.BLL.Service.Asistencia;
 using ProyectoLNSD_WApp.DAL.Repositories.Asistencia;
 using ProyectoLNSD_WApp.BLL.Service.Beca;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
+using ProyectoLNSD_WApp.Services;
 using ProyectoLNSD_WApp.DAL.Repositories.Beca;
 using ProyectoLNSD_WApp.BLL.Service.Inventario;
 using ProyectoLNSD_WApp.DAL.Repositories.Inventario;
+using ProyectoLNSD_WApp.DAL.Repositories.Pauta;
+using ProyectoLNSD_WApp.BLL.Service.Pauta;
 
 namespace ProyectoLNSD_WApp
 {
@@ -95,6 +99,7 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IAsistenciaRepository, AsistenciaRepository>();
             builder.Services.AddScoped<IBecaRepository, BecaRepository>();
             builder.Services.AddScoped<IInventarioRepository, InventarioRepository>();
+            builder.Services.AddScoped<IPautaRepository, PautaRepository>();
 
             //Servicios
             builder.Services.AddScoped<IRolService, RolService>();
@@ -126,6 +131,10 @@ namespace ProyectoLNSD_WApp
             builder.Services.AddScoped<IAsistenciaService, AsistenciaService>();
             builder.Services.AddScoped<IBecaService, BecaService>();
             builder.Services.AddScoped<IInventarioService, InventarioService>();
+            builder.Services.AddScoped<IPautaService, PautaService>();
+            builder.Services.AddScoped<IPautaDocumentoService, PautaDocumentoService>();
+            builder.Services.AddScoped<INotificacionService, NotificacionService>();
+            builder.Services.AddHostedService<NotificacionProgramadaHostedService>();
 
             // Seguridad
             builder.Services.AddScoped<IPasswordHashService, PasswordHashService>();
@@ -184,4 +193,4 @@ namespace ProyectoLNSD_WApp
             app.Run();
         }
     }
-}
+}

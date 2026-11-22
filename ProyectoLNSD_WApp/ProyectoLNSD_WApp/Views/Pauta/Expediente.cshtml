@@ -1,0 +1,200 @@
+@{
+    ViewData["Title"] = "Expediente de pauta";
+    ViewData["Subtitle"] = "Formularios, personas involucradas y cierre";
+    ViewData["Icon"] = "bi-folder2-open";
+
+    bool puedeCrear = User.TienePermiso("Pautas", "Crear");
+    bool puedeEditar = User.TienePermiso("Pautas", "Editar");
+}
+
+<link rel="stylesheet" href="~/css/pauta.css" asp-append-version="true" />
+
+@section Acciones {
+    <a id="btnImprimirExpediente" href="#" target="_blank" rel="noopener" class="btn btn-outline-primary d-none">
+        <i class="bi bi-printer"></i> Imprimir expediente completo
+    </a>
+    <a asp-controller="Pauta" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver a los expedientes
+    </a>
+}
+
+<div class="alert alert-warning py-2 small d-flex align-items-center gap-2">
+    <i class="bi bi-shield-lock"></i>
+    <span>Información confidencial. Cada consulta, edición y descarga de este expediente queda registrada.</span>
+</div>
+
+<div id="mensajeExpediente"></div>
+
+<div id="contenidoExpediente" class="d-none">
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <h5 class="mb-1" id="expCodigo"></h5>
+                    <div id="expPauta" class="fw-semibold"></div>
+                </div>
+                <div id="expEstado" class="fs-6"></div>
+            </div>
+            <div class="row mt-2 small text-muted">
+                <div class="col-md-4">Activada el <span id="expFecha"></span></div>
+                <div class="col-md-4">Responsable: <span id="expResponsable"></span></div>
+                <div class="col-md-4" id="expOrigenWrap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold">Personas estudiantes involucradas</span>
+            <button type="button" id="btnEditarEstudiantes" class="btn btn-sm btn-outline-primary d-none">
+                <i class="bi bi-pencil"></i> Editar
+            </button>
+        </div>
+        <div class="card-body" id="expEstudiantes"></div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-header fw-semibold">Formularios del expediente</div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tblFormularios">
+                    <thead>
+                        <tr>
+                            <th>N°</th>
+                            <th>Formulario</th>
+                            <th>Estado</th>
+                            <th>Última actualización</th>
+                            <th class="text-end">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-3 d-none" id="cardAgregar">
+        <div class="card-header fw-semibold">Agregar formularios</div>
+        <div class="card-body">
+            <div id="listaFaltantes" class="list-group mb-3"></div>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-8">
+                    <label for="otroFormulario" class="form-label small mb-1">Otro formulario (fuera de los indicados para la pauta)</label>
+                    <select id="otroFormulario" class="form-select"></select>
+                </div>
+                <div class="col-md-4 d-grid">
+                    <button type="button" id="btnAgregarOtro" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-lg"></i> Agregar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header fw-semibold">Cierre del expediente</div>
+        <div class="card-body" id="expCierre"></div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEstudiantes" tabindex="-1" aria-labelledby="modalEstudiantesTitulo" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEstudiantesTitulo">Personas estudiantes involucradas</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="selectorEstudiantes"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarEstudiantes" class="btn btn-primary">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAgregar" tabindex="-1" aria-labelledby="modalAgregarTitulo" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalAgregarTitulo">Agregar formulario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="agNumero" />
+                <div id="agEstudianteWrap" class="mb-3 d-none">
+                    <label for="agEstudiante" class="form-label">Persona estudiante a la que corresponde</label>
+                    <select id="agEstudiante" class="form-select"></select>
+                </div>
+                <div id="agJustWrap" class="d-none">
+                    <div class="alert alert-info py-2 small">
+                        Este formulario no está indicado para la pauta del expediente. Explique por qué se necesita.
+                    </div>
+                    <label for="agJust" class="form-label">Justificación</label>
+                    <textarea id="agJust" class="form-control" rows="3" maxlength="300"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarAgregar" class="btn btn-primary">Agregar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCierre" tabindex="-1" aria-labelledby="modalCierreTitulo" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalCierreTitulo">Cerrar el expediente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning py-2 small">
+                    Al cerrar, el expediente queda de solo lectura y no se puede reabrir.
+                </div>
+                <div class="mb-3">
+                    <label for="cFecha" class="form-label">Fecha de cierre</label>
+                    <input id="cFecha" type="date" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="cNombre" class="form-label">Nombre de la persona encargada de la activación</label>
+                    <input id="cNombre" class="form-control" maxlength="150" />
+                </div>
+                <div class="mb-3">
+                    <label for="cVistoBueno" class="form-label">Visto bueno de la persona directora (nombre)</label>
+                    <input id="cVistoBueno" class="form-control" maxlength="150" />
+                </div>
+                <div class="form-check mb-3">
+                    <input id="cDevolucion" type="checkbox" class="form-check-input" />
+                    <label for="cDevolucion" class="form-check-label">
+                        Se realizó la devolución de las acciones a las personas encargadas legales y quedó registrada en un acta firmada
+                    </label>
+                </div>
+                <div>
+                    <label for="cObservacion" class="form-label">Observaciones <span class="text-muted small">(opcional)</span></label>
+                    <textarea id="cObservacion" class="form-control" rows="2" maxlength="500"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarCierre" class="btn btn-dark">Cerrar expediente</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.pautaExpedienteId = @ViewBag.IdExpediente;
+        window.pautaPermisos = {
+            crear: @(puedeCrear ? "true" : "false"),
+            editar: @(puedeEditar ? "true" : "false")
+        };
+    </script>
+    <script src="~/js/pauta-comun.js" asp-append-version="true"></script>
+    <script src="~/js/pauta-expediente.js" asp-append-version="true"></script>
+}

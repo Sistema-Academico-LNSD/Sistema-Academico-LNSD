@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProyectoLNSD_WApp.DAL.Entities;
 
 namespace ProyectoLNSD_WApp.DAL.Data
@@ -57,6 +57,14 @@ namespace ProyectoLNSD_WApp.DAL.Data
         public virtual DbSet<CategoriaInventario> CategoriasInventario { get; set; }
         public virtual DbSet<Inventario> Inventarios { get; set; }
         public virtual DbSet<InventarioMovimiento> InventarioMovimientos { get; set; }
+        public virtual DbSet<PautaExpediente> PautasExpedientes { get; set; }
+        public virtual DbSet<PautaExpedienteEstudiante> PautasExpedientesEstudiantes { get; set; }
+        public virtual DbSet<PautaFormulario> PautasFormularios { get; set; }
+        public virtual DbSet<PautaBitacora> PautasBitacora { get; set; }
+        public virtual DbSet<Notificacion> Notificaciones { get; set; }
+        public virtual DbSet<NotificacionTipo> NotificacionTipos { get; set; }
+        public virtual DbSet<NotificacionTipoRol> NotificacionTipoRoles { get; set; }
+
 
         //Tables override mode builder
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -654,6 +662,22 @@ namespace ProyectoLNSD_WApp.DAL.Data
                 entity.Property(e => e.RutaLogo)
                       .HasColumnName("ruta_logo")
                       .HasMaxLength(250);
+
+                entity.Property(e => e.CodigoPresupuestario)
+                      .HasColumnName("codigo_presupuestario")
+                      .HasMaxLength(30);
+
+                entity.Property(e => e.CircuitoEscolar)
+                      .HasColumnName("circuito_escolar")
+                      .HasMaxLength(100);
+
+                entity.Property(e => e.Dre)
+                      .HasColumnName("dre")
+                      .HasMaxLength(150);
+
+                entity.Property(e => e.NombreDirector)
+                      .HasColumnName("nombre_director")
+                      .HasMaxLength(150);
 
                 entity.Property(e => e.FechaActualizacion)
                       .HasColumnName("fecha_actualizacion")
@@ -1728,8 +1752,187 @@ namespace ProyectoLNSD_WApp.DAL.Data
                       .HasConstraintName("FK_BecaCumplido_Requisito");
             });
 
+            modelBuilder.Entity<PautaExpediente>(entity =>
+            {
+                entity.ToTable("Pauta_Expediente");
+
+                entity.HasKey(e => e.IdExpediente).HasName("PK_Pauta_Expediente");
+
+                entity.Property(e => e.IdExpediente).HasColumnName("id_expediente");
+                entity.Property(e => e.Codigo).HasColumnName("codigo").HasMaxLength(30).IsRequired();
+                entity.Property(e => e.NumeroPauta).HasColumnName("numero_pauta");
+                entity.Property(e => e.IdUsuarioResponsable).HasColumnName("id_usuario_responsable");
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(15).IsRequired().HasDefaultValue("Abierto");
+                entity.Property(e => e.FechaActivacion).HasColumnName("fecha_activacion").HasColumnType("date");
+                entity.Property(e => e.IdExpedienteOrigen).HasColumnName("id_expediente_origen");
+                entity.Property(e => e.FechaCierre).HasColumnName("fecha_cierre").HasColumnType("datetime2(0)");
+                entity.Property(e => e.NombreCierre).HasColumnName("nombre_cierre").HasMaxLength(150);
+                entity.Property(e => e.VistoBuenoDirector).HasColumnName("visto_bueno_director").HasMaxLength(150);
+                entity.Property(e => e.DevolucionRealizada).HasColumnName("devolucion_realizada").HasDefaultValue(false);
+                entity.Property(e => e.ObservacionCierre).HasColumnName("observacion_cierre").HasMaxLength(500);
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => e.Codigo).IsUnique().HasDatabaseName("UQ_Pauta_Expediente_Codigo");
+
+                entity.HasOne(d => d.UsuarioResponsable)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioResponsable)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaExp_Responsable");
+
+                entity.HasOne(d => d.ExpedienteOrigen)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdExpedienteOrigen)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaExp_Origen");
+            });
+
+            modelBuilder.Entity<PautaExpedienteEstudiante>(entity =>
+            {
+                entity.ToTable("Pauta_Expediente_Estudiante");
+
+                entity.HasKey(e => e.IdPautaEstudiante).HasName("PK_Pauta_Expediente_Estudiante");
+
+                entity.Property(e => e.IdPautaEstudiante).HasColumnName("id_pauta_estudiante");
+                entity.Property(e => e.IdExpediente).HasColumnName("id_expediente");
+                entity.Property(e => e.IdEstudiante).HasColumnName("id_estudiante");
+                entity.Property(e => e.NombreCompleto).HasColumnName("nombre_completo").HasMaxLength(200).IsRequired();
+                entity.Property(e => e.Seccion).HasColumnName("seccion").HasMaxLength(50);
+                entity.Property(e => e.Rol).HasColumnName("rol").HasMaxLength(20).IsRequired();
+
+                entity.HasOne(d => d.Expediente)
+                      .WithMany(p => p.Estudiantes)
+                      .HasForeignKey(d => d.IdExpediente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaEst_Expediente");
+
+                entity.HasOne(d => d.Estudiante)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdEstudiante)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaEst_Estudiante");
+            });
+
+            modelBuilder.Entity<PautaFormulario>(entity =>
+            {
+                entity.ToTable("Pauta_Formulario");
+
+                entity.HasKey(e => e.IdFormulario).HasName("PK_Pauta_Formulario");
+
+                entity.Property(e => e.IdFormulario).HasColumnName("id_formulario");
+                entity.Property(e => e.IdExpediente).HasColumnName("id_expediente");
+                entity.Property(e => e.NumeroFormulario).HasColumnName("numero_formulario");
+                entity.Property(e => e.Secuencia).HasColumnName("secuencia").HasDefaultValue((short)1);
+                entity.Property(e => e.Estado).HasColumnName("estado").HasMaxLength(15).IsRequired().HasDefaultValue("Borrador");
+                entity.Property(e => e.Datos).HasColumnName("datos").HasColumnType("nvarchar(max)").IsRequired();
+                entity.Property(e => e.IdUsuarioActualiza).HasColumnName("id_usuario_actualiza");
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaActualizacion).HasColumnName("fecha_actualizacion").HasColumnType("datetime2(0)");
+                entity.Property(e => e.FechaFinalizacion).HasColumnName("fecha_finalizacion").HasColumnType("datetime2(0)");
+
+                entity.HasIndex(e => new { e.IdExpediente, e.NumeroFormulario, e.Secuencia })
+                      .IsUnique()
+                      .HasDatabaseName("UQ_Pauta_Formulario");
+
+                entity.HasOne(d => d.Expediente)
+                      .WithMany(p => p.Formularios)
+                      .HasForeignKey(d => d.IdExpediente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaForm_Expediente");
+
+                entity.HasOne(d => d.UsuarioActualiza)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuarioActualiza)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaForm_Usuario");
+            });
+
+            modelBuilder.Entity<PautaBitacora>(entity =>
+            {
+                entity.ToTable("Pauta_Bitacora");
+
+                entity.HasKey(e => e.IdBitacora).HasName("PK_Pauta_Bitacora");
+
+                entity.Property(e => e.IdBitacora).HasColumnName("id_bitacora");
+                entity.Property(e => e.IdExpediente).HasColumnName("id_expediente");
+                entity.Property(e => e.IdFormulario).HasColumnName("id_formulario");
+                entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+                entity.Property(e => e.Accion).HasColumnName("accion").HasMaxLength(30).IsRequired();
+                entity.Property(e => e.Detalle).HasColumnName("detalle").HasMaxLength(300);
+                entity.Property(e => e.Fecha).HasColumnName("fecha").HasColumnType("datetime2(0)");
+
+                entity.HasOne(d => d.Expediente)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdExpediente)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaBit_Expediente");
+
+                entity.HasOne(d => d.Formulario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdFormulario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaBit_Formulario");
+
+                entity.HasOne(d => d.Usuario)
+                      .WithMany()
+                      .HasForeignKey(d => d.IdUsuario)
+                      .OnDelete(DeleteBehavior.Restrict)
+                      .HasConstraintName("FK_PautaBit_Usuario");
+            });
+
+
+            modelBuilder.Entity<NotificacionTipo>(entity =>
+            {
+                entity.ToTable("Notificacion_Tipo");
+                entity.HasKey(e => e.IdTipo).HasName("PK_Notificacion_Tipo");
+                entity.Property(e => e.IdTipo).HasColumnName("id_tipo");
+                entity.Property(e => e.Codigo).HasColumnName("codigo").HasMaxLength(60).IsRequired();
+                entity.Property(e => e.Nombre).HasColumnName("nombre").HasMaxLength(120).IsRequired();
+                entity.Property(e => e.Modulo).HasColumnName("modulo").HasMaxLength(60).IsRequired();
+                entity.Property(e => e.Descripcion).HasColumnName("descripcion").HasMaxLength(300).IsRequired();
+                entity.Property(e => e.Activo).HasColumnName("activo").HasDefaultValue(true);
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2").HasDefaultValueSql("GETDATE()");
+                entity.HasIndex(e => e.Codigo).IsUnique().HasDatabaseName("UQ_NotificacionTipo_Codigo");
+            });
+
+            modelBuilder.Entity<NotificacionTipoRol>(entity =>
+            {
+                entity.ToTable("Notificacion_Tipo_Rol");
+                entity.HasKey(e => new { e.IdTipo, e.Rol }).HasName("PK_Notificacion_Tipo_Rol");
+                entity.Property(e => e.IdTipo).HasColumnName("id_tipo");
+                entity.Property(e => e.Rol).HasColumnName("rol").HasMaxLength(60).IsRequired();
+                entity.HasOne(e => e.Tipo).WithMany(t => t.RolesDestinatarios)
+                    .HasForeignKey(e => e.IdTipo).OnDelete(DeleteBehavior.Cascade)
+                    .HasConstraintName("FK_NotificacionTipoRol_Tipo");
+            });
+
+            modelBuilder.Entity<Notificacion>(entity =>
+            {
+                entity.ToTable("Notificacion");
+                entity.HasKey(e => e.IdNotificacion).HasName("PK_Notificacion");
+                entity.Property(e => e.IdNotificacion).HasColumnName("id_notificacion");
+                entity.Property(e => e.IdUsuario).HasColumnName("id_usuario");
+                entity.Property(e => e.IdTipo).HasColumnName("id_tipo");
+                entity.Property(e => e.Titulo).HasColumnName("titulo").HasMaxLength(180).IsRequired();
+                entity.Property(e => e.Mensaje).HasColumnName("mensaje").HasMaxLength(2000).IsRequired();
+                entity.Property(e => e.Referencia).HasColumnName("referencia").HasMaxLength(250);
+                entity.Property(e => e.ClaveEvento).HasColumnName("clave_evento").HasMaxLength(180).IsRequired();
+                entity.Property(e => e.FechaCreacion).HasColumnName("fecha_creacion").HasColumnType("datetime2").HasDefaultValueSql("GETDATE()");
+                entity.Property(e => e.Leida).HasColumnName("leida").HasDefaultValue(false);
+                entity.Property(e => e.FechaLectura).HasColumnName("fecha_lectura").HasColumnType("datetime2");
+                entity.HasOne(e => e.Usuario).WithMany().HasForeignKey(e => e.IdUsuario)
+                    .OnDelete(DeleteBehavior.Cascade).HasConstraintName("FK_Notificacion_Usuario");
+                entity.HasOne(e => e.Tipo).WithMany().HasForeignKey(e => e.IdTipo)
+                    .OnDelete(DeleteBehavior.Restrict).HasConstraintName("FK_Notificacion_Tipo");
+                entity.HasIndex(e => new { e.IdUsuario, e.ClaveEvento }).IsUnique()
+                    .HasDatabaseName("UQ_Notificacion_Usuario_Evento");
+                entity.HasIndex(e => new { e.IdUsuario, e.Leida, e.FechaCreacion })
+                    .HasDatabaseName("IX_Notificacion_Usuario_Leida_Fecha");
+            });
+
             OnModelCreatingPartial(modelBuilder);
         }
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);
     }
-}
+}

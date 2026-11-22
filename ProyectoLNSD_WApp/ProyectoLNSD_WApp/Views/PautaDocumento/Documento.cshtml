@@ -1,0 +1,37 @@
+@model string
+@{
+    Layout = null;
+    string? error = ViewData["Error"] as string;
+    string titulo = ViewData["Titulo"] as string ?? "Documento de pauta";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>@titulo</title>
+    <link rel="stylesheet" href="~/css/pauta-documento.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="barra no-print">
+        <button type="button" id="btnImprimir">Imprimir / Guardar como PDF</button>
+        <button type="button" id="btnCerrar" class="secundario">Cerrar</button>
+        <span>En el cuadro de impresión elija "Guardar como PDF" para descargarlo. Documento confidencial.</span>
+    </div>
+
+    @if (error != null)
+    {
+        <div class="error-documento">@error</div>
+    }
+    else
+    {
+        @Html.Raw(Model)
+    }
+
+    <script>
+        document.getElementById('btnImprimir').addEventListener('click', function () { window.print(); });
+        document.getElementById('btnCerrar').addEventListener('click', function () { window.close(); });
+    </script>
+</body>
+</html>

@@ -7,11 +7,12 @@ using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.DAL.Data;
 using ProyectoLNSD_WApp.DAL.Entities;
 using ProyectoLNSD_WApp.BLL.DTO;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 
 namespace ProyectoLNSD_WApp.Controllers;
 
 [Authorize]
-public class InformativoController(AppDbContext db) : Controller
+public class InformativoController(AppDbContext db, INotificacionService notificacionService) : Controller
 {
     private bool EsGestor => User.IsInRole(RolesSistema.Administrador) || User.IsInRole(RolesSistema.Director);
     private int? UsuarioId => int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
@@ -28,6 +29,8 @@ public class InformativoController(AppDbContext db) : Controller
         {
             foreach (var registro in programados) registro.Estado = "Publicado";
             await db.SaveChangesAsync();
+            foreach (var registro in programados)
+                await notificacionService.NotificarInformativo(registro.IdInformativo, "PUBLICADO");
         }
         var hoy = DateTime.Today;
         var q = db.InformativoRegistros.AsNoTracking().Where(x => !x.Eliminado);
@@ -101,11 +104,18 @@ public class InformativoController(AppDbContext db) : Controller
             var siguiente = dto.Recurrencia switch { "Diaria" => cursor.AddDays(1), "Semanal" => cursor.AddDays(7), "Mensual" => cursor.AddMonths(1), _ => limite.AddDays(1) };
             if (fechas.Count == 100 && siguiente <= limite) return BadRequest(new { esCorrecto = false, mensaje = "La recurrencia supera el máximo de 100 ocurrencias." });
         }
+        bool eraPublicado = false;
+        string? huellaAnterior = null;
+        string? huellaNueva = null;
+        var registrosCreados = new List<InformativoRegistro>();
         if (dto.IdInformativo > 0)
         {
             var item = await db.InformativoRegistros.FirstOrDefaultAsync(x => x.IdInformativo == dto.IdInformativo && !x.Eliminado);
             if (item == null) return NotFound(new { esCorrecto = false, mensaje = "El registro ya no existe." });
+            eraPublicado = item.Estado == "Publicado" && item.FechaPublicacion <= DateTime.Now;
+            huellaAnterior = CrearHuella(item);
             Aplicar(item, dto, tipo, estado);
+            huellaNueva = CrearHuella(item);
         }
         else
         {
@@ -115,12 +125,34 @@ public class InformativoController(AppDbContext db) : Controller
                 var duracion = dto.FechaFin.HasValue ? dto.FechaFin.Value.Date - dto.FechaInicio.Date : TimeSpan.Zero;
                 var fechaFinOcurrencia = dto.FechaFin.HasValue ? fecha.AddDays(duracion.TotalDays) : (DateTime?)null;
                 var copia = new InformativoGuardarDTO { Tipo = dto.Tipo, Titulo = dto.Titulo, Descripcion = dto.Descripcion, FechaPublicacion = dto.FechaPublicacion, FechaVigencia = dto.FechaVigencia, FechaInicio = fecha, FechaFin = fechaFinOcurrencia, HoraInicio = dto.HoraInicio, HoraFin = dto.HoraFin, Ubicacion = dto.Ubicacion, Categoria = dto.Categoria, Estado = dto.Estado };
-                Aplicar(item, copia, tipo, estado); item.IdUsuarioCrea = UsuarioId; db.InformativoRegistros.Add(item);
+                Aplicar(item, copia, tipo, estado); item.IdUsuarioCrea = UsuarioId; db.InformativoRegistros.Add(item); registrosCreados.Add(item);
             }
         }
         await db.SaveChangesAsync();
+        if (estado == "Publicado")
+        {
+            if (dto.IdInformativo > 0)
+            {
+                bool cambioReal = !string.Equals(huellaAnterior, huellaNueva, StringComparison.Ordinal);
+                if (!eraPublicado)
+                    await notificacionService.NotificarInformativo(dto.IdInformativo, "PUBLICADO", $"{huellaAnterior}=>{huellaNueva}");
+                else if (cambioReal)
+                    await notificacionService.NotificarInformativo(dto.IdInformativo, "ACTUALIZADO", $"{huellaAnterior}=>{huellaNueva}");
+            }
+            else
+            {
+                foreach (var registro in registrosCreados)
+                    await notificacionService.NotificarInformativo(registro.IdInformativo, "PUBLICADO");
+            }
+        }
         return Json(new { esCorrecto = true, mensaje = dto.IdInformativo > 0 ? "Registro actualizado correctamente." : fechas.Count > 1 ? $"Se registraron {fechas.Count} ocurrencias." : estado == "Programado" ? "Publicación programada correctamente." : "Registro guardado correctamente." });
     }
+
+    private static string CrearHuella(InformativoRegistro item) => string.Join("|",
+        item.Tipo, item.Titulo, item.Descripcion, item.FechaPublicacion.ToString("O"),
+        item.FechaVigencia?.ToString("O"), item.FechaInicio.ToString("O"),
+        item.FechaFin?.ToString("O"), item.HoraInicio?.ToString("c"),
+        item.HoraFin?.ToString("c"), item.Ubicacion, item.Categoria, item.Estado, item.Eliminado);
 
     private static void Aplicar(InformativoRegistro item, InformativoGuardarDTO dto, string tipo, string estado)
     {
@@ -140,7 +172,12 @@ public class InformativoController(AppDbContext db) : Controller
         if (!EsGestor) return Forbid();
         var item = await db.InformativoRegistros.FirstOrDefaultAsync(x => x.IdInformativo == id && !x.Eliminado);
         if (item == null) return NotFound(new { esCorrecto = false, mensaje = "El registro no fue encontrado." });
-        item.Eliminado = true; await db.SaveChangesAsync();
+        string huellaAnterior = CrearHuella(item);
+        item.Eliminado = true;
+        await db.SaveChangesAsync();
+        // Las historias contemplan cancelaciones de actividades y eventos, no anuncios eliminados.
+        if (item.Estado == "Publicado" && item.Tipo != "Anuncio")
+            await notificacionService.NotificarInformativo(id, "CANCELADO", $"{huellaAnterior}=>ELIMINADO");
         return Json(new { esCorrecto = true, mensaje = "Registro retirado correctamente." });
     }
 }

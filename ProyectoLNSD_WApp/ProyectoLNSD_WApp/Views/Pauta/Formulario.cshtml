@@ -1,0 +1,92 @@
+@{
+    ViewData["Title"] = "Formulario de pauta";
+    ViewData["Subtitle"] = "Complete los apartados del formulario del MEP";
+    ViewData["Icon"] = "bi-file-earmark-text";
+
+    bool puedeEditar = User.TienePermiso("Pautas", "Editar");
+}
+
+<link rel="stylesheet" href="~/css/pauta.css" asp-append-version="true" />
+
+@section Acciones {
+    <a id="btnVolver" href="/Pauta/Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left"></i> Volver al expediente
+    </a>
+}
+
+<div class="alert alert-warning py-2 small d-flex align-items-center gap-2">
+    <i class="bi bi-shield-lock"></i>
+    <span>Información confidencial. Cada consulta, edición y descarga queda registrada.</span>
+</div>
+
+<div id="mensajeFormulario"></div>
+<div id="alertaFormulario" class="alert alert-warning d-none" role="alert"></div>
+
+<div id="contenidoFormulario" class="d-none">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap justify-content-between gap-2">
+                <div>
+                    <div class="text-muted small" id="frmTitulo"></div>
+                    <h5 class="mb-1" id="frmNombre"></h5>
+                    <div class="small text-muted" id="frmDescripcion"></div>
+                </div>
+                <div class="text-end">
+                    <div class="small text-muted">Expediente <span id="frmExpediente"></span></div>
+                    <div id="frmEstado" class="fs-6"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="formPauta" novalidate onsubmit="return false;">
+        <div id="seccionesFormulario"></div>
+    </form>
+
+    <div id="barraAcciones" class="d-flex flex-wrap gap-2 justify-content-end">
+        <button type="button" id="btnEliminar" class="btn btn-outline-danger d-none me-auto">
+            <i class="bi bi-trash"></i> Quitar formulario
+        </button>
+        <button type="button" id="btnReabrir" class="btn btn-outline-warning d-none">
+            <i class="bi bi-unlock"></i> Reabrir
+        </button>
+        <a id="btnImprimir" href="#" target="_blank" rel="noopener" class="btn btn-outline-secondary">
+            <i class="bi bi-printer"></i> Vista previa / Imprimir
+        </a>
+        <button type="button" id="btnGuardar" class="btn btn-outline-primary d-none">
+            <i class="bi bi-save"></i> Guardar borrador
+        </button>
+        <button type="button" id="btnFinalizar" class="btn btn-success d-none">
+            <i class="bi bi-check2-circle"></i> Finalizar
+        </button>
+    </div>
+</div>
+
+<div class="modal fade" id="modalReabrir" tabindex="-1" aria-labelledby="modalReabrirTitulo" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalReabrirTitulo">Reabrir formulario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <label for="rMotivo" class="form-label">Motivo de la reapertura</label>
+                <textarea id="rMotivo" class="form-control" rows="3" maxlength="300"></textarea>
+                <div class="form-text">Mínimo 10 caracteres. Queda registrado en la bitácora.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarReabrir" class="btn btn-warning">Reabrir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        window.pautaFormularioId = @ViewBag.IdFormulario;
+        window.pautaPermisos = { editar: @(puedeEditar ? "true" : "false") };
+    </script>
+    <script src="~/js/pauta-comun.js" asp-append-version="true"></script>
+    <script src="~/js/pauta-formulario.js" asp-append-version="true"></script>
+}
