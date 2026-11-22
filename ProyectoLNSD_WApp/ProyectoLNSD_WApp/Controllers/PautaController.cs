@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 using ProyectoLNSD_WApp.BLL.Service.Pauta;
 using System.Security.Claims;
 
@@ -15,10 +16,12 @@ namespace ProyectoLNSD_WApp.Controllers
         private const string Modulo = "Pautas";
 
         private readonly IPautaService _pautaService;
+        private readonly INotificacionService _notificacionService;
 
-        public PautaController(IPautaService pautaService)
+        public PautaController(IPautaService pautaService, INotificacionService notificacionService)
         {
             _pautaService = pautaService;
+            _notificacionService = notificacionService;
         }
 
         // ---- Pantallas ----
@@ -97,7 +100,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerSesion(out int idUsuario, out string rol))
                 return Json(RespuestaDTO<ExpedienteDetalleDTO>.Error("La sesión no es válida; inicie sesión de nuevo", 401));
 
-            return Json(await _pautaService.CrearExpediente(idUsuario, rol, dto));
+            var resultado = await _pautaService.CrearExpediente(idUsuario, rol, dto);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+                await _notificacionService.NotificarPauta(resultado.Dato.IdExpediente, "ABIERTA", idUsuario);
+            return Json(resultado);
         }
 
         [HttpGet]
@@ -145,7 +151,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerSesion(out int idUsuario, out string rol))
                 return Json(RespuestaDTO<ExpedienteDetalleDTO>.Error("La sesión no es válida; inicie sesión de nuevo", 401));
 
-            return Json(await _pautaService.CerrarExpediente(idUsuario, rol, dto));
+            var resultado = await _pautaService.CerrarExpediente(idUsuario, rol, dto);
+            if (resultado.EsCorrecto)
+                await _notificacionService.NotificarPauta(dto.IdExpediente, "CERRADA", idUsuario);
+            return Json(resultado);
         }
 
         // ---- Formularios (MPPAF-01-03, 01-05 a 01-07, 01-11, 01-13) ----
@@ -185,7 +194,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerSesion(out int idUsuario, out string rol))
                 return Json(RespuestaDTO<FormularioDetalleDTO>.Error("La sesión no es válida; inicie sesión de nuevo", 401));
 
-            return Json(await _pautaService.GuardarFormulario(idUsuario, rol, dto));
+            var resultado = await _pautaService.GuardarFormulario(idUsuario, rol, dto);
+            if (dto.Finalizar && resultado.EsCorrecto && resultado.Dato != null && resultado.Dato.Estado == "Finalizado")
+                await _notificacionService.NotificarPauta(resultado.Dato.IdExpediente, "FORMULARIO_FINALIZADO", idUsuario, resultado.Dato.IdFormulario);
+            return Json(resultado);
         }
 
         [HttpPost]
@@ -196,7 +208,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerSesion(out int idUsuario, out string rol))
                 return Json(RespuestaDTO<FormularioDetalleDTO>.Error("La sesión no es válida; inicie sesión de nuevo", 401));
 
-            return Json(await _pautaService.ReabrirFormulario(idUsuario, rol, idFormulario, motivo));
+            var resultado = await _pautaService.ReabrirFormulario(idUsuario, rol, idFormulario, motivo);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+                await _notificacionService.NotificarPauta(resultado.Dato.IdExpediente, "FORMULARIO_REABIERTO", idUsuario, idFormulario);
+            return Json(resultado);
         }
 
         [HttpPost]

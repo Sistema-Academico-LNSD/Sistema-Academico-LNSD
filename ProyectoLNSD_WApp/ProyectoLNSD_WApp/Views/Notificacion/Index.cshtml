@@ -1,0 +1,19 @@
+<link rel="stylesheet" href="~/css/notificaciones.css" asp-append-version="true" />
+@{
+    ViewData["Title"] = "Mis notificaciones";
+}
+<div class="notificaciones-page">
+    @Html.AntiForgeryToken()
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <p class="text-muted mb-1">Centro de comunicaciones</p>
+            <h2 class="h4 mb-0">Mis notificaciones</h2>
+        </div>
+        <span class="badge rounded-pill text-bg-primary fs-6" id="contadorNoLeidas">0 pendientes</span>
+    </div>
+    <div id="estadoNotificaciones" class="alert alert-light border">Cargando notificaciones...</div>
+    <div id="listaNotificaciones" class="notificaciones-lista" aria-live="polite"></div>
+</div>
+@section Scripts {
+    <script src="~/js/notificaciones.js" asp-append-version="true"></script>
+}

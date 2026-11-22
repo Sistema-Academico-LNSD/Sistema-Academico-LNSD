@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.Service.Calificacion;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 using System.Security.Claims;
 
 namespace ProyectoLNSD_WApp.Controllers
@@ -13,15 +14,18 @@ namespace ProyectoLNSD_WApp.Controllers
         private readonly ICalificacionService _calificacionService;
         private readonly IResultadoCalificacionService _resultadoService;
         private readonly IConsultaCalificacionService _consultaService;
+        private readonly INotificacionService _notificacionService;
 
         public CalificacionController(
             ICalificacionService calificacionService,
             IResultadoCalificacionService resultadoService,
-            IConsultaCalificacionService consultaService)
+            IConsultaCalificacionService consultaService,
+            INotificacionService notificacionService)
         {
             _calificacionService = calificacionService;
             _resultadoService = resultadoService;
             _consultaService = consultaService;
+            _notificacionService = notificacionService;
         }
 
         // ---- Docente: registro de calificaciones (MCNF-01-01, 01-02, 01-03 y 01-12) ----
@@ -93,7 +97,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _calificacionService.GuardarNota(idUsuario, dto));
+            var resultado = await _calificacionService.GuardarNota(idUsuario, dto);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+                await _notificacionService.NotificarCalificacion(resultado.Dato.IdNota, false);
+            return Json(resultado);
         }
 
         [HttpPost]
@@ -108,7 +115,11 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _calificacionService.GuardarNotas(idUsuario, notas));
+            var resultado = await _calificacionService.GuardarNotas(idUsuario, notas);
+            if (resultado.Dato != null)
+                foreach (var item in resultado.Dato.Where(x => x.Exito && x.Nota != null))
+                    await _notificacionService.NotificarCalificacion(item.Nota!.IdNota, false);
+            return Json(resultado);
         }
 
         // ---- Docente: editar o corregir notas, observaciones e historial (MCNF-01-06, 01-07 y 01-08) ----
@@ -125,7 +136,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _calificacionService.EditarNota(idUsuario, dto));
+            var resultado = await _calificacionService.EditarNota(idUsuario, dto);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+                await _notificacionService.NotificarCalificacion(resultado.Dato.IdNota, true);
+            return Json(resultado);
         }
 
         [HttpGet]

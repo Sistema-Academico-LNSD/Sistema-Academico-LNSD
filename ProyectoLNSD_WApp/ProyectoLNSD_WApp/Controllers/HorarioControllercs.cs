@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.Service.Horario;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 using System.Security.Claims;
 
 namespace ProyectoLNSD_WApp.Controllers
@@ -11,10 +12,12 @@ namespace ProyectoLNSD_WApp.Controllers
     public class HorarioController : BaseController
     {
         private readonly IHorarioService _horarioService;
+        private readonly INotificacionService _notificacionService;
 
-        public HorarioController(IHorarioService horarioService)
+        public HorarioController(IHorarioService horarioService, INotificacionService notificacionService)
         {
             _horarioService = horarioService;
+            _notificacionService = notificacionService;
         }
 
         // ---- Administrador y director: gestión de horarios (MHOF-01-01 a 01-04) ----
@@ -69,7 +72,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!ModelState.IsValid)
                 return RespuestaModeloInvalido();
 
-            return Json(await _horarioService.Registrar(dto));
+            var resultado = await _horarioService.Registrar(dto);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+                await _notificacionService.NotificarHorario(resultado.Dato.IdHorario, "ASIGNADO");
+            return Json(resultado);
         }
 
 
@@ -97,7 +103,19 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!ModelState.IsValid)
                 return RespuestaModeloInvalido();
 
-            return Json(await _horarioService.Actualizar(dto));
+            var anterior = await _horarioService.GetHorario(dto.IdHorario);
+            var resultado = await _horarioService.Actualizar(dto);
+            if (resultado.EsCorrecto && resultado.Dato != null && anterior.Dato != null)
+            {
+                var actual = resultado.Dato;
+                var previo = anterior.Dato;
+                bool cambioRelevante = previo.IdCurso != actual.IdCurso || previo.IdSeccion != actual.IdSeccion ||
+                    previo.IdGrupo != actual.IdGrupo || previo.IdDocente != actual.IdDocente || previo.Dia != actual.Dia ||
+                    previo.HoraInicio != actual.HoraInicio || previo.HoraFin != actual.HoraFin || previo.Aula != actual.Aula;
+                if (cambioRelevante)
+                    await _notificacionService.NotificarHorario(actual.IdHorario, "MODIFICADO", previo.IdDocente, previo);
+            }
+            return Json(resultado);
         }
 
         [HttpPost]
@@ -105,7 +123,19 @@ namespace ProyectoLNSD_WApp.Controllers
         [RequierePermiso("Horarios", "Editar")]
         public async Task<IActionResult> CambiarEstado(int idHorario, bool activar)
         {
-            return Json(await _horarioService.CambiarEstado(idHorario, activar));
+            // Conserva el estado anterior para construir una clave de evento estable.
+            var anterior = await _horarioService.GetHorario(idHorario);
+            var resultado = await _horarioService.CambiarEstado(idHorario, activar);
+            if (resultado.EsCorrecto && resultado.Dato != null)
+            {
+                var previo = anterior.Dato;
+                await _notificacionService.NotificarHorario(
+                    idHorario,
+                    activar ? "ASIGNADO" : "RETIRADO",
+                    previo?.IdDocente,
+                    previo);
+            }
+            return Json(resultado);
         }
 
         // ---- Docente: Mi horario (MHOF-01-10) ----

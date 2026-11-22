@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ProyectoLNSD_WApp.Authorization;
 using ProyectoLNSD_WApp.BLL.DTO;
 using ProyectoLNSD_WApp.BLL.Service.Asistencia;
+using ProyectoLNSD_WApp.BLL.Service.Notificaciones;
 using System.Security.Claims;
 
 namespace ProyectoLNSD_WApp.Controllers
@@ -17,10 +18,12 @@ namespace ProyectoLNSD_WApp.Controllers
         private const string Modulo = "Asistencia";
 
         private readonly IAsistenciaService _asistenciaService;
+        private readonly INotificacionService _notificacionService;
 
-        public AsistenciaController(IAsistenciaService asistenciaService)
+        public AsistenciaController(IAsistenciaService asistenciaService, INotificacionService notificacionService)
         {
             _asistenciaService = asistenciaService;
+            _notificacionService = notificacionService;
         }
 
         // ---- Docente: pasar lista (MCAF-01-01 a 01-06) ----
@@ -67,7 +70,10 @@ namespace ProyectoLNSD_WApp.Controllers
             if (!TryObtenerIdUsuario(out int idUsuario))
                 return RespuestaSesionInvalida();
 
-            return Json(await _asistenciaService.Guardar(idUsuario, dto, PuedeEditar()));
+            var resultado = await _asistenciaService.Guardar(idUsuario, dto, PuedeEditar());
+            if (resultado.EsCorrecto && dto.Fecha.HasValue)
+                await _notificacionService.NotificarAsistencia(dto.IdHorario, dto.Fecha.Value);
+            return Json(resultado);
         }
 
         // MCAF-01-06: lo usan el docente (sus clases) y administración/dirección (todo)

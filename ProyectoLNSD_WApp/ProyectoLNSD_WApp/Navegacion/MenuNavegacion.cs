@@ -42,6 +42,7 @@ namespace ProyectoLNSD_WApp.Navegacion
                     _ => true, CoincidirAccion: true),
                 new("Información institucional", "bi-megaphone", "Informativo", "Index",
                     _ => true, CoincidirAccion: true),
+                new("Mis notificaciones", "bi-bell", "Notificacion", "Index", _ => true, CoincidirAccion: true),
                 new("Material de estudio", "bi-journal-bookmark", "Recurso", "Material",
                     u => u.IsInRole(RolesSistema.Estudiante) && u.TienePermiso("Recursos", "Ver"), CoincidirAccion: true),
                 new("Mis recursos", "bi-folder2-open", "Recurso", "Index",
@@ -147,7 +148,9 @@ namespace ProyectoLNSD_WApp.Navegacion
                 new("Auditoría", "bi-journal-text", "Auditoria", "Index",
                     u => u.IsInRole(RolesSistema.Administrador)),
                 new("Configuración", "bi-gear", "Configuracion", "Index",
-                    u => u.TienePermiso("Configuracion", "Ver"))
+                    u => u.TienePermiso("Configuracion", "Ver")),
+                new("Tipos de notificación", "bi-bell-gear", "Notificacion", "Configuracion",
+                    u => u.IsInRole(RolesSistema.Administrador))
             ])
         ];
 
